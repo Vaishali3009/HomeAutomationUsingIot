@@ -1,0 +1,800 @@
+package com.rbs.bdd.application.service;
+
+
+import com.rbs.bdd.application.exception.AccountValidationException;
+import com.rbs.bdd.application.port.out.AccountValidationPort;
+import com.rbs.bdd.common.ErrorConstants;
+import com.rbs.bdd.common.ServiceConstants;
+import com.rbs.bdd.domain.enums.AccountStatus;
+import com.rbs.bdd.domain.enums.ModulusCheckStatus;
+import com.rbs.bdd.domain.enums.SwitchingStatus;
+import com.rbs.bdd.domain.enums.model.ErrorDetail;
+import com.rbs.bdd.generated.ValidateArrangementForPaymentRequest;
+
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.ZonedDateTime;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
+import static com.rbs.bdd.common.ServiceConstants.*;
+import static com.rbs.bdd.domain.enums.AccountStatus.DOMESTIC_RESTRICTED;
+import static com.rbs.bdd.domain.enums.AccountStatus.DOMESTIC_UNRESTRICTED;
+import static com.rbs.bdd.domain.enums.ModulusCheckStatus.FAILED;
+import static com.rbs.bdd.domain.enums.ModulusCheckStatus.PASSED;
+import static com.rbs.bdd.domain.enums.SwitchingStatus.NOT_SWITCHING;
+import static com.rbs.bdd.domain.enums.SwitchingStatus.SWITCHED;
+
+/**
+ * Service responsible for validating SOAP requests for account validation and returning
+ * static success or error responses based on configured rules.
+ */
+@Service
+@RequiredArgsConstructor
+public class AccountValidationService implements AccountValidationPort {
+
+    private static final Logger logger = LoggerFactory.getLogger(AccountValidationService.class);
+
+    /**
+     * Logs the fact that schema validation is already handled by Spring WS.
+     */
+    @Override
+    public void validateSchema(ValidateArrangementForPaymentRequest request) {
+        logger.info("Schema validation completed by Spring WS");
+    }
+
+    /**
+     * Applies business rule validation based on account identifiers, code values, and IBAN/UBAN checks.
+     * Depending on the logic, either a static success or error response is returned.
+     *
+     * @param request the incoming SOAP request
+     * @param message the SOAP response message to be modified
+     */
+    @Override
+    public void validateBusinessRules(ValidateArrangementForPaymentRequest request, WebServiceMessage message) {
+        try {
+            logger.info("Starting business rule validation for request.");
+            RequestParams params = extractParams(request);
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            Document responseDoc;
+
+            Optional<ErrorDetail> error = determineError(params);
+            if (error.isPresent()) {
+                logger.info("Business error condition detected: {}", error.get().description);
+                responseDoc = loadAndParseXml(ServiceConstants.ERROR_XML_PATH);
+                applyErrorResponse(responseDoc, xpath, error.get(), params.originalTxnId);
+            } else {
+                Optional<ResponseConfig> config = determineMatchingConfig(params);
+                if (config.isPresent()) {
+                    logger.info("Matched account configuration: {}", config.get());
+                    responseDoc = loadAndParseXml(RESPONSE_XML_PATH);
+                    updateSuccessResponse(responseDoc, xpath, config.get(), params);
+                } else {
+                    logger.warn("No account matched. Returning MOD97 failure.");
+                    responseDoc = loadAndParseXml(ServiceConstants.ERROR_XML_PATH);
+                    applyErrorResponse(responseDoc, xpath, ErrorConstants.ERR_MOD97_IBAN, params.originalTxnId);
+                }
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+           TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.transform(new DOMSource(responseDoc), new StreamResult(out));
+            ((SaajSoapMessage) message).getSaajMessage().getSOAPPart()
+                    .setContent(new StreamSource(new ByteArrayInputStream(out.toByteArray())));
+
+            logger.info("Business response prepared and set successfully.");
+        } catch (Exception ex) {
+            logger.error("Business rule validation failed", ex);
+            throw new AccountValidationException("Validation failed", ex);
+        }
+    }
+
+    /**
+     * Extracts key fields like identifier, codeValue, transactionId, and systemId from the SOAP request.
+     */
+    private RequestParams extractParams(ValidateArrangementForPaymentRequest request) {
+        String identifier = request.getArrangementIdentifier().getIdentifier();
+        String codeValue = request.getArrangementIdentifier().getContext().getCodeValue();
+        String txnId = request.getRequestHeader().getRequestIds().get(0).getTransactionId();
+        String systemId = request.getRequestHeader().getRequestIds().get(0).getSystemId();
+        logger.debug("Extracted request parameters: identifier={}, codeValue={}, txnId={}, systemId={}",
+                identifier, codeValue, txnId, systemId);
+        return new RequestParams(identifier, codeValue, identifier.length(), txnId, systemId);
+    }
+
+    /**
+     * Validates error conditions such as invalid IBAN/UBAN format or mismatched values.
+     */
+    private Optional<ErrorDetail> determineError(RequestParams p) {
+    ErrorDetail errorDetail = null;
+
+    if (ServiceConstants.INTL_BANK_ACCOUNT.equals(p.codeValue())) {
+        if (!p.identifier().startsWith("GB")) {
+            errorDetail = ErrorConstants.ERR_WRONG_COUNTRY_CODE;
+        } else if (p.length() != 22) {
+            errorDetail = ErrorConstants.ERR_INVALID_IBAN_LENGTH;
+        }
+    } else if (ServiceConstants.UK_BASIC_BANK_ACCOUNT.equals(p.codeValue())) {
+        if (p.identifier().startsWith("GB")) {
+            errorDetail = ErrorConstants.ERR_DB2_SQL;
+        } else if (p.length() != 14) {
+            errorDetail = ErrorConstants.ERR_INVALID_UBAN_LENGTH;
+        } else if (!isUbanValid(p.identifier())) {
+            errorDetail = ErrorConstants.ERR_MOD97_UBAN;
+        }
+    }
+
+    return Optional.ofNullable(errorDetail);
+    }
+
+    /**
+     * Matches the request against known account types and configurations.
+     */
+    private Optional<ResponseConfig> determineMatchingConfig(RequestParams p) {
+
+        Map<String, ResponseConfig> ruleMap = Map.of(
+        IBAN_1, new ResponseConfig(DOMESTIC_RESTRICTED, SWITCHED, PASSED),
+        IBAN_2, new ResponseConfig(DOMESTIC_RESTRICTED, NOT_SWITCHING, PASSED),
+        IBAN_3, new ResponseConfig(DOMESTIC_UNRESTRICTED, SWITCHED, PASSED),
+        IBAN_4, new ResponseConfig(DOMESTIC_UNRESTRICTED, NOT_SWITCHING, FAILED)
+    );
+
+    return ruleMap.entrySet().stream()
+        .filter(e -> isMatch(p, e.getKey()))
+        .findFirst()
+        .map(Map.Entry::getValue)
+        .map(Optional::of)
+        .orElse(Optional.empty());
+
+    }
+
+    /**
+     * Checks if the request identifier matches exactly or by suffix.
+     */
+    private boolean isMatch(RequestParams p, String account) {
+        return p.identifier.equals(account) || extractLast14Digits(account).equals(p.identifier);
+    }
+
+    /**
+     * Verifies if the given UBAN matches the suffix of known IBANs.
+     */
+    private boolean isUbanValid(String identifier) {
+        return ServiceConstants.ALL_IBANS.stream()
+                .map(this::extractLast14Digits)
+                .anyMatch(ibanSuffix -> ibanSuffix.equals(identifier));
+    }
+
+    /**
+     * Extracts last 14 digits from a given IBAN string.
+     */
+    private String extractLast14Digits(String iban) {
+        return iban.length() >= 14 ? iban.substring(iban.length() - 14) : "";
+    }
+
+    /**
+     * Reads and parses a static XML file from the classpath.
+     */
+    private Document loadAndParseXml(String path) throws ParserConfigurationException, IOException, SAXException {
+        logger.debug("Loading XML from path: {}", path);
+        InputStream xml = getClass().getClassLoader().getResourceAsStream(path);
+        if (xml == null) {
+            logger.error("XML file not found at path: {}", path);
+            throw new AccountValidationException("XML not found: " + path);
+        }
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        factory.setXIncludeAware(false);
+        factory.setExpandEntityReferences(false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        return builder.parse(xml);
+    }
+
+    /**
+     * Populates values in the success response based on matched config.
+     */
+    private void updateSuccessResponse(Document doc, XPath xpath, ResponseConfig config, RequestParams p) throws XPathExpressionException {
+        updateText(xpath, doc, "//responseId/systemId", p.systemId);
+        updateText(xpath, doc, "//responseId/transactionId", generateTxnId());
+        updateText(xpath, doc, "//status", config.accountStatus.getValue());
+        updateText(xpath, doc, "//switchingStatus", config.switchingStatus.getValue());
+        updateText(xpath, doc, "//modulusCheckStatus/codeValue", config.modulusCheckStatus.getValue());
+        logger.info("Updated response XML with success values");
+    }
+
+    /**
+     * Populates values in the static error response XML.
+     */
+    private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail errorDetail, String txnId) throws XPathExpressionException {
+        updateText(xpath, doc, ErrorConstants.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
+        updateText(xpath, doc, ErrorConstants.XPATH_REF_REQUEST_TXN_ID, txnId);
+        updateText(xpath, doc, ErrorConstants.XPATH_CMD_STATUS, "Failed");
+        updateText(xpath, doc, ErrorConstants.XPATH_CMD_DESCRIPTION, errorDetail.description);
+        updateText(xpath, doc, ErrorConstants.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
+        updateText(xpath, doc, ErrorConstants.XPATH_RETURN_CODE, errorDetail.returnCode);
+        if (errorDetail.systemNotificationDesc != null) {
+            updateText(xpath, doc, ErrorConstants.XPATH_SYS_NOTIFICATION_DESC, errorDetail.systemNotificationDesc);
+            updateText(xpath, doc, ErrorConstants.XPATH_SYS_NOTIFICATION_CODE, errorDetail.returnCode);
+        } else {
+            Node node = (Node) xpath.evaluate(ErrorConstants.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
+            if (node != null && node.getParentNode() != null) {
+                node.getParentNode().removeChild(node);
+                logger.debug("Removed systemNotification block as it was not applicable.");
+            }
+        }
+        logger.info("Updated response XML with error values: {}", errorDetail.description);
+    }
+
+    /**
+     * Utility method to update a specific XML node’s text content.
+     */
+    private void updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
+        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
+        if (node != null && value != null) {
+            node.setTextContent(value);
+            logger.debug("Updated XML node {} with value {}", path, value);
+        }
+    }
+
+    /**
+     * Generates a unique transaction ID string.
+     */
+    private String generateTxnId() {
+        return "1alN" + UUID.randomUUID().toString().replace("-", "") + "h";
+    }
+
+    /**
+     * Immutable container representing a valid request configuration.
+     * this record is left without methods or additional logic,as it is only
+     *  used to group and transport request fields such as
+     *  <ul>
+     *     <li>{@code identifier} - contains account number </li>
+     *     <li>{@code codeValue} - used to identify
+     * whether account is UKBasicBankAccountNumber or InternationalBankAccountNumber</li>
+     *     <li>{@code length} - returns length of account number </li>
+     *      <li>{@code originalTxnId} - return the transactionId of the request </li>
+     *       <li>{@code systemId} - returns the systemId from the request </li>
+     */
+     @SuppressWarnings("unused")
+    private record RequestParams(String identifier, String codeValue, int length, String originalTxnId,String systemId) {
+    // this record is left without methods or additional logic,as it is only used to group and transport request fields
+     }
+
+    /**
+     * Immutable container representing a valid account configuration.
+     * this record is left without methods or additional logic,as it is only
+     * used to group and transport validation results such as
+     * <ul>
+     *     <li>{@code accountStatus} - the classification of the account(eg , restricted,unrestricted)</li>
+     *      <li>{@code switchingStatus} - whether the account has been switched or not switching </li>
+     *       <li>{@code modulusStatus} - result of modulus check </li>
+     * </ul>
+     */
+     @SuppressWarnings("unused")
+    private record ResponseConfig(AccountStatus accountStatus, SwitchingStatus switchingStatus,ModulusCheckStatus modulusCheckStatus) {
+     // this record is left without methods or additional logic,as it is only used to group and transport validation results
+     }
+}
+
+
+------------------------
+
+package com.rbs.bdd.application.port.out;
+
+import org.springframework.ws.WebServiceMessage;
+
+
+
+/**
+ * Defines the business contract for Customer retrieval.
+ * Used by the orchestrator to call schema and business rule validators.
+ */
+public interface CustomerRetrievalPort {
+    /**
+     * Performs XSD schema validation of the request. (Currently delegated to Spring WS config.)
+     *
+     * @param request The SOAP request payload.
+     */
+    void validateSchema(RetrievePrimaryCustomerForArrRequest request);
+
+
+    /**
+     * Applies business rules on the static response XML based on request content,
+     * and writes the final SOAP response directly to the output message.
+     *
+     * @param request The incoming SOAP request.
+     * @param message The WebServiceMessage to write the modified response to.
+     */
+    void validateBusinessRules(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message);
+
+}
+-----------------
+
+package com.rbs.bdd.application.port.in;
+
+import org.springframework.ws.WebServiceMessage;
+
+import javax.xml.transform.Source;
+
+public interface RetrieveCustomerPort {
+    Source retrieveCustomerDetails(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage response);
+}
+------------------
+
+package com.rbs.bdd.common;
+
+import com.rbs.bdd.domain.enums.model.ErrorDetail;
+
+/**
+ * Centralized constants used for generating error responses in {@link com.rbs.bdd.application.service.AccountValidationService}.
+ * <p>
+ * This includes:
+ * <ul>
+ *     <li>XPath expressions used to locate and update XML response elements</li>
+ *     <li>Predefined {@link ErrorDetail} instances used to represent different validation errors</li>
+ * </ul>
+ * These constants help ensure consistency across all error response transformations.
+ */
+public final class ErrorConstants {
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private ErrorConstants() {}
+
+    // ─────────────────────────────────────────────────────
+    // XPath Expressions for XML Node Updates
+    // ─────────────────────────────────────────────────────
+
+    /**
+     * XPath to locate transactionId under responseId node.
+     */
+    public static final String XPATH_RESPONSE_ID_TXN_ID = "//*[local-name()='responseId']/*[local-name()='transactionId']";
+
+    /**
+     * XPath to locate transactionId under refRequestIds node.
+     */
+    public static final String XPATH_REF_REQUEST_TXN_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
+
+    /**
+     * XPath to locate cmdStatus node for command result status.
+     */
+    public static final String XPATH_CMD_STATUS = "//*[local-name()='cmdStatus']";
+
+    /**
+     * XPath to locate description node inside cmdNotifications block.
+     */
+    public static final String XPATH_CMD_DESCRIPTION = "//*[local-name()='cmdNotifications']/*[local-name()='description']";
+
+    /**
+     * XPath to locate timestamp node inside cmdNotifications block.
+     */
+    public static final String XPATH_TIMESTAMP = "//*[local-name()='cmdNotifications']/*[local-name()='timestamp']";
+
+    /**
+     * XPath to locate returnCode node inside cmdNotifications block.
+     */
+    public static final String XPATH_RETURN_CODE = "//*[local-name()='cmdNotifications']/*[local-name()='returnCode']";
+
+    /**
+     * XPath to locate description inside systemNotifications block.
+     */
+    public static final String XPATH_SYS_NOTIFICATION_DESC = "//*[local-name()='systemNotifications']/*[local-name()='description']";
+
+    /**
+     * XPath to locate returnCode inside systemNotifications block.
+     */
+    public static final String XPATH_SYS_NOTIFICATION_CODE = "//*[local-name()='systemNotifications']/*[local-name()='returnCode']";
+
+    /**
+     * XPath to locate the entire systemNotifications block node.
+     */
+    public static final String XPATH_SYS_NOTIFICATION_BLOCK = "//*[local-name()='systemNotifications']";
+
+    // ─────────────────────────────────────────────────────
+    // Predefined Error Responses
+    // ─────────────────────────────────────────────────────
+
+    /**
+     * Error returned when the IBAN length is not 22 characters.
+     */
+    public static final ErrorDetail ERR_INVALID_IBAN_LENGTH = new ErrorDetail(
+            "ERR006",
+            "Length of IBAN is Invalid",
+            "0013",
+            "Length of IBAN is Invalid"
+    );
+
+    /**
+     * Error representing a failure in DB2 SQL lookup for the sort code or account.
+     */
+    public static final ErrorDetail ERR_DB2_SQL = new ErrorDetail(
+            "ERR006",
+            "500|Service GRPUB.OA_GET_SORTCODE_DETAILS...(OA2.2105271236)...",
+            null,
+            null
+    );
+
+    /**
+     * Error returned when the IBAN does not start with a valid GB country code.
+     */
+    public static final ErrorDetail ERR_WRONG_COUNTRY_CODE = new ErrorDetail(
+            "0010",
+            "Country code is not found in Db, try  with the correct country code",
+            null,
+            null
+    );
+
+    /*
+     * Common error code used to representgeneral service or validation failure
+     */
+    public static final String ERROR_CODE_ERR06="ERROO6";
+
+    /**
+     * Error returned when MOD97 validation fails for the IBAN.
+     */
+    public static final ErrorDetail ERR_MOD97_IBAN = new ErrorDetail(
+            ERROR_CODE_ERR06,
+            "MOD97 failure for the IBAN",
+            "0020",
+            "MOD97 failure for the IBAN"
+    );
+
+    /**
+     * Error returned when the UBAN length is not exactly 14 characters.
+     */
+    public static final ErrorDetail ERR_INVALID_UBAN_LENGTH = new ErrorDetail(
+            ERROR_CODE_ERR06,
+            "UBAN should be 14 digits",
+            "0013",
+            "UBAN should be 14 digits"
+    );
+
+    /**
+     * Error returned when MOD97 validation fails for the UBAN.
+     */
+    public static final ErrorDetail ERR_MOD97_UBAN = new ErrorDetail(
+            ERROR_CODE_ERR06,
+            "MOD97 failure for the UBAN",
+            "0020",
+            "MOD97 failure for the UBAN"
+    );
+}
+
+---------
+package com.rbs.bdd.common;
+
+import java.util.List;
+
+/**
+ * Centralized constants used across the application for:
+ *
+ *   IBAN and code value mappings
+ *   File paths for static SOAP responses
+ *   XPath expressions for XML manipulation
+ *
+ * These constants help standardize values and avoid repetition throughout the service layer,
+ * particularly within the SOAP response handling and validation logic.
+ */
+public final class ServiceConstants {
+
+    /**
+     * Path to the default error SOAP response XML used when validation fails.
+     */
+    public static final String ERROR_XML_PATH = "error-response/error-response.xml";
+
+    /**
+     * Path to the schema validation-specific SOAP error response.
+     */
+    public static final String SCHEMA_VALIDATION_ERROR_XML = "error-response/SchemaValidationError.xml";
+
+    // ─────────────────────────────────────────────────────
+    // IBAN Constants for Matching Configurations
+    // ─────────────────────────────────────────────────────
+
+    /**
+     * Configured IBAN representing a Domestic-Restricted, Switched, Modulus Passed account.
+     */
+    public static final String IBAN_1 = "GB29NWBK60161331926801";
+
+    /**
+     * Configured IBAN representing a Domestic-Restricted, Not Switching, Modulus Passed account.
+     */
+    public static final String IBAN_2 = "GB82WEST12345698765437";
+
+    /**
+     * Configured IBAN representing a Domestic-Unrestricted, Switched, Modulus Passed account.
+     */
+    public static final String IBAN_3 = "GB94BARC10201530093422";
+
+    /**
+     * Configured IBAN representing a Domestic-Unrestricted, Not Switching, Modulus Failed account.
+     */
+    public static final String IBAN_4 = "GB33BUKB20201555555567";
+
+    /**
+     * List of all supported IBANs used for validation and suffix matching.
+     */
+    public static final List<String> ALL_IBANS = List.of(
+            IBAN_1,
+            IBAN_2,
+            IBAN_3,
+            IBAN_4
+    );
+
+    // ─────────────────────────────────────────────────────
+    // Code Values for Identifying Account Type
+    // ─────────────────────────────────────────────────────
+
+    /**
+     * Code value representing an international bank account (IBAN).
+     */
+    public static final String INTL_BANK_ACCOUNT = "InternationalBankAccountNumber";
+
+    /**
+     * Code value representing a UK basic bank account (UBAN).
+     */
+    public static final String UK_BASIC_BANK_ACCOUNT = "UKBasicBankAccountNumber";
+
+    // ─────────────────────────────────────────────────────
+    // Static Response XML Paths
+    // ─────────────────────────────────────────────────────
+
+    /**
+     * Path to the static success SOAP response XML used when business rules pass.
+     */
+    public static final String RESPONSE_XML_PATH = "static-response/account-validation/success-response.xml";
+
+    // ─────────────────────────────────────────────────────
+    // XPath Expressions for XML Node Access/Manipulation
+    // ─────────────────────────────────────────────────────
+
+    /**
+     * XPath to locate any transactionId in the response.
+     */
+    public static final String XPATH_TRANSACTION_ID = "//*[local-name()='transactionId']";
+
+    /**
+     * XPath to locate account status under accountingUnits.
+     */
+    public static final String XPATH_ACCOUNT_STATUS = "//*[local-name()='accountingUnits']/*[local-name()='status']/*[local-name()='codeValue']";
+
+    /**
+     * XPath to locate switching status value.
+     */
+    public static final String XPATH_SWITCHING_STATUS = "//*[local-name()='switchingStatus']/*[local-name()='codeValue']";
+
+    /**
+     * XPath to locate modulus check status code value.
+     */
+    public static final String XPATH_MODULUS_STATUS = "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']";
+
+    // ─────────────────────────────────────────────────────
+    // XPath Expressions for Fault/Error Response Nodes
+    // ─────────────────────────────────────────────────────
+
+    /**
+     * XPath to locate transactionId inside refRequestIds in a SOAP Fault response.
+     */
+    public static final String XPATH_FAULT_TRANSACTION_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
+
+    /**
+     * XPath to locate the full responseId block in a SOAP Fault.
+     */
+    public static final String XPATH_FAULT_RESPONSE_ID = "//*[local-name()='responseId']";
+
+    /**
+     * XPath to locate the timestamp node in a SOAP Fault.
+     */
+    public static final String XPATH_FAULT_TIMESTAMP = "//*[local-name()='timestamp']";
+
+
+    /**
+     * XML Tage name used to identify the transactionId element in the request
+     */
+    public static final String TAG_TRANSACTION_ID= "transactionId";
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private ServiceConstants() {
+        // Prevent instantiation
+    }
+}
+
+------------------
+
+static-response-> customer-retrieval-> customer-retrieval.xml
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<crfpSP:retrievePrimaryCustomerForArrResponse xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/ CustomerRetrievalForPaymentParameters.xsd ">
+    <response>
+        <responseHeader/>
+        <customer xsi:type="crfpTO:Individual_TO">
+            <universalUniqueIdentifier>
+                <identifier>1122334455</identifier>
+                <context>
+                    <schemeName>CustomerEnterpriseIdType</schemeName>
+                    <codeValue>CustomerIdentificationNumber</codeValue>
+                </context>
+            </universalUniqueIdentifier>
+            <isClassifiedBy xsi:type="crfpTO:ClassificationValue_TO">
+                <codeValue> <!--Space indicates Personal Customer--></codeValue>
+                <name>CustomerSegment</name>
+            </isClassifiedBy>
+            <hasForContactPreference>
+                <contactPoint xsi:type="crfpTO:PostalAddress_TO">
+                    <usage>
+                        <schemeName>ContactPointUsage</schemeName>
+                        <codeValue>StatementAddress</codeValue>
+                    </usage>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddresseeLine1</codeValue>
+                        <address>Addressee name 1</address>
+                        <!--Note: This will not be present for an International Account Customer-->
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine2</codeValue>
+                        <address>Addressee name 2</address>
+                        <!--Note: This will not be present for an International Account Customer-->
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine1</codeValue>
+                        <address>1 North Street</address>
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine2</codeValue>
+                        <address>North Town</address>
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine3</codeValue>
+                        <address>North City</address>
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine4</codeValue>
+                        <address>Northshire</address>
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine5</codeValue>
+                        <address />
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>PostalCode</codeValue>
+                        <address>AB123CB</address>
+                    </hasComponent>
+                    <postalCodeExemptionReason>
+                        <schemeName>PostalCodeExemptionReasonType</schemeName>
+                        <codeValue>codevalue</codeValue>
+                    </postalCodeExemptionReason>
+                    <!--For a domestic account - this element is only present if the /customer/hasForContactPreference/correspondenceDestinationPreference element is NOT present, i.e. Return to Branch has not been specified as a correspondence destination preference. -->
+                    <!--This element will always be present for an International account.-->
+                </contactPoint>
+                <correspondenceDestinationPreference>
+                    <schemeName>CorrespondenceDestinationPreferenceType</schemeName>
+                    <codeValue>R</codeValue>
+                    <!--Note: This will not be present for an International Account Customer-->
+                    <!--For a domestic account - this element is only present if the /customer/hasForContactPreference/contactPoint element is NOT present.
+      -->
+                    <!-- A value of R indicates the Return To Branch correspondence preference in which case there will be no address details.-->
+                </correspondenceDestinationPreference>
+            </hasForContactPreference>
+            <hasForName xsi:type="crfpTO:IndividualName_TO">
+                <usage>
+                    <schemeName>InvolvedPartyNameType</schemeName>
+                    <codeValue>LegalName</codeValue>
+                </usage>
+                <middleNames>middleName1</middleNames>
+                <middleNames>middleName2</middleNames>
+                <middleNames>middleName3</middleNames>
+                <prefixTitle>
+                    <schemeName>IndividualNamePrefixType</schemeName>
+                    <codeValue>Ms</codeValue>
+                </prefixTitle>
+                <firstName>firstName</firstName>
+                <lastName>lastName</lastName>
+            </hasForName>
+            <isSensitive>false</isSensitive>
+            <hasLegalAddress>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>AddressLine1</codeValue>
+                    <address>1 North Street</address>
+                </hasComponent>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>AddressLine2</codeValue>
+                    <address>North Town</address>
+                </hasComponent>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>AddressLine3</codeValue>
+                    <address>North City</address>
+                </hasComponent>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>AddressLine4</codeValue>
+                    <address>Northshire</address>
+                </hasComponent>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>AddressLine5</codeValue>
+                    <address/>
+                </hasComponent>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>PostalCode</codeValue>
+                    <address>AB123CB</address>
+                </hasComponent>
+                <postalCodeExemptionReason>
+                    <schemeName>PostalCodeExemptionReasonType</schemeName>
+                    <codeValue>codevalue</codeValue>
+                </postalCodeExemptionReason>
+            </hasLegalAddress>
+            <hasPartyType>
+                <schemeName>InvolvedPartyType</schemeName>
+                <codeValue>Individual</codeValue>
+            </hasPartyType>
+            <residesAt>
+                <schemeName>CountryCode</schemeName>
+                <codeValue>GBR</codeValue>
+            </residesAt>
+            <birthDate>1965-03-05</birthDate>
+            <gender>
+                <schemeName>IndividualGenderType</schemeName>
+                <codeValue>F</codeValue>
+            </gender>
+            <primaryNationalityRegistration>
+                <countryCode>
+                    <schemeName>CountryCode</schemeName>
+                    <codeValue>GBR</codeValue>
+                </countryCode>
+            </primaryNationalityRegistration>
+        </customer>
+    </response>
+</crfpSP:retrievePrimaryCustomerForArrResponse>
+
+
+-----------------------------------
