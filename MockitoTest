@@ -1,3 +1,624 @@
+[INFO]
+[INFO] --- clean:3.4.1:clean (default-clean) @ bdd-ms-esp-simulation-service ---
+[INFO] Deleting F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target
+[INFO]
+[INFO] --- jacoco:0.8.13:prepare-agent (prepare-agent) @ bdd-ms-esp-simulation-service ---
+[INFO] argLine set to -javaagent:C:\\dev\\devtools\\cache\\m2_repository\\org\\jacoco\\org.jacoco.agent\\0.8.13\\org.jacoco.agent-0.8.13-runtime.jar=destfile=F:\\NatWest_Code\\ESPPOC\\bdd-ms-esp-simulation-service\\bdd-ms-esp-simulation-service\\target\\jacoco.exec,excludes=com/rbs/bdd/generated/**
+[INFO]
+[INFO] --- build-helper:3.2.0:add-source (add-source) @ bdd-ms-esp-simulation-service ---
+[INFO] Source directory: F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb added.
+[INFO]
+[INFO] --- jaxb2:3.1.0:xjc (xjc) @ bdd-ms-esp-simulation-service ---
+[INFO] Created EpisodePath [F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\META-INF\JAXB]: true
+[INFO] Ignored given or default xjbSources [F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\xjb], since it is not an existent file or directory.
+[INFO] Created EpisodePath [F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\META-INF\JAXB]: true
+[ERROR] file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/account-validation/ArrValidationForPaymentTransferObjects.xsd [3,46]
+org.xml.sax.SAXParseException: A class/interface with the same name "com.rbs.bdd.generated.BaseTransferObject" is already in use. Use a class customization to resolve this conflict.
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:92)
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:52)
+    at com.sun.tools.xjc.generator.bean.ImplStructureStrategy$1.createClasses (ImplStructureStrategy.java:52)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generateClassDef (BeanGenerator.java:416)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.getClazz (BeanGenerator.java:448)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.<init> (BeanGenerator.java:169)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generate (BeanGenerator.java:141)
+    at com.sun.tools.xjc.model.Model.generateCode (Model.java:258)
+    at com.sun.tools.xjc.Driver.run (Driver.java:354)
+    at org.codehaus.mojo.jaxb2.javageneration.AbstractJavaGeneratorMojo.performExecution (AbstractJavaGeneratorMojo.java:476)
+    at org.codehaus.mojo.jaxb2.AbstractJaxbMojo.execute (AbstractJaxbMojo.java:337)
+    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:126)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:328)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
+    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
+    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:73)
+    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:53)
+    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:118)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:261)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:173)
+    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:101)
+    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:906)
+    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:283)
+    at org.apache.maven.cli.MavenCli.main (MavenCli.java:206)
+    at jdk.internal.reflect.DirectMethodHandleAccessor.invoke (DirectMethodHandleAccessor.java:103)
+    at java.lang.reflect.Method.invoke (Method.java:580)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:283)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:226)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:407)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:348)
+[ERROR] file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd [3,46]
+org.xml.sax.SAXParseException: (Relevant to above error) another "BaseTransferObject" is generated from here.
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:95)
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:52)
+    at com.sun.tools.xjc.generator.bean.ImplStructureStrategy$1.createClasses (ImplStructureStrategy.java:52)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generateClassDef (BeanGenerator.java:416)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.getClazz (BeanGenerator.java:448)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.<init> (BeanGenerator.java:169)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generate (BeanGenerator.java:141)
+    at com.sun.tools.xjc.model.Model.generateCode (Model.java:258)
+    at com.sun.tools.xjc.Driver.run (Driver.java:354)
+    at org.codehaus.mojo.jaxb2.javageneration.AbstractJavaGeneratorMojo.performExecution (AbstractJavaGeneratorMojo.java:476)
+    at org.codehaus.mojo.jaxb2.AbstractJaxbMojo.execute (AbstractJaxbMojo.java:337)
+    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:126)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:328)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
+    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
+    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:73)
+    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:53)
+    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:118)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:261)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:173)
+    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:101)
+    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:906)
+    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:283)
+    at org.apache.maven.cli.MavenCli.main (MavenCli.java:206)
+    at jdk.internal.reflect.DirectMethodHandleAccessor.invoke (DirectMethodHandleAccessor.java:103)
+    at java.lang.reflect.Method.invoke (Method.java:580)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:283)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:226)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:407)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:348)
+[ERROR] file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/account-validation/ArrValidationForPaymentTransferObjects.xsd [139,45]
+org.xml.sax.SAXParseException: A class/interface with the same name "com.rbs.bdd.generated.GeographicAreaTO" is already in use. Use a class customization to resolve this conflict.
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:92)
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:52)
+    at com.sun.tools.xjc.generator.bean.ImplStructureStrategy$1.createClasses (ImplStructureStrategy.java:52)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generateClassDef (BeanGenerator.java:416)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.getClazz (BeanGenerator.java:448)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.<init> (BeanGenerator.java:169)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generate (BeanGenerator.java:141)
+    at com.sun.tools.xjc.model.Model.generateCode (Model.java:258)
+    at com.sun.tools.xjc.Driver.run (Driver.java:354)
+    at org.codehaus.mojo.jaxb2.javageneration.AbstractJavaGeneratorMojo.performExecution (AbstractJavaGeneratorMojo.java:476)
+    at org.codehaus.mojo.jaxb2.AbstractJaxbMojo.execute (AbstractJaxbMojo.java:337)
+    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:126)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:328)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
+    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
+    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:73)
+    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:53)
+    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:118)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:261)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:173)
+    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:101)
+    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:906)
+    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:283)
+    at org.apache.maven.cli.MavenCli.main (MavenCli.java:206)
+    at jdk.internal.reflect.DirectMethodHandleAccessor.invoke (DirectMethodHandleAccessor.java:103)
+    at java.lang.reflect.Method.invoke (Method.java:580)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:283)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:226)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:407)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:348)
+[ERROR] file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd [67,45]
+org.xml.sax.SAXParseException: (Relevant to above error) another "GeographicAreaTO" is generated from here.
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:95)
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:52)
+    at com.sun.tools.xjc.generator.bean.ImplStructureStrategy$1.createClasses (ImplStructureStrategy.java:52)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generateClassDef (BeanGenerator.java:416)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.getClazz (BeanGenerator.java:448)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.<init> (BeanGenerator.java:169)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generate (BeanGenerator.java:141)
+    at com.sun.tools.xjc.model.Model.generateCode (Model.java:258)
+    at com.sun.tools.xjc.Driver.run (Driver.java:354)
+    at org.codehaus.mojo.jaxb2.javageneration.AbstractJavaGeneratorMojo.performExecution (AbstractJavaGeneratorMojo.java:476)
+    at org.codehaus.mojo.jaxb2.AbstractJaxbMojo.execute (AbstractJaxbMojo.java:337)
+    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:126)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:328)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
+    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
+    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:73)
+    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:53)
+    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:118)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:261)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:173)
+    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:101)
+    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:906)
+    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:283)
+    at org.apache.maven.cli.MavenCli.main (MavenCli.java:206)
+    at jdk.internal.reflect.DirectMethodHandleAccessor.invoke (DirectMethodHandleAccessor.java:103)
+    at java.lang.reflect.Method.invoke (Method.java:580)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:283)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:226)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:407)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:348)
+[ERROR] file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/account-validation/ArrValidationForPaymentTransferObjects.xsd [110,50]
+org.xml.sax.SAXParseException: A class/interface with the same name "com.rbs.bdd.generated.ClassificationValueTO" is already in use. Use a class customization to resolve this conflict.
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:92)
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:52)
+    at com.sun.tools.xjc.generator.bean.ImplStructureStrategy$1.createClasses (ImplStructureStrategy.java:52)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generateClassDef (BeanGenerator.java:416)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.getClazz (BeanGenerator.java:448)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.<init> (BeanGenerator.java:169)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generate (BeanGenerator.java:141)
+    at com.sun.tools.xjc.model.Model.generateCode (Model.java:258)
+    at com.sun.tools.xjc.Driver.run (Driver.java:354)
+    at org.codehaus.mojo.jaxb2.javageneration.AbstractJavaGeneratorMojo.performExecution (AbstractJavaGeneratorMojo.java:476)
+    at org.codehaus.mojo.jaxb2.AbstractJaxbMojo.execute (AbstractJaxbMojo.java:337)
+    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:126)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:328)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
+    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
+    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:73)
+    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:53)
+    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:118)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:261)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:173)
+    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:101)
+    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:906)
+    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:283)
+    at org.apache.maven.cli.MavenCli.main (MavenCli.java:206)
+    at jdk.internal.reflect.DirectMethodHandleAccessor.invoke (DirectMethodHandleAccessor.java:103)
+    at java.lang.reflect.Method.invoke (Method.java:580)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:283)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:226)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:407)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:348)
+[ERROR] file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd [72,50]
+org.xml.sax.SAXParseException: (Relevant to above error) another "ClassificationValueTO" is generated from here.
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:95)
+    at com.sun.tools.xjc.util.CodeModelClassFactory.createClass (CodeModelClassFactory.java:52)
+    at com.sun.tools.xjc.generator.bean.ImplStructureStrategy$1.createClasses (ImplStructureStrategy.java:52)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generateClassDef (BeanGenerator.java:416)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.getClazz (BeanGenerator.java:448)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.<init> (BeanGenerator.java:169)
+    at com.sun.tools.xjc.generator.bean.BeanGenerator.generate (BeanGenerator.java:141)
+    at com.sun.tools.xjc.model.Model.generateCode (Model.java:258)
+    at com.sun.tools.xjc.Driver.run (Driver.java:354)
+    at org.codehaus.mojo.jaxb2.javageneration.AbstractJavaGeneratorMojo.performExecution (AbstractJavaGeneratorMojo.java:476)
+    at org.codehaus.mojo.jaxb2.AbstractJaxbMojo.execute (AbstractJaxbMojo.java:337)
+    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:126)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:328)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
+    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
+    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:73)
+    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:53)
+    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:118)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:261)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:173)
+    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:101)
+    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:906)
+    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:283)
+    at org.apache.maven.cli.MavenCli.main (MavenCli.java:206)
+    at jdk.internal.reflect.DirectMethodHandleAccessor.invoke (DirectMethodHandleAccessor.java:103)
+    at java.lang.reflect.Method.invoke (Method.java:580)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:283)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:226)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:407)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:348)
+[ERROR] file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/account-validation/ArrValidationForPaymentTransferObjects.xsd [79,50]
+org.xml.sax.SAXParseExc
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.rbs.bdd</groupId>
+    <artifactId>bdd-ms-esp-simulation-service-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <groupId>com.rbs.bdd</groupId>
+  <artifactId>bdd-ms-esp-simulation-service</artifactId>
+  <name>bdd-ms-esp-simulation-service</name>
+  <description>BDD ESP Simulator microservice - This is an example of a BDD ESP Simulator Service.</description>
+
+  <properties>
+    <validation-api.version>1.1.0.Final</validation-api.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.ws.commons.schema</groupId>
+        <artifactId>XmlSchema</artifactId>
+        <version>1.4.3</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <!-- enabling actuator to expose management endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <!-- Used to add hyperlinks to the actuator's endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-hateoas</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>3.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ws.xmlschema</groupId>
+      <artifactId>xmlschema-core</artifactId>
+      <version>2.2.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.ws.commons.schema</groupId>
+      <artifactId>XmlSchema</artifactId>
+      <version>1.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-xml</artifactId>
+      <version>4.0.12</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.ws.commons.schema</groupId>
+          <artifactId>XmlSchema</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Dependency added to do bean validation in spring boot app as it's packaged with jakarta.validation-api.jar -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>software.amazon.awssdk</groupId>-->
+<!--      <artifactId>apache-client</artifactId>-->
+<!--    </dependency>-->
+    <!-- Required for UserIdentityFilter -->
+<!--    <dependency>-->
+<!--      <groupId>org.json</groupId>-->
+<!--      <artifactId>json</artifactId>-->
+<!--      <version>20240303</version>-->
+<!--    </dependency>-->
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>${httpcore.version}</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+
+    <!--    JAXB API-->
+
+    <!-- SOAP Dependencies Start-->
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-core</artifactId>
+      <version>4.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.messaging.saaj</groupId>
+      <artifactId>saaj-impl</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-test</artifactId>
+      <version>4.0.10</version>
+      <scope>test</scope>
+    </dependency
+
+
+
+
+
+    >
+    <dependency>
+      <groupId>jakarta.xml.ws</groupId>
+      <artifactId>jakarta.xml.ws-api</artifactId>
+      <version>4.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.ws</groupId>
+      <artifactId>jaxws-ri</artifactId>
+      <version>4.0.1</version>
+      <type>pom</type>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.woodstox</groupId>
+          <artifactId>woodstox-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Dependency to convert xml to json -->
+    <dependency>
+      <groupId>com.github.javadev</groupId>
+      <artifactId>underscore</artifactId>
+      <version>1.89</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>xml-resolver</groupId>
+      <artifactId>xml-resolver</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <!-- Dependency for caching -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>wsdl4j</groupId>
+      <artifactId>wsdl4j</artifactId>
+      <version>1.6.3</version>
+    </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.vaadin.external.google</groupId>
+          <artifactId>android-json</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.7.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+<!--     Adding JAXB2 Maven Plugin     -->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.10.1</version>
+        <configuration>
+          <excludePackageNames>com.rbs.bdd.generated</excludePackageNames>
+        </configuration>
+      </plugin>
+      <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.13</version>
+          <configuration>
+            <excludes>
+              <exclude>com/rbs/bdd/generated/**</exclude>
+            </excludes>
+          </configuration>
+
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/jaxb</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>jaxb2-maven-plugin</artifactId>
+          <version>3.1.0</version>
+          <executions>
+            <execution>
+              <id>xjc</id>
+              <goals>
+                <goal>xjc</goal>
+              </goals>
+              <phase>generate-sources</phase>
+              <configuration>
+<!--                <bindingDirectory>${project.basedir}/src/main/resources</bindingDirectory>-->
+                <bindingFiles>
+                  <bindingFile>src/main/resources/bindings.xjb</bindingFile>
+                </bindingFiles>
+<!--                <verbose>true</verbose>-->
+<!--                <extension>true</extension>-->
+                <sources>
+<!--                  <source>src/main/resources/xsd</source>-->
+                  <source>${project.basedir}/src/main/resources/xsd/account-validation/ArrValidationForPaymentParameters.xsd</source>
+                  <source>${project.basedir}/src/main/resources/xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd</source>
+                </sources>
+                <outputDirectory>${project.build.directory}/generated-sources/jaxb</outputDirectory>
+                <packageName>com.rbs.bdd.generated</packageName>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <!--to be imported on other projects-->
+              <classifier>original</classifier>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <scm>
+    <connection>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</connection>
+    <url>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</url>
+    <developerConnection>scm:git:${stash.ssh.url}/CPBD/${project.artifactId}-archetype-template.git
+    </developerConnection>
+  </scm>
+
+</project>
+
+
+--------------------
+
+
+
+bindings.xjb
+
 <jxb:bindings xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
               xmlns:xs="http://www.w3.org/2001/XMLSchema"
               version="1.0">
@@ -7,3 +628,1482 @@
         </jxb:schemaBindings>
     </jxb:bindings>
 </jxb:bindings>
+
+
+
+---------------------
+
+
+xsd->account-validation->ArrValidationForPaymentParameters.xsd
+
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/" version="RBS_20210526_Baseline" xmlns:avfpSP="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/" xmlns:avfpTO="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/">
+  <!-- <?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/ServiceParameters/V01/" version="RBS_20210526_Baseline" xmlns:avfpSP="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/ServiceParameters/V01/" xmlns:avfpTO="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/"> -->
+<xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" schemaLocation="ArrValidationForPaymentTransferObjects.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/Services/Definitions/V03/" schemaLocation="../shared/ServiceDefinitions.xsd"/>
+  <xsd:complexType name="validateArrangementForPaymentRequest">
+    <xsd:sequence>
+      <xsd:element name="requestHeader" type="sdef:RequestHeader"/>
+      <xsd:element name="arrangementIdentifier" type="pdt:ObjectReference">
+        <xsd:annotation>
+          <xsd:documentation>The identifier for the arrangement being validated, a variety of formats are supported by the service.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="processingParameter" type="pdt:Property">
+        <xsd:annotation>
+          <xsd:documentation>Optional parameter used to satisfy any consumer driven technical provider requirements</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ValidateArrangementForPaymentContent">
+    <xsd:sequence>
+      <xsd:element name="responseHeader" type="sdef:ResponseHeader"/>
+      <xsd:element minOccurs="0" name="validatedArrangement" type="avfpTO:ProductArrangement_TO">
+        <xsd:annotation>
+          <xsd:documentation>Details of the arrangement being validated by the service</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="validateArrangementForPaymentResponse">
+    <xsd:sequence>
+      <xsd:choice>
+        <xsd:element name="response" type="avfpSP:ValidateArrangementForPaymentContent"/>
+        <xsd:element name="exception" type="sdef:Exception"/>
+      </xsd:choice>
+    </xsd:sequence>
+  </xsd:complexType>
+  <!-- Global elements required for WSDL operation binding -->
+  <xsd:element name="validateArrangementForPayment" type="avfpSP:validateArrangementForPaymentRequest"/>
+  <xsd:element name="validateArrangementForPaymentResponse" type="avfpSP:validateArrangementForPaymentResponse"/>
+
+</xsd:schema>
+
+----------------------
+
+xsd->account-validation->ArrValidationForPaymentTransferObjects.xsd
+
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" version="RBS_20210526_Baseline" xmlns:avfpTO="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/">
+  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
+  <xsd:complexType name="BaseTransferObject">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="extendedProperties" type="pdt:Property"/>
+      <xsd:element minOccurs="0" name="lastUpdateToken" type="pdt:PropertyVariant">
+        <xsd:annotation>
+          <xsd:documentation>Datetime for objects that require optimistic locking on update.  The datetime retrieved is passed back on the update operation and validated against the last updated datetime stored for the object.  If they are the same, the update can go ahead.  If not, another update has occurred in the interim and the update is rejected.
+
+As this is on the BaseTransferObject, it can be used selectively for those objects within a retrieve and update operation response / request parameter set, that require such optimistic locking.  This a a set on BMOs and the constituent dependent types, can be used to form a set of lock tokens.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedPartyName_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a name associated with an Involved Party. Multiple names are possible both concurrently and over time, varying by the use of the name such as the birth name or marriage name.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="nameText" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The complete aggregated name used for identifying a Role Player</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Organization_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party that is a group of Individuals bound by a common purpose. This includes commercial Organizations such as limited companies, publicly quoted multinationals, subsidiaries, etc. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:InvolvedParty_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="parentOrganization" type="avfpTO:Organization_TO">
+            <xsd:annotation>
+              <xsd:documentation>Returns the parent Organization for given Organization.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="AccountArrangementIdentifierAssessment_TO">
+    <xsd:annotation>
+      <xsd:documentation>An Assessment that has an ArrangementIdentifier as its subject - to verify the correctness of an Arrangement identifier.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:Assessment_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="modulusCheckStatus" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Represents the result of the account arrangement identifier (Modulus Check) assessment. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Assessment_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the result of an evaluation, based on a subjective opinion or on a scientific result. This includes Financial Valuation of Involved Partys, Market Segments, policies, places or other objects and scores calculated for risk assessment, marketing or other purposes.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="referred" type="pdt:Boolean">
+            <xsd:annotation>
+              <xsd:documentation>An arrangement assessment that results in certain payments to be referred to the Relationship Manager/Relationship Support Team for authorisation. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="BusinessModelObject_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the highest class of objects in the hierarchy of the Financial Services Business Object Model representing a thing or a concept that is meaningful to the modeled Organization. Business Model Objects are superclasses of many objects that have business significance to business people and are used to provide common behavior across many object definitions. Examples of Business Model Object subclasses are Accounting Unit, Arrangement, Channel, Event, Product etc.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="alternativeIdentifier" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>An alternative identifier for the Business Object</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="isSubjectOf" type="avfpTO:Assessment_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the result of an assessment based on a subjective opinion or on a scientific result. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="universalUniqueIdentifier" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>The unique identifier for the Business Object</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="isClassifiedBy" type="avfpTO:ClassificationValue_TO">
+            <xsd:annotation>
+              <xsd:documentation>The reference classification values that classify the given Business Object </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ClassificationValue_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a grouping of Business Model Objects, for example; Single Males Under 30, Married People over 50, etc... A Classification Value can be further partitioned into several sub-classifications according to different criteria, each of which is represented in turn by a Classification Scheme.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="schemeName" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="codeValue" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="name" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The word or phrase that identifies (but not uniquely) the object</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="shortName" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>An abridged version of classificationValue name Example: For retrieving job title reference data, If the name of the value is AGRICULTURAL WORKER, the shortName is AG</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="lifecycleStatus" type="pdt:LifecycleStatus">
+            <xsd:annotation>
+              <xsd:documentation>The lifeyclestatus of the ClassificationValue. Eg If retrieving  reference data related to customer titles, a ClassificationValue by the name of 'Mr' or "Mrs" may have the lifecycle status of 'Current'</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="displayOrder" type="pdt:String"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="GeographicArea_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a Location that is a place or a bounded area that is defined by nature, by an external authority, such as a government, or for an internal business purpose. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:ClassificationValue_TO"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType abstract="true" name="Registration_TO">
+    <xsd:annotation>
+      <xsd:documentation>A formal granting, by an authorized body, of rights, privileges, favors, statuses, or qualifications. Registrations are important from the perspective of being a qualified source of information. Note that a Registration represents the actual granting, not the Document that represents those rights. that document is a Registration Document.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="lifeCycleStatus" type="pdt:LifecycleStatus">
+            <xsd:annotation>
+              <xsd:documentation>The position of the registration within a life-cycle model consisting of a number of statuses.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isIssuedIn" type="avfpTO:GeographicArea_TO">
+            <xsd:annotation>
+              <xsd:documentation>The place of the registration</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="SortCodeRegistration_TO">
+    <xsd:annotation>
+      <xsd:documentation>A class representing the internal registration of a SortCode within the RBS Group</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:Registration_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="isTrainingBranch" type="pdt:Boolean">
+            <xsd:annotation>
+              <xsd:documentation>The traning branch of the sortcode registration</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="sortCodeRegistrationType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The sortcode registration type</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="paymentServicesProviderType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The Payment service provider type</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="agencyIndicator" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Indicates if the registration unit is an agency</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="activeIndicator" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Performs a dual purpose - indicates if the SortCode under the registration is Active, or Inactive as an internal SortCode, but in additional will indicate if the sort code is External (i.e. active/inactive are not relevant).</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="nonFPSettlementSortCode" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The sortcode aspect of a Settlement Account associated with a HOCA or Agency for Non-Faster Payments (eg paper and BACS payments)</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="nonFPSettlementAccountNumber" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The account number aspect of a Settlement Account associated with a HOCA or Agency for Non-Faster Payments (eg paper and BACS payments)</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isCreditCardHOCA" type="pdt:Boolean">
+            <xsd:annotation>
+              <xsd:documentation>Used to distinguish credit card HOCA sortcodes from other HOCA’s due to the need to apply special processing for to meet PSD2 Credit Card processing rules.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="FPSettlementSortCode" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The sortcode aspect of a Settlement Account associated with Faster Payments for a HOCA or Agency.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="FPSettlementAccountNumber" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The account number aspect of a Settlement Account associated with Faster Payments for a HOCA or Agency.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="FPSettlementType" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether or not this is an FP enabled Agency or a Credit Card HOCA.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isFPEnabled" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether the Sortcode is FP Enabled as a Member, Agency or not FP Enabled.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isInternalFunction" type="pdt:Boolean">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether the business processing carried out under the SortCode is deemed to be internal to RBS or not.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="OrganizationUnit_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party that is a component or subdivision of an &lt;Organization&gt; established for the purpose of performing discrete functional responsibilities. This typically represents the Organizational structure of the modeled Organization including sections, departments, district offices, projects, and employment positions.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:InvolvedParty_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="parentOrganization" type="avfpTO:Organization_TO">
+            <xsd:annotation>
+              <xsd:documentation>Returns the parent Organization for given Organization Unit. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="sortCodeRegistration" type="avfpTO:SortCodeRegistration_TO">
+            <xsd:annotation>
+              <xsd:documentation>Details of the internal registration of a SortCode within the Natwest Group</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType abstract="true" name="RolePlayer_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies an Involved Party or a role played by an Involved Party within the context of the modeled organization.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedParty_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Role Player that is any participant that may have contact with, or that is of interest to the modeled organization, and about which the Financial Institution wishes to maintain information. This includes the modeled organization itself.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:RolePlayer_TO">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasForName" type="avfpTO:InvolvedPartyName_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies a name associated with an Involved Party</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Balance_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a value that is the net of all debits and credits posted to an Accounting Unit at a particular point in time (usually covering a defined time period, such as day, month, year.)</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="balanceDerivationType" type="pdt:BalanceType">
+            <xsd:annotation>
+              <xsd:documentation>The kind of balance of this object represents. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="postedAmount" type="pdt:CurrencyAmount">
+            <xsd:annotation>
+              <xsd:documentation>Specifies the monetary (e.g. currency amount) or non-monetary (e.g. an integer counter) value of the Period Balance Type for the associated Accounting Unit and Scenario at the time designated by the Point Balance Type, before any later adjustments are made. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="AccountingUnit_TO">
+    <xsd:annotation>
+      <xsd:documentation>A repository used to monitor both monetary and non-monetary standings and used to support the operation of an Arrangement. An Accounting Unit can stand independently, or it can combine the values of other Accounting Units as in summarizing the position of the Financial Institution in a General Ledger or accounting for groups of arrangements.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The non-unique label by which an instance of Accounting Unit is known.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasBalance" type="avfpTO:Balance_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the Balances associated with the Accounting Unit.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="status" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Distinguishes between Accounting Units according to their standing in relation to legal and bank-imposed parameters and restrictions</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="badDebtStatus" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether the Accounting Unit has been assigned a bad debt status by the Debt Manager process. Bad debt accounts are those accounts which are unable to pay their liabilities back to the bank or to its lenders. The account receivables that will not be collected, can be identified as Bad Debt Accounts. There is specific processing of the Bad Debt accounts and they need to be identified differently in comparison to the other accounts. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isManagedBy" type="avfpTO:OrganizationUnit_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the Organization Unit that has ownership and responsibility for the maintenance of the Accounting Unit.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Arrangement_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a potential or actual agreement between an Organization and one or more Involved Partys that provides and affirms the rules and obligations associated with that agreement.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>A label given to a specific Arrangement used to distinguish it from other Arrangements. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="accountingUnits" type="avfpTO:AccountingUnit_TO">
+            <xsd:annotation>
+              <xsd:documentation>The Accounting Unit(s) which records and maintains the amounts involved in business dealings based on the specifications of the AccountArrangement.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="managingOrganizationUnit" type="avfpTO:OrganizationUnit_TO">
+            <xsd:annotation>
+              <xsd:documentation>The organisation unit which is managing the registration of the Arrangement, eg an organisation unit identified by a sort code</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isServicedBy" type="avfpTO:InvolvedParty_TO">
+            <xsd:annotation>
+              <xsd:documentation>Financial Institution that manages the product arrangement for a customer</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ContactPreference_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the characteristics related to the way a Role Player wants to be contacted. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="correspondenceAddressee" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The addressee text specified for use on the correspondence address. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="correspondenceDestinationPreference" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>In relation to Arrangements held by the RolePlayer, the destination preference for correspondence on that Arrangement. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="noMailIndicator" type="pdt:Boolean">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether the customer is opted for paperless communication.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Currency_TO">
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="numberOfDecimalPlaces" type="pdt:Number"/>
+          <xsd:element minOccurs="0" name="numericCode" type="pdt:Number">
+            <xsd:annotation>
+              <xsd:documentation>The numeric code for the given currency, used when codes need to be understood in countries that do not use latin scripts</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="restrictedStatus" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether the currency has a restriction placed against it, for reasons like currency sanctions/controls or the currency is deemed worthless. Used by payments processing to know whether to process a payment. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="alphabeticCode" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The alphabetic currency code for the given currency. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="AccountArrangement_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of ProductArrangement in which there is an agreement between two or more Individuals, Organizations or OrganizationUnits, that provides and affirms the rules and obligations associated with the sale, exchange, or provision of financial goods, services or resources.An AccountArrangement is a ProductArrangement whose activities are tracked by a customer account; for example, Deposit Arrangements, Loan Arrangements, Credit Card Arrangements.The alternative is a NonAccountArrangement which is a Product Arrangement whose activities are not tracked by a customer account; for example, Travelers Check provision, Consulting Service.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:ProductArrangement_TO"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="AccountSwitchingArrangement_TO">
+    <xsd:annotation>
+      <xsd:documentation>A type of Account Facility Arrangement whereby a relationship is maintained between a source AccountArrangment and a target AccountArrangement, for a set period of time, to enable facilities such as inpayment forwarding Facilities are deteremined by the Arrangement Switch Status</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:ProductArrangement_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="targetArrangement" type="avfpTO:AccountArrangement_TO">
+            <xsd:annotation>
+              <xsd:documentation>Specifies the details relating to the (new) switched to target Account Arrangement</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="switchTargetDate" type="pdt:Date">
+            <xsd:annotation>
+              <xsd:documentation>The target date by when it is expected that facilities such as balances, inpayments, and scheduled outpayments will be successfully switched from the source Account Arrangement to the target Account Arrangement.  This is calculated based on the current industry aspirational SLA for switching services.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="switchStartDate" type="pdt:DateTime">
+            <xsd:annotation>
+              <xsd:documentation>The Date and Time after which an AccountSwitchingArangement is/will be in force</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ProductArrangement_TO">
+    <xsd:annotation>
+      <xsd:documentation>A Product Arrangement identifies an Arrangement between Involved Partys and the modeled organization specifying the terms by which the Involved Party obtains the use of the Products of the modeled organization.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:Arrangement_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="switchingStatus" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The Status of an SwitchedAccountArrangement </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="switchingArrangement" type="avfpTO:AccountSwitchingArrangement_TO">
+            <xsd:annotation>
+              <xsd:documentation>Switching arrangement that handles the account switching process</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isBasedOnProduct" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>The Arrangement based Product that forms the basis of a Product Arrangement</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="currency" type="avfpTO:Currency_TO">
+            <xsd:annotation>
+              <xsd:documentation>Base currency of the Product Arrangement, i.e. the Currency in which the accounting of transactions is done.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="contactPreferences" type="avfpTO:ContactPreference_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the contact preferences whioch relate directly to the Arrangement. Eg Statement preference information</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+</xsd:schema>
+
+
+-----------------------------
+
+xsd->customer-retrieval->CustomerRetrievalForPaymentParameters.xsd
+
+
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" version="RBS_20210325_Baseline" xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/">
+  <xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" schemaLocation="CustomerRetrievalForPaymentTransferObjects.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/Services/Definitions/V03/" schemaLocation="../shared/ServiceDefinitions.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
+  <xsd:complexType name="retrievePrimaryCustomerForArrRequest">
+    <xsd:sequence>
+      <xsd:element name="requestHeader" type="sdef:RequestHeader"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="processingParameter" type="pdt:Property"/>
+      <xsd:element name="arrangementIdentifier" type="pdt:ObjectReference">
+        <xsd:annotation>
+          <xsd:documentation>Identifier of the account for which the Customer is identified as the Primary Customer (Account Owner).</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="RetrievePrimaryCustomerForArrContent">
+    <xsd:sequence>
+      <xsd:element name="responseHeader" type="sdef:ResponseHeader"/>
+      <xsd:element minOccurs="0" name="customer" type="crfpTO:InvolvedParty_TO"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="modifyToken" type="pdt:Property"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="retrievePrimaryCustomerForArrResponse">
+    <xsd:sequence>
+      <xsd:choice>
+        <xsd:element name="response" type="crfpSP:RetrievePrimaryCustomerForArrContent"/>
+        <xsd:element name="exception" type="sdef:Exception"/>
+      </xsd:choice>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>
+
+------------------------------------
+xsd->customer-retrieval->CustomerRetrievalForPaymentTransferObjects.xsd
+
+
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" version="RBS_20210325_Baseline" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/">
+  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
+  <xsd:complexType name="BaseTransferObject">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="extendedProperties" type="pdt:Property"/>
+      <xsd:element minOccurs="0" name="lastUpdateToken" type="pdt:PropertyVariant">
+        <xsd:annotation>
+          <xsd:documentation>Datetime for objects that require optimistic locking on update.  The datetime retrieved is passed back on the update operation and validated against the last updated datetime stored for the object.  If they are the same, the update can go ahead.  If not, another update has occurred in the interim and the update is rejected.
+
+As this is on the BaseTransferObject, it can be used selectively for those objects within a retrieve and update operation response / request parameter set, that require such optimistic locking.  This a a set on BMOs and the constituent dependent types, can be used to form a set of lock tokens.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ContactPoint_TO">
+    <xsd:annotation>
+      <xsd:documentation>The method and destination of a communication contact with a Role Player. This relates to specific communication media: Postal Address, Telephone Number, Electronic Address, Care Of Address </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="priorityLevel" type="pdt:Number">
+            <xsd:annotation>
+              <xsd:documentation>The relative priority level of one Contact Point over another.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="usage" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The context in which a Role Player uses this Contact Point. eg Primary Residence, Work etc</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasComponent" type="pdt:AddressComponent">
+            <xsd:annotation>
+              <xsd:documentation>Individual components of a postal address e.g. City, PostCode etc</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="lifecycleStatus" type="pdt:LifecycleStatus">
+            <xsd:annotation>
+              <xsd:documentation>Lifecycle status of the Contact Point e.g Active, Inactive etc </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="contactPointType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the type of Contact Point under consideration eg Postal Address, Telephone number etc </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="PostalAddress_TO">
+    <xsd:annotation>
+      <xsd:documentation>An address used for the delivery of letters and packages by an external mailing or package service, at a place where the recipient usually lives or works. The structure of a postal address depends on the country of the postal address, for this reason a Postal Address is made up of a number of Postal Address Components. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:ContactPoint_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="postalCodeExemptionReason" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The exempt type of the Postal Address, which indicates whether the postal address is exempted in having a Postal Code.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="GeographicArea_TO">
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:ClassificationValue_TO"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ClassificationValue_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a grouping of Business Model Objects, for example; Single Males Under 30, Married People over 50, etc... A Classification Value can be further partitioned into several sub-classifications according to different criteria, each of which is represented in turn by a Classification Scheme.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="schemeName" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="codeValue" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="name" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The word or phrase that identifies (but not uniquely) the classification value.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="shortName" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>An abridged version of classificationValue name Example: For retrieving job title reference data, If the name of the value is AGRICULTURAL WORKER, the shortName is AG</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ConditionContext_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the &lt;Business&gt; to which a &lt;Condition&gt; relates</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="priority" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="occurrenceNumber" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>A reference number which signifies the occurrence of the Condition applying to the product Arrangement </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="startDate" type="pdt:DateTime">
+            <xsd:annotation>
+              <xsd:documentation>The date on which this Condition becomes appicable to the ProductArrangement.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="endDate" type="pdt:Date">
+            <xsd:annotation>
+              <xsd:documentation>The date from when this Condition is no longer applicable to the ProductArrangement. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Condition_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the specific requirements that pertain to how the business of the modeled organization is conducted and includes information such as prerequisite or qualification criteria and restrictions or limits associated with the requirements. Conditions can apply to various aspects of a Financial Institution's operations, such as the sale and servicing of Products or the determination of eligibility to purchase a product.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The word or phrase used to identify (but not uniquely) the Condition.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="conditionValue" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Identifies a Condition Descriptor that defines the measurable content that applies to a Condition. A Condition Value can be numeric, textual or an indicator (Yes, No). Numeric Condition Values can be qualified by a Unit Of Measure.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="code" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>This can be used for any Condition codes.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="hasConditionContext" type="crfpTO:ConditionContext_TO"/>
+          <xsd:element minOccurs="0" name="purposeType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Distinguishes between Conditions according to the business activity they support or assist in accomplishing. Values within this Scheme are not mutually exclusive. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType abstract="true" name="BusinessModelObject_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the highest class of objects in the hierarchy of the Financial Services Business Object Model representing a thing or a concept that is meaningful to the modeled Organization. Business Model Objects are superclasses of many objects that have business significance to business people and are used to provide common behavior across many object definitions. Examples of Business Model Object subclasses are Accounting Unit, Arrangement, Channel, Event, Product etc.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="universalUniqueIdentifier" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>Unique identifier for the Business Model Object</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="alternativeIdentifier" type="pdt:ObjectReference"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="isClassifiedBy" type="crfpTO:ClassificationValue_TO"/>
+          <xsd:element minOccurs="0" name="objectType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The dynamic type for an instance of an object. E.g. for a DepositArrangement, this might specify FixedTermDepositArrangement to qualify what attributes are meaningful.Used to dynamically type an object as an instance of the specified type.Where an object has been created as a Testing/Training or Production object (e.g operationalNature), then the objectType Reference will be replaced by ObjectType, which includes an additional operationalNature element to reflect this where meaningful (e.g. "DepositArrangementType", "FixedTermDeposit", "Training"). The default value if a Reference is used rather than ObjectType, should be "Production"</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasConditions" type="crfpTO:Condition_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the Conditions to which the Business Model Objects refers</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="description" type="pdt:String"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Registration_TO">
+    <xsd:annotation>
+      <xsd:documentation>A formal granting, by an authorized body, of rights, privileges, favors, statuses, or qualifications. Registrations are important from the perspective of being a qualified source of information. Note that a Registration represents the actual granting, not the Document that represents those rights. that document is a Registration Document.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="isIssuedIn" type="crfpTO:GeographicArea_TO"/>
+          <xsd:element minOccurs="0" name="lifeCycleStatus" type="pdt:LifecycleStatus">
+            <xsd:annotation>
+              <xsd:documentation>Life cycle status of the Registration</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="placeOfIssue" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>Place of the registration</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Customer_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party Role played by an Involved Party that is considered to be receiving services or products from the modeled organization or one of its Organization Units, or who is a potential recipient of such services or products.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:InvolvedPartyRole_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="kycAssessmentChannel" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Specifies which channel carried out the Know Your Customer (KYC) assessment for the given customer. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedPartyRole_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular role played by a Role Player in a specific context. This role can specify additional information specific to the context, such as a mailing address for an account holder. The role can be identified independently of the context if the details are unavailable or irrelevant.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:RolePlayer_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="hasForContext" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>The identification of a Business Model Object as the context of an Involved Party Role</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="roleType" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="lifecycleStatus" type="pdt:LifecycleStatus"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ContactPreference_TO">
+    <xsd:annotation>
+      <xsd:documentation>The characteristics related to the way a Role Player wants to be contacted. This includes the contact points, the language, medium, name and timing preferences, the preferred contacting Individual as well as restrictions on the contact frequency. It also defines the usage such as business or private and the purpose, such as billing or mailing. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="contactPoint" type="crfpTO:ContactPoint_TO">
+            <xsd:annotation>
+              <xsd:documentation>One or more points of contact for the Role Player under this Contact Preference</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="coveredArrangements" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>Returns the Arrangements that are covered by this Contact Preference </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="correspondenceDestinationPreference" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>In relation to Arrangements held by the RolePlayer, the destination preference for correspondence on that Arrangement. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType abstract="true" name="RolePlayer_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies an Involved Party or a role played by an Involved Party within the context of the modeled organization.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="firstContactDate" type="pdt:String"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="isPlayingRole" type="crfpTO:InvolvedPartyRole_TO"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="isRegisteredIn" type="crfpTO:PartyRegistration_TO"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasForContactPreference" type="crfpTO:ContactPreference_TO"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="PartyRegistration_TO">
+    <xsd:annotation>
+      <xsd:documentation>An official recognition related to a Role Player. A Party Registration may be backed up by a Documentation Item</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:Registration_TO">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="registersParty" type="crfpTO:RolePlayer_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the Involved Partys that are the subjects of a Party Registration.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="NationalRegistration_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Party Registration that certifies an Involved Party as belonging to or governed by a national governmental entity. For example, social security registration, taxpayer identification, passport, citizenship identity card are forms of National Registration.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:PartyRegistration_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="countryCode" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="hasPrimaryResidence" type="pdt:Boolean"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="IndividualName_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a name structure used to specify a particular Individual or an Involved Party Role played by an Individual. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:InvolvedPartyName_TO">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="middleNames" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The additional names given to an Individual, usually at birth, and which appear sequentially between the first name and last name.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="prefixTitle" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The honorifics or titles that precede the name when addressing an Individual in polite, somewhat formal circumstances.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="suffixTitle" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The titles, qualifications, or positions that follow the &lt;Individual&gt;'s name when addressing her formally or professionally, usually when writing.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="firstName" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The Individual's name normally preceding the last name and typically used to refer to the person in informal circumstances. For Example: John, Mary</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="lastName" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The part of a Individual's name arising from family identifications. e.g. Murphy.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedPartyName_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a name associated with an Involved Party. Multiple names are possible both concurrently and over time, varying by the use of the name such as the birth name or marriage name.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="nameText" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Name text</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="description" type="pdt:Text"/>
+          <xsd:element minOccurs="0" name="startDate" type="pdt:Date"/>
+          <xsd:element minOccurs="0" name="endDate" type="pdt:Date"/>
+          <xsd:element minOccurs="0" name="aliasType" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="usage" type="pdt:Reference"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Organization_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party that is a group of Individuals bound by a common purpose. This includes commercial Organizations such as limited companies, publicly quoted multinationals, subsidiaries, etc. Organizations include Financial Organizations that provides products and services related to the financial services sector of the economy. Examples of such products and services include accepting deposits, making of loans, exchanging foreign currency, providing bill finance, handling foreign trade, managing investments and financing corporations. These financial organizations include the various types of banks (e.g.: retail banks, merchant banks, accepting houses, discount houses, foreign banks), building societies, pension funds, unit trusts, investment trusts and insurance companies. Financial organizations are either recognized as such by law or are regulated by a self regulating organization.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:InvolvedParty_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="incorporationDate" type="pdt:Date">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the date of the Incorporation of the Organization </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isIncorporatedIn" type="crfpTO:GeographicArea_TO"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasTradingAddress" type="crfpTO:PostalAddress_TO">
+            <xsd:annotation>
+              <xsd:documentation>Attribute of the relationship between an Organization and a PostalAddress where the address is registered as a trading address for the Organization. Creation Date: 06/04/2018 Last Change Modeler: Julie Williamson Initiative: Party MDM</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="organizationClassificationType" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="tradeStartMonth" type="pdt:Number">
+            <xsd:annotation>
+              <xsd:documentation>Month the Organization started trading.  Facilitates the requirement to break the trading start date into separate Month and Year elements.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="tradeStartYear" type="pdt:Number">
+            <xsd:annotation>
+              <xsd:documentation>Year the Organization started trading.  Facilitates the requirement to break the trading start date into separate Month and Year elements.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="fiscalYearEnd" type="pdt:Number"/>
+          <xsd:element minOccurs="0" name="areaOfOperation" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="hasInternationalTrade" type="pdt:Reference"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="OrganizationUnit_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party that is a component or subdivision of an Organization established for the purpose of performing discrete functional responsibilities. This typically represents the Organizational structure of the modeled Organization including sections, departments, district offices, projects, and employment positions.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:InvolvedParty_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="parentOrganization" type="crfpTO:Organization_TO">
+            <xsd:annotation>
+              <xsd:documentation>Returns the parent Organization for given Organization Unit. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedPartyAssociation_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies additional details about the association of one Involved Party to another Involved Party, for example, the delegated duty.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="associationStart" type="pdt:DateTime"/>
+          <xsd:element minOccurs="0" name="associatedInvolvedParty" type="crfpTO:InvolvedParty_TO"/>
+          <xsd:element minOccurs="0" name="associationEnd" type="pdt:DateTime"/>
+          <xsd:element minOccurs="0" name="associationType" type="pdt:Reference"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="EducationCourse_TO">
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="startDate" type="pdt:Date"/>
+          <xsd:element minOccurs="0" name="endDate" type="pdt:Date"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Individual_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party that is a natural person who is of interest to the modeled organization.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:InvolvedParty_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="birthDate" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The birth date of the Individual</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="gender" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The Individual's sex or gender.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="maritalStatus" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="deathDate" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The date of the Individual's death. IBM Unique ID: IDM09020</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="occupation" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="birthPlace" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="hasBirthCountry" type="pdt:Reference"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasCitizenships" type="crfpTO:NationalRegistration_TO"/>
+          <xsd:element minOccurs="0" name="additionalCitizenships" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Identifies whether the &lt;Individual&gt; is a citizen of multiple countries and that the number of countries exceeds that in which RBS records the details. Note: In the current Core provider implementation, this indicator represents the situation where there are more than 4 countries of citizenship</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="primaryNationalityRegistration" type="crfpTO:NationalRegistration_TO"/>
+          <xsd:element minOccurs="0" name="isStaff" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="employmentStatus" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="isHighNetWorth" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="specialCreditIndicatorType" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="mainSourceOfWealth" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="mainSourceOfIncome" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="consentToDataUsage" type="pdt:String"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="records" type="crfpTO:EducationCourse_TO"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedParty_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Role Player that is any participant that may have contact with, or that is of interest to the modeled organization, and about which the Financial Institution wishes to maintain information. This includes the modeled organization itself.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:RolePlayer_TO">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasForName" type="crfpTO:InvolvedPartyName_TO">
+            <xsd:annotation>
+              <xsd:documentation>name of the party</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isSensitive" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="hasLegalAddress" type="crfpTO:PostalAddress_TO"/>
+          <xsd:element minOccurs="0" name="hasPartyType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The PartyType of the Involved Party</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasInvolvedPartyAssociation" type="crfpTO:InvolvedPartyAssociation_TO"/>
+          <xsd:element minOccurs="0" name="hasRiskCountry" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="residesAt" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Specifies the Country the Involved Party resides at, for example John Doe resides in Canada.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasTaxRegistrations" type="crfpTO:NationalRegistration_TO"/>
+          <xsd:element minOccurs="0" name="isPoliticallyExposed" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="isPrivateBankParty" type="pdt:String"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+</xsd:schema>
+
+
+
+---------------------
+pom.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.rbs.bdd</groupId>
+    <artifactId>bdd-ms-esp-simulation-service-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <groupId>com.rbs.bdd</groupId>
+  <artifactId>bdd-ms-esp-simulation-service</artifactId>
+  <name>bdd-ms-esp-simulation-service</name>
+  <description>BDD ESP Simulator microservice - This is an example of a BDD ESP Simulator Service.</description>
+
+  <properties>
+    <validation-api.version>1.1.0.Final</validation-api.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.ws.commons.schema</groupId>
+        <artifactId>XmlSchema</artifactId>
+        <version>1.4.3</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <!-- enabling actuator to expose management endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <!-- Used to add hyperlinks to the actuator's endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-hateoas</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>3.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ws.xmlschema</groupId>
+      <artifactId>xmlschema-core</artifactId>
+      <version>2.2.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.ws.commons.schema</groupId>
+      <artifactId>XmlSchema</artifactId>
+      <version>1.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-xml</artifactId>
+      <version>4.0.12</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.ws.commons.schema</groupId>
+          <artifactId>XmlSchema</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Dependency added to do bean validation in spring boot app as it's packaged with jakarta.validation-api.jar -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>software.amazon.awssdk</groupId>-->
+<!--      <artifactId>apache-client</artifactId>-->
+<!--    </dependency>-->
+    <!-- Required for UserIdentityFilter -->
+<!--    <dependency>-->
+<!--      <groupId>org.json</groupId>-->
+<!--      <artifactId>json</artifactId>-->
+<!--      <version>20240303</version>-->
+<!--    </dependency>-->
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>${httpcore.version}</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+
+    <!--    JAXB API-->
+
+    <!-- SOAP Dependencies Start-->
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-core</artifactId>
+      <version>4.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.messaging.saaj</groupId>
+      <artifactId>saaj-impl</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-test</artifactId>
+      <version>4.0.10</version>
+      <scope>test</scope>
+    </dependency
+
+
+
+
+
+    >
+    <dependency>
+      <groupId>jakarta.xml.ws</groupId>
+      <artifactId>jakarta.xml.ws-api</artifactId>
+      <version>4.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.ws</groupId>
+      <artifactId>jaxws-ri</artifactId>
+      <version>4.0.1</version>
+      <type>pom</type>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.woodstox</groupId>
+          <artifactId>woodstox-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Dependency to convert xml to json -->
+    <dependency>
+      <groupId>com.github.javadev</groupId>
+      <artifactId>underscore</artifactId>
+      <version>1.89</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>xml-resolver</groupId>
+      <artifactId>xml-resolver</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <!-- Dependency for caching -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>wsdl4j</groupId>
+      <artifactId>wsdl4j</artifactId>
+      <version>1.6.3</version>
+    </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.vaadin.external.google</groupId>
+          <artifactId>android-json</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.7.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+<!--     Adding JAXB2 Maven Plugin     -->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.10.1</version>
+        <configuration>
+          <excludePackageNames>com.rbs.bdd.generated</excludePackageNames>
+        </configuration>
+      </plugin>
+      <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.13</version>
+          <configuration>
+            <excludes>
+              <exclude>com/rbs/bdd/generated/**</exclude>
+            </excludes>
+          </configuration>
+
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/jaxb</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>jaxb2-maven-plugin</artifactId>
+          <version>3.1.0</version>
+          <executions>
+            <execution>
+              <id>xjc</id>
+              <goals>
+                <goal>xjc</goal>
+              </goals>
+              <phase>generate-sources</phase>
+              <configuration>
+<!--                <bindingDirectory>${project.basedir}/src/main/resources</bindingDirectory>-->
+                <bindingFiles>
+                  <bindingFile>src/main/resources/bindings.xjb</bindingFile>
+                </bindingFiles>
+<!--                <verbose>true</verbose>-->
+<!--                <extension>true</extension>-->
+                <sources>
+<!--                  <source>src/main/resources/xsd</source>-->
+                  <source>${project.basedir}/src/main/resources/xsd/account-validation/ArrValidationForPaymentParameters.xsd</source>
+                  <source>${project.basedir}/src/main/resources/xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd</source>
+                </sources>
+                <outputDirectory>${project.build.directory}/generated-sources/jaxb</outputDirectory>
+                <packageName>com.rbs.bdd.generated</packageName>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <!--to be imported on other projects-->
+              <classifier>original</classifier>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <scm>
+    <connection>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</connection>
+    <url>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</url>
+    <developerConnection>scm:git:${stash.ssh.url}/CPBD/${project.artifactId}-archetype-template.git
+    </developerConnection>
+  </scm>
+
+</project>
+
