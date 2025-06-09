@@ -1,111 +1,373 @@
-package com.rbs.bdd.application.service;
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import com.rbs.bdd.application.port.out.CustomerRetrievalPort;
-import com.rbs.bdd.application.util.ServiceConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.ws.soap.SoapMessage;
+  <parent>
+    <groupId>com.rbs.bdd</groupId>
+    <artifactId>bdd-ms-esp-simulation-service-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+  <groupId>com.rbs.bdd</groupId>
+  <artifactId>bdd-ms-esp-simulation-service</artifactId>
+  <name>bdd-ms-esp-simulation-service</name>
+  <description>BDD ESP Simulator microservice - This is an example of a BDD ESP Simulator Service.</description>
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
+  <properties>
+    <validation-api.version>1.1.0.Final</validation-api.version>
+  </properties>
 
-@Slf4j
-@Service
-public class CustomerRetrievalService implements CustomerRetrievalPort {
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.ws.commons.schema</groupId>
+        <artifactId>XmlSchema</artifactId>
+        <version>1.4.3</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <!-- enabling actuator to expose management endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <!-- Used to add hyperlinks to the actuator's endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-hateoas</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>3.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ws.xmlschema</groupId>
+      <artifactId>xmlschema-core</artifactId>
+      <version>2.2.1</version>
+    </dependency>
 
-    private static final String HARDCODED_ACCOUNT = "GB98MIDL07009312345678";
-    private static final String STATIC_RESPONSE_PATH = "/static-response/customer/retrieval/customer-retrieval-success.xml";
+    <dependency>
+      <groupId>org.apache.ws.commons.schema</groupId>
+      <artifactId>XmlSchema</artifactId>
+      <version>1.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-xml</artifactId>
+      <version>4.0.12</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.ws.commons.schema</groupId>
+          <artifactId>XmlSchema</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Dependency added to do bean validation in spring boot app as it's packaged with jakarta.validation-api.jar -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>software.amazon.awssdk</groupId>-->
+<!--      <artifactId>apache-client</artifactId>-->
+<!--    </dependency>-->
+    <!-- Required for UserIdentityFilter -->
+<!--    <dependency>-->
+<!--      <groupId>org.json</groupId>-->
+<!--      <artifactId>json</artifactId>-->
+<!--      <version>20240303</version>-->
+<!--    </dependency>-->
 
-    @Override
-    public void validateSchema(SoapMessage request) throws SchemaValidationException {
-        // No-op for now if Spring WS validates schema automatically
-        log.info("Schema validated successfully by Spring WS.");
-    }
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
-    @Override
-    public DOMSource retrieveCustomer(Document requestDocument) {
-        try {
-            String accountNumber = extractAccountNumber(requestDocument);
-            log.info("Extracted Account Number: {}", accountNumber);
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>${httpcore.version}</version>
+    </dependency>
 
-            if (HARDCODED_ACCOUNT.equals(accountNumber)) {
-                return loadAndModifySuccessResponse(requestDocument, accountNumber);
-            } else {
-                return loadErrorResponse("MOD97 failure for the IBAN", accountNumber);
-            }
 
-        } catch (Exception e) {
-            log.error("Error in customer retrieval logic", e);
-            throw new RuntimeException("Customer retrieval failed", e);
-        }
-    }
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+    </dependency>
 
-    private String extractAccountNumber(Document doc) throws Exception {
-        XPath xPath = XPathFactory.newInstance().newXPath();
-        return xPath.compile("//ns2:retrieveCustomer/ns2:account/ns2:identifier")
-                .evaluate(doc)
-                .trim();
-    }
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>4.0.2</version>
+    </dependency>
 
-    private DOMSource loadAndModifySuccessResponse(Document request, String accountNumber) throws Exception {
-        InputStream is = getClass().getResourceAsStream(STATIC_RESPONSE_PATH);
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document responseDoc = builder.parse(is);
+    <!--    JAXB API-->
 
-        XPath xPath = XPathFactory.newInstance().newXPath();
-        String transactionId = extractTransactionId(request);
+    <!-- SOAP Dependencies Start-->
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-core</artifactId>
+      <version>4.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.messaging.saaj</groupId>
+      <artifactId>saaj-impl</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-test</artifactId>
+      <version>4.0.10</version>
+      <scope>test</scope>
+    </dependency
 
-        // Modify transactionId
-        Node txnNode = (Node) xPath.compile("//ns2:transactionId").evaluate(responseDoc, XPathConstants.NODE);
-        if (txnNode != null) txnNode.setTextContent(transactionId);
 
-        // Modify timestamp
-        Node timestampNode = (Node) xPath.compile("//ns2:timestamp").evaluate(responseDoc, XPathConstants.NODE);
-        if (timestampNode != null)
-            timestampNode.setTextContent(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
 
-        return new DOMSource(responseDoc);
-    }
 
-    private DOMSource loadErrorResponse(String errorMessage, String transactionId) throws Exception {
-        InputStream is = getClass().getResourceAsStream(ServiceConstants.ERROR_XML_PATH);
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document errorDoc = builder.parse(is);
 
-        XPath xPath = XPathFactory.newInstance().newXPath();
+    >
+    <dependency>
+      <groupId>jakarta.xml.ws</groupId>
+      <artifactId>jakarta.xml.ws-api</artifactId>
+      <version>4.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.ws</groupId>
+      <artifactId>jaxws-ri</artifactId>
+      <version>4.0.1</version>
+      <type>pom</type>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.woodstox</groupId>
+          <artifactId>woodstox-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
-        Node txnNode = (Node) xPath.compile("//ns2:transactionId").evaluate(errorDoc, XPathConstants.NODE);
-        if (txnNode != null) txnNode.setTextContent(transactionId);
+    <!-- Dependency to convert xml to json -->
+    <dependency>
+      <groupId>com.github.javadev</groupId>
+      <artifactId>underscore</artifactId>
+      <version>1.89</version>
+    </dependency>
 
-        Node descNode = (Node) xPath.compile("//ns2:description").evaluate(errorDoc, XPathConstants.NODE);
-        if (descNode != null) descNode.setTextContent(errorMessage);
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>xml-resolver</groupId>
+      <artifactId>xml-resolver</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <!-- Dependency for caching -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>wsdl4j</groupId>
+      <artifactId>wsdl4j</artifactId>
+      <version>1.6.3</version>
+    </dependency>
 
-        Node timestampNode = (Node) xPath.compile("//ns2:timestamp").evaluate(errorDoc, XPathConstants.NODE);
-        if (timestampNode != null)
-            timestampNode.setTextContent(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.vaadin.external.google</groupId>
+          <artifactId>android-json</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
-        return new DOMSource(errorDoc);
-    }
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.7.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
 
-    private String extractTransactionId(Document doc) throws Exception {
-        XPath xPath = XPathFactory.newInstance().newXPath();
-        return xPath.compile("//ns2:retrieveCustomer/ns2:refRequestIds/ns2:transactionId")
-                .evaluate(doc)
-                .trim();
-    }
-}
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+<!--     Adding JAXB2 Maven Plugin     -->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.10.1</version>
+        <configuration>
+          <excludePackageNames>com.rbs.bdd.generated</excludePackageNames>
+        </configuration>
+      </plugin>
+      <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.13</version>
+          <configuration>
+            <excludes>
+              <exclude>com/rbs/bdd/generated/**</exclude>
+            </excludes>
+          </configuration>
+
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/jaxb</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>jaxb2-maven-plugin</artifactId>
+          <version>3.1.0</version>
+          <executions>
+            <execution>
+              <id>xjc</id>
+              <goals>
+                <goal>xjc</goal>
+              </goals>
+              <phase>generate-sources</phase>
+              <configuration>
+                <bindingDirectory>${project.basedir}/src/main/resources</bindingDirectory>
+                <bindingFiles>
+                  <bindingFile>bindings.xjb</bindingFile>
+                </bindingFiles>
+<!--                <verbose>true</verbose>-->
+               <extension>true</extension>
+                <sources>
+<!--                  <source>src/main/resources/xsd</source>-->
+                  <source>${project.basedir}/src/main/resources/xsd/account-validation/ArrValidationForPaymentParameters.xsd</source>
+                  <source>${project.basedir}/src/main/resources/xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd</source>
+                  <source>${project.basedir}/src/main/resources/xsd/shared</source>
+                </sources>
+                <outputDirectory>${project.build.directory}/generated-sources/jaxb</outputDirectory>
+                <packageName>com.rbs.bdd.generated</packageName>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <!--to be imported on other projects-->
+              <classifier>original</classifier>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <scm>
+    <connection>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</connection>
+    <url>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</url>
+    <developerConnection>scm:git:${stash.ssh.url}/CPBD/${project.artifactId}-archetype-template.git
+    </developerConnection>
+  </scm>
+
+</project>
+
+
+------------------------
+
+bindings.xjb
+
+
+<jaxb:bindings
+    xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    jaxb:version="2.1">
+
+    <jaxb:globalBindings>
+        <!-- Prevent default constructors in enums -->
+        <jaxb:javaType name="java.lang.String" xmlType="xs:string" printMethod="javax.xml.bind.DatatypeConverter.printString" parseMethod="javax.xml.bind.DatatypeConverter.parseString"/>
+    </jaxb:globalBindings>
+</jaxb:bindings>
