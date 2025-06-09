@@ -1,52 +1,79 @@
-<plugin>
-  <groupId>org.codehaus.mojo</groupId>
-  <artifactId>build-helper-maven-plugin</artifactId>
-  <executions>
-    <execution>
-      <id>add-source</id>
-      <phase>generate-sources</phase>
-      <goals><goal>add-source</goal></goals>
-      <configuration>
-        <sources>
-          <source>${project.build.directory}/generated-sources/jaxb/account</source>
-          <source>${project.build.directory}/generated-sources/jaxb/customer</source>
-        </sources>
-      </configuration>
-    </execution>
-  </executions>
-</plugin>
+            <!-- JAXB Code Generation -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxb2-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>xjc</id>
+                        <goals>
+                            <goal>xjc</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <schemaDirectory>${project.basedir}/src/main/resources/xsd</schemaDirectory>
+                            <bindingDirectory>${project.basedir}/src/main/resources/jaxb-bindings</bindingDirectory>
+                            <bindingFiles>
+                                <bindingFile>src/main/resources/jaxb-bindings/bindings.xjb</bindingFile>
+                            </bindingFiles>
+                            <sources>
+                                <source>${project.basedir}/src/main/resources/xsd/account-validation</source>
+                                <source>${project.basedir}/src/main/resources/xsd/customer-retrieval</source>
+                            </sources>
+                            <outputDirectory>${project.build.directory}/generated-sources/jaxb</outputDirectory>
+                            <clearOutputDir>false</clearOutputDir>
+                            <verbose>true</verbose>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Add generated source to compilation -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/jaxb</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
 
---------
 
-<execution>
-  <id>xjc-customer</id>
-  <goals><goal>xjc</goal></goals>
-  <configuration>
-    <sources>
-      <source>${project.basedir}/src/main/resources/xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd</source>
-      <source>${project.basedir}/src/main/resources/xsd/shared</source>
-    </sources>
-    <outputDirectory>${project.build.directory}/generated-sources/jaxb/customer</outputDirectory>
-    <packageName>com.rbs.bdd.generated.customer</packageName>
-    <extension>true</extension>
-  </configuration>
-</execution>
+------
+<jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+               jaxb:version="2.1">
 
------
+    <!-- Custom package for shared/common XSD types -->
+    <jaxb:bindings schemaLocation="../xsd/shared/ServiceDefinitions.xsd" node="/xsd:schema">
+        <jaxb:schemaBindings>
+            <jaxb:package name="com.rbs.bdd.generated.shared"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
 
-<execution>
-  <id>xjc-account</id>
-  <goals><goal>xjc</goal></goals>
-  <configuration>
-    <sources>
-      <source>${project.basedir}/src/main/resources/xsd/account-validation/ArrValidationForPaymentParameters.xsd</source>
-      <source>${project.basedir}/src/main/resources/xsd/shared</source>
-    </sources>
-    <outputDirectory>${project.build.directory}/generated-sources/jaxb/account</outputDirectory>
-    <packageName>com.rbs.bdd.generated.account</packageName>
-    <extension>true</extension>
-  </configuration>
-</execution>
+    <!-- Avoid conflict for BaseTransferObject, GeographicAreaTO etc. -->
+    <jaxb:bindings schemaLocation="../xsd/account-validation/ArrValidationForPaymentTransferObjects.xsd" node="/xsd:schema">
+        <jaxb:schemaBindings>
+            <jaxb:package name="com.rbs.bdd.generated.accountvalidation"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
 
------
+    <jaxb:bindings schemaLocation="../xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd" node="/xsd:schema">
+        <jaxb:schemaBindings>
+            <jaxb:package name="com.rbs.bdd.generated.customerretrieval"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+
+</jaxb:bindings>
