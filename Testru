@@ -1,97 +1,394 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-2025-06-09T15:38:47.602+01:00  INFO 20988 --- [  restartedMain] com.rbs.bdd.EspSimulatorEngine           : Starting EspSimulatorEngine using Java 21.0.1 with PID 20988 (F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\classes started by MishrVx in F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service)
-2025-06-09T15:38:47.606+01:00  INFO 20988 --- [  restartedMain] com.rbs.bdd.EspSimulatorEngine           : No active profile set, falling back to 1 default profile: "default"
-2025-06-09T15:38:47.711+01:00  INFO 20988 --- [  restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\dev\devtools\cache\m2_repository\com\sun\xml\bind\jaxb-impl\4.0.2\jaxb-impl-4.0.2.jar referenced one or more files that do not exist: file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/bind/jaxb-impl/4.0.2/jaxb-core.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/bind/jaxb-impl/4.0.2/angus-activation.jar
-2025-06-09T15:38:47.712+01:00  INFO 20988 --- [  restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\dev\devtools\cache\m2_repository\com\sun\xml\bind\jaxb-core\4.0.5\jaxb-core-4.0.5.jar referenced one or more files that do not exist: file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/bind/jaxb-core/4.0.5/jakarta.activation-api.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/bind/jaxb-core/4.0.5/jakarta.xml.bind-api.jar
-2025-06-09T15:38:47.712+01:00  INFO 20988 --- [  restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\dev\devtools\cache\m2_repository\com\sun\xml\ws\jaxws-rt\4.0.1\jaxws-rt-4.0.1.jar referenced one or more files that do not exist: file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/jakarta.annotation-api.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/jakarta.activation-api.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/jakarta.mail-api.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/jakarta.xml.bind-api.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/jakarta.xml.ws-api.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/jakarta.xml.soap-api.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/angus-activation.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/angus-mail.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/FastInfoset.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/gmbal-api-only.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/ha-api.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/jaxb-core.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/jaxb-impl.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/management-api.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/mimepull.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/saaj-impl.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/stax-ex.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/stax2-api.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/streambuffer.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-rt/4.0.1/woodstox-core.jar
-2025-06-09T15:38:47.712+01:00  INFO 20988 --- [  restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\dev\devtools\cache\m2_repository\org\glassfish\ha\ha-api\3.1.13\ha-api-3.1.13.jar referenced one or more files that do not exist: file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/hk2.jar,file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/hk2-core.jar,file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/class-model.jar,file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/config-api.jar,file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/tiger-types.jar,file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/bean-validator.jar,file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/jtype.jar,file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/auto-depends.jar,file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/jakarta.inject-api.jar,file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/asm-all-repackaged.jar,file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/hk2-api.jar,file:/C:/dev/devtools/cache/m2_repository/org/glassfish/ha/ha-api/3.1.13/osgi-resource-locator.jar
-2025-06-09T15:38:47.712+01:00  INFO 20988 --- [  restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\dev\devtools\cache\m2_repository\com\sun\xml\ws\jaxws-tools\4.0.1\jaxws-tools-4.0.1.jar referenced one or more files that do not exist: file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-tools/4.0.1/jaxws-rt.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-tools/4.0.1/jaxb-xjc.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/ws/jaxws-tools/4.0.1/jaxb-jxc.jar
-2025-06-09T15:38:47.712+01:00  INFO 20988 --- [  restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\dev\devtools\cache\m2_repository\com\sun\xml\bind\jaxb-xjc\4.0.5\jaxb-xjc-4.0.5.jar referenced one or more files that do not exist: file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/bind/jaxb-xjc/4.0.5/jaxb-core.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/bind/jaxb-xjc/4.0.5/jaxb-impl.jar
-2025-06-09T15:38:47.712+01:00  INFO 20988 --- [  restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\dev\devtools\cache\m2_repository\com\sun\xml\bind\jaxb-jxc\4.0.5\jaxb-jxc-4.0.5.jar referenced one or more files that do not exist: file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/bind/jaxb-jxc/4.0.5/jaxb-core.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/bind/jaxb-jxc/4.0.5/jaxb-impl.jar,file:/C:/dev/devtools/cache/m2_repository/com/sun/xml/bind/jaxb-jxc/4.0.5/jaxb-xjc.jar
-2025-06-09T15:38:47.712+01:00  INFO 20988 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
-2025-06-09T15:38:47.712+01:00  INFO 20988 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
-2025-06-09T15:38:50.374+01:00  WARN 20988 --- [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'soapWebServiceConfig' of type [com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [annotationActionEndpointMapping]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
-2025-06-09T15:38:50.375+01:00  WARN 20988 --- [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.ws.config.annotation.DelegatingWsConfiguration' of type [org.springframework.ws.config.annotation.DelegatingWsConfiguration$$SpringCGLIB$$0] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). The currently created BeanPostProcessor [annotationActionEndpointMapping] is declared through a non-static factory method on that class; consider declaring it as static instead.
-2025-06-09T15:38:50.668+01:00  INFO 20988 --- [  restartedMain] o.s.x.x.c.CommonsXsdSchemaCollection     : Loaded class path resource [xsd/account-validation/ArrValidationForPaymentParameters.xsd]
-2025-06-09T15:38:50.669+01:00  WARN 20988 --- [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'updateContactXsd' of type [org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [annotationActionEndpointMapping]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
-2025-06-09T15:38:50.781+01:00  INFO 20988 --- [  restartedMain] .w.s.a.s.AnnotationActionEndpointMapping : Supporting [WS-Addressing August 2004, WS-Addressing 1.0]
-2025-06-09T15:38:51.374+01:00  INFO 20988 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2025-06-09T15:38:51.401+01:00  INFO 20988 --- [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2025-06-09T15:38:51.402+01:00  INFO 20988 --- [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.40]
-2025-06-09T15:38:51.494+01:00  INFO 20988 --- [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2025-06-09T15:38:51.495+01:00  INFO 20988 --- [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3781 ms
-2025-06-09T15:38:51.854+01:00 DEBUG 20988 --- [  restartedMain] yloadRootAnnotationMethodEndpointMapping : Looking for endpoints in application context: org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@6f3fff64, started on Mon Jun 09 15:38:47 BST 2025
-2025-06-09T15:38:51.858+01:00 DEBUG 20988 --- [  restartedMain] yloadRootAnnotationMethodEndpointMapping : Mapped [{http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/}validateArrangementForPayment] onto endpoint [public void com.rbs.bdd.infrastructure.soap.api.PaymentValidationSoapAdapter.validateArrangementForPayment(com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest,org.springframework.ws.context.MessageContext)]
-2025-06-09T15:38:51.858+01:00 DEBUG 20988 --- [  restartedMain] yloadRootAnnotationMethodEndpointMapping : Mapped [{http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/}retrieveCustomer] onto endpoint [public void com.rbs.bdd.infrastructure.soap.api.PaymentValidationSoapAdapter.validateCustomerRetrieval(com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest,org.springframework.ws.context.MessageContext)]
-2025-06-09T15:38:51.863+01:00 DEBUG 20988 --- [  restartedMain] oapActionAnnotationMethodEndpointMapping : Looking for endpoints in application context: org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@6f3fff64, started on Mon Jun 09 15:38:47 BST 2025
-2025-06-09T15:38:51.902+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.s.e.a.DefaultMethodEndpointAdapter : No MethodArgumentResolvers set, using defaults: [org.springframework.ws.server.endpoint.adapter.method.dom.DomPayloadMethodProcessor@760409d7, org.springframework.ws.server.endpoint.adapter.method.MessageContextMethodArgumentResolver@308a8995, org.springframework.ws.server.endpoint.adapter.method.SourcePayloadMethodProcessor@e737342, org.springframework.ws.server.endpoint.adapter.method.XPathParamMethodArgumentResolver@29551c8c, org.springframework.ws.soap.server.endpoint.adapter.method.SoapMethodArgumentResolver@7fc9f2c0, org.springframework.ws.soap.server.endpoint.adapter.method.SoapHeaderElementMethodArgumentResolver@1b6b1a8d, org.springframework.ws.server.endpoint.adapter.method.jaxb.XmlRootElementPayloadMethodProcessor@e9793c1, org.springframework.ws.server.endpoint.adapter.method.jaxb.JaxbElementPayloadMethodProcessor@f275fe3, org.springframework.ws.server.endpoint.adapter.method.StaxPayloadMethodArgumentResolver@3f48f335]
-2025-06-09T15:38:51.907+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.s.e.a.DefaultMethodEndpointAdapter : No MethodReturnValueHandlers set, using defaults: [org.springframework.ws.server.endpoint.adapter.method.dom.DomPayloadMethodProcessor@7cb43923, org.springframework.ws.server.endpoint.adapter.method.SourcePayloadMethodProcessor@4e0fa4ef, org.springframework.ws.server.endpoint.adapter.method.jaxb.XmlRootElementPayloadMethodProcessor@7be2228a, org.springframework.ws.server.endpoint.adapter.method.jaxb.JaxbElementPayloadMethodProcessor@34bb798]
-2025-06-09T15:38:52.055+01:00 DEBUG 20988 --- [  restartedMain] s.w.w.w.p.InliningXsdSchemaTypesProvider : Inlining CommonsXsdSchema{http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/}
-2025-06-09T15:38:52.080+01:00 DEBUG 20988 --- [  restartedMain] s.w.w.w.p.InliningXsdSchemaTypesProvider : Inlining CommonsXsdSchema{http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/}
-2025-06-09T15:38:52.092+01:00 DEBUG 20988 --- [  restartedMain] s.w.w.w.p.InliningXsdSchemaTypesProvider : Inlining CommonsXsdSchema{http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/}
-2025-06-09T15:38:52.100+01:00 DEBUG 20988 --- [  restartedMain] s.w.w.w.p.InliningXsdSchemaTypesProvider : Inlining CommonsXsdSchema{http://com/rbsg/soa/Services/Definitions/V03/}
-2025-06-09T15:38:52.104+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.w.w.p.DefaultMessagesProvider      : Looking for elements in schema with target namespace [http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/]
-2025-06-09T15:38:52.106+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.w.w.p.DefaultMessagesProvider      : Creating message [{http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/}validateArrangementForPaymentResponse]
-2025-06-09T15:38:52.107+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.w.w.p.DefaultMessagesProvider      : Looking for elements in schema with target namespace [http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/]
-2025-06-09T15:38:52.107+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.w.w.p.DefaultMessagesProvider      : Looking for elements in schema with target namespace [http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/]
-2025-06-09T15:38:52.107+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.w.w.p.DefaultMessagesProvider      : Looking for elements in schema with target namespace [http://com/rbsg/soa/Services/Definitions/V03/]
-2025-06-09T15:38:52.110+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.w.w.p.SuffixBasedPortTypesProvider : Creating port type [{http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/}IArrValidationForPayment]
-2025-06-09T15:38:52.115+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.w.w.p.SuffixBasedPortTypesProvider : Adding operation [validateArrangementForPayment] to port type [{http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/}IArrValidationForPayment]
-2025-06-09T15:38:52.116+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.w.wsdl11.provider.Soap11Provider   : Creating binding [{http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/}IArrValidationForPaymentSoap11]
-2025-06-09T15:38:52.120+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.w.wsdl11.provider.Soap11Provider   : Creating service [{http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/}IArrValidationForPaymentService]
-2025-06-09T15:38:52.121+01:00 DEBUG 20988 --- [  restartedMain] o.s.w.w.wsdl11.provider.Soap11Provider   : Adding port [IArrValidationForPaymentSoap11] to service [{http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/}IArrValidationForPaymentService]
-2025-06-09T15:38:52.179+01:00  WARN 20988 --- [  restartedMain] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'CustomerRetrievalForPaymentParameters' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-2025-06-09T15:38:52.185+01:00  INFO 20988 --- [  restartedMain] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
-2025-06-09T15:38:52.224+01:00  INFO 20988 --- [  restartedMain] .s.b.a.l.ConditionEvaluationReportLogger :
+  <parent>
+    <groupId>com.rbs.bdd</groupId>
+    <artifactId>bdd-ms-esp-simulation-service-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
 
-Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
-2025-06-09T15:38:52.333+01:00 ERROR 20988 --- [  restartedMain] o.s.boot.SpringApplication               : Application run failed
+  <groupId>com.rbs.bdd</groupId>
+  <artifactId>bdd-ms-esp-simulation-service</artifactId>
+  <name>bdd-ms-esp-simulation-service</name>
+  <description>BDD ESP Simulator microservice - This is an example of a BDD ESP Simulator Service.</description>
 
-org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'CustomerRetrievalForPaymentParameters' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-        at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:657) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:489) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1367) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1197) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1221) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1187) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1122) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:987) ~[spring-context-6.2.6.jar:6.2.6]
-        at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627) ~[spring-context-6.2.6.jar:6.2.6]
-        at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:753) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.run(SpringApplication.java:1362) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.run(SpringApplication.java:1351) ~[spring-boot-3.4.5.jar:3.4.5]
-        at com.rbs.bdd.EspSimulatorEngine.main(EspSimulatorEngine.java:21) ~[classes/:na]
-        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
-        at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
-        at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:50) ~[spring-boot-devtools-3.4.5.jar:3.4.5]
-Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:199) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiateWithFactoryMethod(SimpleInstantiationStrategy.java:88) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:168) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653) ~[spring-beans-6.2.6.jar:6.2.6]
-        ... 24 common frames omitted
-Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1818) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.resolveBeanReference(ConfigurationClassEnhancer.java:425) ~[spring-context-6.2.6.jar:6.2.6]
-        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:396) ~[spring-context-6.2.6.jar:6.2.6]
-        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0.updateCustomerRetrievalXsd(<generated>) ~[classes/:na]
-        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig.customerRetrievalWSDL(SoapWebServiceConfig.java:119) ~[classes/:na]
-        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0.CGLIB$customerRetrievalWSDL$3(<generated>) ~[classes/:na]
-        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$FastClass$$1.invoke(<generated>) ~[classes/:na]
-        at org.springframework.cglib.proxy.MethodProxy.invokeSuper(MethodProxy.java:258) ~[spring-core-6.2.6.jar:6.2.6]
-        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:393) ~[spring-context-6.2.6.jar:6.2.6]
+  <properties>
+    <validation-api.version>1.1.0.Final</validation-api.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.ws.commons.schema</groupId>
+        <artifactId>XmlSchema</artifactId>
+        <version>1.4.3</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <!-- enabling actuator to expose management endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <!-- Used to add hyperlinks to the actuator's endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-hateoas</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ws.xmlschema</groupId>
+      <artifactId>xmlschema-core</artifactId>
+      <version>2.2.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.ws.commons.schema</groupId>
+      <artifactId>XmlSchema</artifactId>
+      <version>1.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-xml</artifactId>
+      <version>4.0.12</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.ws.commons.schema</groupId>
+          <artifactId>XmlSchema</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Dependency added to do bean validation in spring boot app as it's packaged with jakarta.validation-api.jar -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>software.amazon.awssdk</groupId>-->
+<!--      <artifactId>apache-client</artifactId>-->
+<!--    </dependency>-->
+    <!-- Required for UserIdentityFilter -->
+<!--    <dependency>-->
+<!--      <groupId>org.json</groupId>-->
+<!--      <artifactId>json</artifactId>-->
+<!--      <version>20240303</version>-->
+<!--    </dependency>-->
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>${httpcore.version}</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+
+    <!--    JAXB API-->
+
+    <!-- SOAP Dependencies Start-->
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-core</artifactId>
+      <version>4.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.messaging.saaj</groupId>
+      <artifactId>saaj-impl</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-test</artifactId>
+      <version>4.0.10</version>
+      <scope>test</scope>
+    </dependency
+
+
+
+
+
+    >
+    <dependency>
+      <groupId>jakarta.xml.ws</groupId>
+      <artifactId>jakarta.xml.ws-api</artifactId>
+      <version>4.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.ws</groupId>
+      <artifactId>jaxws-ri</artifactId>
+      <version>4.0.1</version>
+      <type>pom</type>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.woodstox</groupId>
+          <artifactId>woodstox-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Dependency to convert xml to json -->
+    <dependency>
+      <groupId>com.github.javadev</groupId>
+      <artifactId>underscore</artifactId>
+      <version>1.89</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>xml-resolver</groupId>
+      <artifactId>xml-resolver</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <!-- Dependency for caching -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>wsdl4j</groupId>
+      <artifactId>wsdl4j</artifactId>
+      <version>1.6.3</version>
+    </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.vaadin.external.google</groupId>
+          <artifactId>android-json</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.7.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+<!--     Adding JAXB2 Maven Plugin     -->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.10.1</version>
+        <configuration>
+          <excludePackageNames>com.rbs.bdd.generated</excludePackageNames>
+        </configuration>
+      </plugin>
+      <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.13</version>
+          <configuration>
+            <excludes>
+              <exclude>com/rbs/bdd/generated/**</exclude>
+            </excludes>
+          </configuration>
+
+      </plugin>
+      <!-- JAXB Code Generation -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>jaxb2-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>xjc</id>
+            <goals>
+              <goal>xjc</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <arguments>
+                <argument>-b</argument>
+                <argument>${project.basedir}/src/main/resources/jaxb-bindings/bindings.xjb</argument>
+              </arguments>
+              <sources>
+                <source>${project.basedir}/src/main/resources/xsd/account-validation</source>
+                <source>${project.basedir}/src/main/resources/xsd/customer-retrieval</source>
+              </sources>
+              <outputDirectory>${project.build.directory}/generated-sources/jaxb</outputDirectory>
+              <clearOutputDir>false</clearOutputDir>
+              <verbose>true</verbose>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Add generated source to compilation -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/jaxb</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <!--to be imported on other projects-->
+              <classifier>original</classifier>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <scm>
+    <connection>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</connection>
+    <url>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</url>
+    <developerConnection>scm:git:${stash.ssh.url}/CPBD/${project.artifactId}-archetype-template.git
+    </developerConnection>
+  </scm>
+
+</project>
+
+
+-------------------
+
+
+
+
+<jaxb:bindings xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
+               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+               jaxb:version="3.0">
+
+    <!-- Custom package for shared/common XSD types -->
+    <jaxb:bindings schemaLocation="../xsd/shared/ServiceDefinitions.xsd" node="/xsd:schema">
+        <jaxb:schemaBindings>
+            <jaxb:package name="com.rbs.bdd.generated.shared"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+     <jaxb:bindings schemaLocation="../xsd/shared/PrimitiveDatatypes.xsd" node="/xsd:schema">
+            <jaxb:schemaBindings>
+                <jaxb:package name="com.rbs.bdd.generated.shared"/>
+            </jaxb:schemaBindings>
+        </jaxb:bindings>
+
+
+    <!-- Avoid conflict for BaseTransferObject, GeographicAreaTO etc. -->
+    <jaxb:bindings schemaLocation="../xsd/account-validation/ArrValidationForPaymentTransferObjects.xsd" node="/xsd:schema">
+        <jaxb:schemaBindings>
+            <jaxb:package name="com.rbs.bdd.generated.accountvalidation"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+
+    <jaxb:bindings schemaLocation="../xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd" node="/xsd:schema">
+        <jaxb:schemaBindings>
+            <jaxb:package name="com.rbs.bdd.generated.customerretrieval"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+
+</jaxb:bindings>
