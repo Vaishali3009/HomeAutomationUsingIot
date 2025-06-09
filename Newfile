@@ -1,0 +1,111 @@
+package com.rbs.bdd.application.service;
+
+import com.rbs.bdd.application.exception.SchemaValidationException;
+import com.rbs.bdd.application.port.out.CustomerRetrievalPort;
+import com.rbs.bdd.application.util.ServiceConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.ws.soap.SoapMessage;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+@Slf4j
+@Service
+public class CustomerRetrievalService implements CustomerRetrievalPort {
+
+    private static final String HARDCODED_ACCOUNT = "GB98MIDL07009312345678";
+    private static final String STATIC_RESPONSE_PATH = "/static-response/customer/retrieval/customer-retrieval-success.xml";
+
+    @Override
+    public void validateSchema(SoapMessage request) throws SchemaValidationException {
+        // No-op for now if Spring WS validates schema automatically
+        log.info("Schema validated successfully by Spring WS.");
+    }
+
+    @Override
+    public DOMSource retrieveCustomer(Document requestDocument) {
+        try {
+            String accountNumber = extractAccountNumber(requestDocument);
+            log.info("Extracted Account Number: {}", accountNumber);
+
+            if (HARDCODED_ACCOUNT.equals(accountNumber)) {
+                return loadAndModifySuccessResponse(requestDocument, accountNumber);
+            } else {
+                return loadErrorResponse("MOD97 failure for the IBAN", accountNumber);
+            }
+
+        } catch (Exception e) {
+            log.error("Error in customer retrieval logic", e);
+            throw new RuntimeException("Customer retrieval failed", e);
+        }
+    }
+
+    private String extractAccountNumber(Document doc) throws Exception {
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        return xPath.compile("//ns2:retrieveCustomer/ns2:account/ns2:identifier")
+                .evaluate(doc)
+                .trim();
+    }
+
+    private DOMSource loadAndModifySuccessResponse(Document request, String accountNumber) throws Exception {
+        InputStream is = getClass().getResourceAsStream(STATIC_RESPONSE_PATH);
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document responseDoc = builder.parse(is);
+
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        String transactionId = extractTransactionId(request);
+
+        // Modify transactionId
+        Node txnNode = (Node) xPath.compile("//ns2:transactionId").evaluate(responseDoc, XPathConstants.NODE);
+        if (txnNode != null) txnNode.setTextContent(transactionId);
+
+        // Modify timestamp
+        Node timestampNode = (Node) xPath.compile("//ns2:timestamp").evaluate(responseDoc, XPathConstants.NODE);
+        if (timestampNode != null)
+            timestampNode.setTextContent(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+
+        return new DOMSource(responseDoc);
+    }
+
+    private DOMSource loadErrorResponse(String errorMessage, String transactionId) throws Exception {
+        InputStream is = getClass().getResourceAsStream(ServiceConstants.ERROR_XML_PATH);
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document errorDoc = builder.parse(is);
+
+        XPath xPath = XPathFactory.newInstance().newXPath();
+
+        Node txnNode = (Node) xPath.compile("//ns2:transactionId").evaluate(errorDoc, XPathConstants.NODE);
+        if (txnNode != null) txnNode.setTextContent(transactionId);
+
+        Node descNode = (Node) xPath.compile("//ns2:description").evaluate(errorDoc, XPathConstants.NODE);
+        if (descNode != null) descNode.setTextContent(errorMessage);
+
+        Node timestampNode = (Node) xPath.compile("//ns2:timestamp").evaluate(errorDoc, XPathConstants.NODE);
+        if (timestampNode != null)
+            timestampNode.setTextContent(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+
+        return new DOMSource(errorDoc);
+    }
+
+    private String extractTransactionId(Document doc) throws Exception {
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        return xPath.compile("//ns2:retrieveCustomer/ns2:refRequestIds/ns2:transactionId")
+                .evaluate(doc)
+                .trim();
+    }
+}
