@@ -36,14 +36,14 @@ import org.springframework.ws.WebServiceMessage;
  * Entry port for handling SOAP requests related to payment validation.
  * Follows hexagonal architecture's `port in` pattern.
  */
-public class CustomerRetrievalPort {
+public interface CustomerRetrievalPort {
         /**
          * Validates a customer retrieval request by delegating to the underlying orchestrator/service.
          *
          * @param request The SOAP request payload.
          * @param message The outgoing WebServiceMessage to be modified and returned.
          */
-        void validateCustomerRetrieval(ValidateArrangementForPaymentRequest request, WebServiceMessage message);
+        void validateCustomerRetrieval(RetrieveCustomerRequest request, WebServiceMessage message);
 
 
     }
@@ -86,7 +86,8 @@ public interface AccountValidationPort {
 
 write the code for customer retrieval
 
-package com.rbs.bdd.application.port.out;
+
+ package com.rbs.bdd.application.port.out;
 
 
 
@@ -103,7 +104,7 @@ public interface RetrieveCustomerPort {
      *
      * @param request The SOAP request payload.
      */
-    void validateSchema(ValidateArrangementForPaymentRequest request);
+    void validateSchema(RetrieveCustomerRequest request);
 
 
     /**
@@ -113,9 +114,10 @@ public interface RetrieveCustomerPort {
      * @param request The incoming SOAP request.
      * @param message The WebServiceMessage to write the modified response to.
      */
-    void validateBusinessRules(ValidateArrangementForPaymentRequest request, WebServiceMessage message);
+    void validateBusinessRules(RetrieveCustomerRequest request, WebServiceMessage message);
 
 }
+
 
 
 ----------------------
@@ -445,7 +447,43 @@ import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
 public class CustomerRetrievalService  implements RetrieveCustomerPort {
 }
 
+----------------------------------------
+package com.rbs.bdd.application.service;
 
+import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
+import com.rbs.bdd.application.port.in.PaymentValidationPort;
+import com.rbs.bdd.application.port.out.AccountValidationPort;
+import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.ws.WebServiceMessage;
+
+
+/**
+ * Service class responsible for orchestrating the validation flow of Customer Retrieval requests.
+ * Implements {@link CustomerRetrievalPort} and delegates schema and business rule validation
+ * to the appropriate output port.
+ */
+@Service
+@RequiredArgsConstructor
+public class CustomerRetrievalOrchestrator implements CustomerRetrievalPort {
+
+    private final RetrieveCustomerPort retrieveCustomerPort;
+
+
+    /**
+     * Entry point for handling the SOAP request. Validates schema and applies business rules.
+     *
+     * @param request the incoming SOAP request payload
+     * @param message the SOAP WebServiceMessage used to write the final response
+     */
+    @Override
+    public void validateCustomerRetrieval(RetrieveCustomerRequest request, WebServiceMessage message) {
+        retrieveCustomerPort.validateSchema(request); // automatic validation through interceptors
+        retrieveCustomerPort.validateBusinessRules(request, message);
+    }
+
+}
 
 ------------------------------------------
 
@@ -568,7 +606,7 @@ public class SoapWebServiceConfig extends WsConfigurerAdapter {
      * @throws SchemaValidationException if XSD loading fails
      */
     @Bean(name = "ArrValidationForPaymentParameters")
-    public DefaultWsdl11Definition defaultWsdl11Definition() throws SchemaValidationException {
+    public DefaultWsdl11Definition accountValidationWSDL() throws SchemaValidationException {
         DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
         wsdl11Definition.setPortTypeName("IArrValidationForPayment");
         wsdl11Definition.setLocationUri("/ws");
@@ -595,7 +633,47 @@ public class SoapWebServiceConfig extends WsConfigurerAdapter {
             throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
         }
     }
+
+
+    /**
+     * Publishes a WSDL endpoint based on the `CustomerRetrievalForPaymentParameters.xsd` file.
+     * This exposes the WSDL dynamically under /ws/CustomerRetrievalForPaymentParameters.wsdl
+     *
+     * @return a configured WSDL definition bean
+     * @throws SchemaValidationException if XSD loading fails
+     */
+    @Bean(name = "CustomerRetrievalForPaymentParameters")
+    public DefaultWsdl11Definition customerRetrievalWSDL() throws SchemaValidationException {
+        DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
+        wsdl11Definition.setPortTypeName("ICustomerRetrievalForPayment");
+        wsdl11Definition.setLocationUri("/ws");
+        wsdl11Definition.setTargetNamespace("http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/");
+        wsdl11Definition.setSchemaCollection(updateCustomerRetrievalXsd());
+        return wsdl11Definition;
+    }
+
+
+    /**
+     * Loads the primary XSD schema (`CustomerRetrievalForPaymentParameters.xsd`) from the classpath
+     * and enables inlining for WSDL generation and schema validation.
+     *
+     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
+     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     */
+    @Bean
+    public XsdSchemaCollection updateCustomerRetrievalXsd() {
+        try {
+            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
+                    new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd"));
+            xsd.setInline(true);
+            return xsd;
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
+        }
+    }
 }
+
+
 
 
 ----------------------
@@ -605,6 +683,7 @@ Do the changes for Customer Retrieval
 
 package com.rbs.bdd.infrastructure.soap.api;
 
+import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
 import com.rbs.bdd.application.port.in.PaymentValidationPort;
 import com.rbs.bdd.generated.ValidateArrangementForPaymentRequest;
 import org.springframework.ws.WebServiceMessage;
@@ -624,8 +703,11 @@ public class PaymentValidationSoapAdapter {
 
     /**Changes for the request*/
 
-    private static final String NAMESPACE_URI = "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/";
+    private static final String NAMESPACE_URI_FOR_ACCOUNT_VALIDATION = "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/";
+    private static final String NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL = "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/";
+
     private final PaymentValidationPort paymentValidationPort;
+    private final CustomerRetrievalPort customerRetrievalPort;
 
     /**
      * Constructor-based injection of the orchestrator that handles business logic.
@@ -636,6 +718,16 @@ public class PaymentValidationSoapAdapter {
         this.paymentValidationPort = paymentValidationPort;
     }
 
+
+    /**
+     * Constructor-based injection of the orchestrator that handles business logic.
+     *
+     * @param customerRetrievalPort the orchestrator service
+     */
+    public PaymentValidationSoapAdapter(CustomerRetrievalPort customerRetrievalPort) {
+        this.customerRetrievalPort = customerRetrievalPort;
+    }
+
     /**
      * Handles the `validateArrangementForPayment` SOAP request.
      * Delegates request processing to the orchestrator which modifies the response message directly.
@@ -643,7 +735,7 @@ public class PaymentValidationSoapAdapter {
      * @param request the SOAP request payload
      * @param context the Spring WS message context
      */
-    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "validateArrangementForPayment")
+    @PayloadRoot(namespace = NAMESPACE_URI_FOR_ACCOUNT_VALIDATION, localPart = "validateArrangementForPayment")
     @ResponsePayload
     public void validateArrangementForPayment(@RequestPayload ValidateArrangementForPaymentRequest request,
                                                 MessageContext context) {
@@ -652,9 +744,27 @@ public class PaymentValidationSoapAdapter {
         paymentValidationPort.validateArrangementForPayment(request, response);
          }
 
+    /**
+     * Handles the `RetrieveCustomerRequest` SOAP request.
+     * Delegates request processing to the orchestrator which modifies the response message directly.
+     *
+     * @param request the SOAP request payload
+     * @param context the Spring WS message context
+     */
+    @PayloadRoot(namespace = NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL, localPart = "retrieveCustomer")
+    @ResponsePayload
+    public void validateCustomerRetrieval(@RequestPayload RetrieveCustomerRequest request,
+                                              MessageContext context) {
+
+        WebServiceMessage response = context.getResponse();
+        customerRetrievalPort.validateCustomerRetrieval(request, response);
+    }
+
 }
 
-------------
+
+
+--------------------------------------
 
 
 Call SchemaValidationInterceptor incase of SchemaValidation failure for customerRetrieval 
