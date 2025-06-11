@@ -1,31 +1,25 @@
-<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" version="RBS_20210325_Baseline" xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/">
-  <xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" schemaLocation="CustomerRetrievalForPaymentTransferObjects.xsd"/>
-  <xsd:import namespace="http://com/rbsg/soa/Services/Definitions/V03/" schemaLocation="../shared/ServiceDefinitions.xsd"/>
-  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
-  <xsd:complexType name="retrievePrimaryCustomerForArrRequest">
-    <xsd:sequence>
-      <xsd:element name="requestHeader" type="sdef:RequestHeader"/>
-      <xsd:element maxOccurs="unbounded" minOccurs="0" name="processingParameter" type="pdt:Property"/>
-      <xsd:element name="arrangementIdentifier" type="pdt:ObjectReference">
-        <xsd:annotation>
-          <xsd:documentation>Identifier of the account for which the Customer is identified as the Primary Customer (Account Owner).</xsd:documentation>
-        </xsd:annotation>
-      </xsd:element>
-    </xsd:sequence>
-  </xsd:complexType>
-  <xsd:complexType name="RetrievePrimaryCustomerForArrContent">
-    <xsd:sequence>
-      <xsd:element name="responseHeader" type="sdef:ResponseHeader"/>
-      <xsd:element minOccurs="0" name="customer" type="crfpTO:InvolvedParty_TO"/>
-      <xsd:element maxOccurs="unbounded" minOccurs="0" name="modifyToken" type="pdt:Property"/>
-    </xsd:sequence>
-  </xsd:complexType>
-  <xsd:complexType name="retrievePrimaryCustomerForArrResponse">
-    <xsd:sequence>
-      <xsd:choice>
-        <xsd:element name="response" type="crfpSP:RetrievePrimaryCustomerForArrContent"/>
-        <xsd:element name="exception" type="sdef:Exception"/>
-      </xsd:choice>
-    </xsd:sequence>
-  </xsd:complexType>
-</xsd:schema>
+@Bean
+public XsdSchemaCollection updateCustomerRetrievalXsd() {
+    try {
+        System.out.println("Inside updateCustomerRetrievalXsd");
+
+        ClassPathResource main = new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd");
+        ClassPathResource transfer = new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd");
+        ClassPathResource serviceDefs = new ClassPathResource("xsd/shared/ServiceDefinitions.xsd");
+        ClassPathResource primitiveTypes = new ClassPathResource("xsd/shared/PrimitiveDatatypes.xsd");
+
+        // Print checks
+        System.out.println("CustomerRetrievalForPaymentParameters: " + main.exists());
+        System.out.println("TransferObjects: " + transfer.exists());
+        System.out.println("ServiceDefinitions: " + serviceDefs.exists());
+        System.out.println("PrimitiveDatatypes: " + primitiveTypes.exists());
+
+        CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
+            new ClassPathResource[] { main, transfer, serviceDefs, primitiveTypes }
+        );
+        xsd.setInline(true);
+        return xsd;
+    } catch (Exception e) {
+        throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
+    }
+}
