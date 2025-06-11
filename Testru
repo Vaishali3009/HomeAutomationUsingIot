@@ -1,25 +1,396 @@
-@Bean
-public XsdSchemaCollection updateCustomerRetrievalXsd() {
-    try {
-        System.out.println("Inside updateCustomerRetrievalXsd");
+Getting the belwo error :-
 
-        ClassPathResource main = new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd");
-        ClassPathResource transfer = new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd");
-        ClassPathResource serviceDefs = new ClassPathResource("xsd/shared/ServiceDefinitions.xsd");
-        ClassPathResource primitiveTypes = new ClassPathResource("xsd/shared/PrimitiveDatatypes.xsd");
 
-        // Print checks
-        System.out.println("CustomerRetrievalForPaymentParameters: " + main.exists());
-        System.out.println("TransferObjects: " + transfer.exists());
-        System.out.println("ServiceDefinitions: " + serviceDefs.exists());
-        System.out.println("PrimitiveDatatypes: " + primitiveTypes.exists());
+Inside updateCustomerRetrievalXsd
+CustomerRetrievalForPaymentParameters: true
+TransferObjects: true
+ServiceDefinitions: true
+PrimitiveDatatypes: true
+2025-06-11T10:50:13.086+01:00  WARN 428 --- [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'CustomerRetrievalForPaymentParameters' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+2025-06-11T10:50:13.109+01:00  INFO 428 --- [           main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2025-06-11T10:50:13.201+01:00  INFO 428 --- [           main] .s.b.a.l.ConditionEvaluationReportLogger :
 
-        CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
-            new ClassPathResource[] { main, transfer, serviceDefs, primitiveTypes }
-        );
-        xsd.setInline(true);
-        return xsd;
-    } catch (Exception e) {
-        throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-06-11T10:50:13.341+01:00 ERROR 428 --- [           main] o.s.boot.SpringApplication               : Application run failed
+
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'CustomerRetrievalForPaymentParameters' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:657) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:489) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1367) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1197) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1221) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1187) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1122) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:987) ~[spring-context-6.2.6.jar:6.2.6]
+        at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627) ~[spring-context-6.2.6.jar:6.2.6]
+        at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.4.5.jar:3.4.5]
+        at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:753) ~[spring-boot-3.4.5.jar:3.4.5]
+        at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) ~[spring-boot-3.4.5.jar:3.4.5]
+        at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) ~[spring-boot-3.4.5.jar:3.4.5]
+        at org.springframework.boot.SpringApplication.run(SpringApplication.java:1362) ~[spring-boot-3.4.5.jar:3.4.5]
+        at org.springframework.boot.SpringApplication.run(SpringApplication.java:1351) ~[spring-boot-3.4.5.jar:3.4.5]
+        at com.rbs.bdd.EspSimulatorEngine.main(EspSimulatorEngine.java:21) ~[classes/:na]
+        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15) ~[test-classes/:na]
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+        at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767) ~[junit-platform-commons-1.11.4.jar:1.11.4]
+        at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$8(TestMethodTestDescriptor.java:217) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:156) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54) ~[junit-platform-engine-1.11.4.jar:1.11.4]
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:220) ~[junit-platform-launcher-1.3.1.jar:1.3.1]
+        at org.junit.platform.launcher.core.DefaultLauncher.lambda$execute$6(DefaultLauncher.java:188) ~[junit-platform-launcher-1.3.1.jar:1.3.1]
+        at org.junit.platform.launcher.core.DefaultLauncher.withInterceptedStreams(DefaultLauncher.java:202) ~[junit-platform-launcher-1.3.1.jar:1.3.1]
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:181) ~[junit-platform-launcher-1.3.1.jar:1.3.1]
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:128) ~[junit-platform-launcher-1.3.1.jar:1.3.1]
+        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:150) ~[surefire-junit-platform-2.22.2.jar:2.22.2]
+        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:124) ~[surefire-junit-platform-2.22.2.jar:2.22.2]
+        at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:384) ~[surefire-booter-2.22.2.jar:2.22.2]
+        at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:345) ~[surefire-booter-2.22.2.jar:2.22.2]
+        at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:126) ~[surefire-booter-2.22.2.jar:2.22.2]
+        at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:418) ~[surefire-booter-2.22.2.jar:2.22.2]
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:199) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiateWithFactoryMethod(SimpleInstantiationStrategy.java:88) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:168) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653) ~[spring-beans-6.2.6.jar:6.2.6]
+        ... 85 common frames omitted
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1818) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.resolveBeanReference(ConfigurationClassEnhancer.java:425) ~[spring-context-6.2.6.jar:6.2.6]
+        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:396) ~[spring-context-6.2.6.jar:6.2.6]
+        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0.updateCustomerRetrievalXsd(<generated>) ~[classes/:na]
+        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig.customerRetrievalWSDL(SoapWebServiceConfig.java:119) ~[classes/:na]
+        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0.CGLIB$customerRetrievalWSDL$3(<generated>) ~[classes/:na]
+        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$FastClass$$1.invoke(<generated>) ~[classes/:na]
+        at org.springframework.cglib.proxy.MethodProxy.invokeSuper(MethodProxy.java:258) ~[spring-core-6.2.6.jar:6.2.6]
+        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:393) ~[spring-context-6.2.6.jar:6.2.6]
+        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0.customerRetrievalWSDL(<generated>) ~[classes/:na]
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:171) ~[spring-beans-6.2.6.jar:6.2.6]
+        ... 88 common frames omitted
+Caused by: org.springframework.xml.xsd.commons.CommonsXsdSchemaException: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection.afterPropertiesSet(CommonsXsdSchemaCollection.java:150) ~[spring-xml-4.0.12.jar:4.0.12]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1865) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1814) ~[spring-beans-6.2.6.jar:6.2.6]
+        ... 106 common frames omitted
+Caused by: java.lang.IllegalArgumentException: The resource path [/../shared/PrimitiveDatatypes.xsd] has been normalized to [null] which is not valid
+        at org.apache.catalina.webresources.StandardRoot.validate(StandardRoot.java:259) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
+        at org.apache.catalina.webresources.StandardRoot.getResource(StandardRoot.java:208) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
+        at org.apache.catalina.webresources.StandardRoot.getResource(StandardRoot.java:203) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
+        at org.apache.catalina.core.ApplicationContext.getResource(ApplicationContext.java:491) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
+        at org.apache.catalina.core.ApplicationContextFacade.getResource(ApplicationContextFacade.java:195) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
+        at org.springframework.web.context.support.ServletContextResource.exists(ServletContextResource.java:105) ~[spring-web-6.2.6.jar:6.2.6]
+        at org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection$ClasspathUriResolver.resolveEntity(CommonsXsdSchemaCollection.java:245) ~[spring-xml-4.0.12.jar:4.0.12]
+        at org.apache.ws.commons.schema.SchemaBuilder.resolveXmlSchema(SchemaBuilder.java:684) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleImport(SchemaBuilder.java:538) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleSchemaElementChild(SchemaBuilder.java:1516) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleXmlSchemaElement(SchemaBuilder.java:659) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.build(SchemaBuilder.java:157) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:508) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:717) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.resolveXmlSchema(SchemaBuilder.java:706) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleImport(SchemaBuilder.java:538) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleSchemaElementChild(SchemaBuilder.java:1516) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleXmlSchemaElement(SchemaBuilder.java:659) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.build(SchemaBuilder.java:157) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:508) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:717) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:565) ~[xmlschema-core-2.2.1.jar:na]
+        at org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection.afterPropertiesSet(CommonsXsdSchemaCollection.java:141) ~[spring-xml-4.0.12.jar:4.0.12]
+        ... 108 common frames omitted
+
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 18.977 s <<< FAILURE! - in com.rbs.bdd.application.service.EspSimulatorEngineTest
+[ERROR] testMainMethodCoverage  Time elapsed: 18.977 s  <<< ERROR!
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'CustomerRetrievalForPaymentParameters' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
+Caused by: org.springframework.xml.xsd.commons.CommonsXsdSchemaException: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
+Caused by: java.lang.IllegalArgumentException: The resource path [/../shared/PrimitiveDatatypes.xsd] has been normalized to [null] which is not valid
+        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
+
+[INFO] Running com.rbs.bdd.application.service.SchemaValidationInterceptorTest
+WARNING: A Java agent has been loaded dynamically (C:\dev\devtools\cache\m2_repository\net\bytebuddy\byte-buddy-agent\1.15.11\byte-buddy-agent-1.15.11.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+2025-06-11T10:50:19.185+01:00  WARN 428 --- [           main] c.r.b.i.s.i.SchemaValidationInterceptor  : Schema validation failed. Returning custom schemaValidationError.xml
+
+
+
+-----------------------------
+
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" version="RBS_20210325_Baseline" xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/">
+  <xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" schemaLocation="CustomerRetrievalForPaymentTransferObjects.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/Services/Definitions/V03/" schemaLocation="../shared/ServiceDefinitions.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
+  <xsd:complexType name="retrievePrimaryCustomerForArrRequest">
+    <xsd:sequence>
+      <xsd:element name="requestHeader" type="sdef:RequestHeader"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="processingParameter" type="pdt:Property"/>
+      <xsd:element name="arrangementIdentifier" type="pdt:ObjectReference">
+        <xsd:annotation>
+          <xsd:documentation>Identifier of the account for which the Customer is identified as the Primary Customer (Account Owner).</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="RetrievePrimaryCustomerForArrContent">
+    <xsd:sequence>
+      <xsd:element name="responseHeader" type="sdef:ResponseHeader"/>
+      <xsd:element minOccurs="0" name="customer" type="crfpTO:InvolvedParty_TO"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="modifyToken" type="pdt:Property"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="retrievePrimaryCustomerForArrResponse">
+    <xsd:sequence>
+      <xsd:choice>
+        <xsd:element name="response" type="crfpSP:RetrievePrimaryCustomerForArrContent"/>
+        <xsd:element name="exception" type="sdef:Exception"/>
+      </xsd:choice>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>
+
+
+---------------------------------
+package com.rbs.bdd.infrastructure.config;
+
+import com.rbs.bdd.application.exception.SchemaValidationException;
+import com.rbs.bdd.application.exception.XsdSchemaLoadingException;
+import com.rbs.bdd.infrastructure.soap.interceptor.SchemaValidationInterceptor;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.ws.config.annotation.EnableWs;
+import org.springframework.ws.config.annotation.WsConfigurerAdapter;
+import org.springframework.ws.server.EndpointInterceptor;
+import org.springframework.ws.transport.http.MessageDispatcherServlet;
+import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
+import org.springframework.xml.xsd.XsdSchemaCollection;
+import org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection;
+
+import java.util.*;
+
+/**
+ * Configures Spring Web Services (Spring WS) for the application.
+ * <p>
+ * This configuration includes:
+ * <ul>
+ *     <li>Publishing WSDL endpoints for SOAP web services</li>
+ *     <li>Enabling automatic XML Schema (XSD) validation of incoming SOAP requests</li>
+ *     <li>Registering interceptors for request validation</li>
+ * </ul>
+ */
+@Configuration
+@EnableWs
+public class SoapWebServiceConfig extends WsConfigurerAdapter {
+
+    /**
+     * Registers the {@link MessageDispatcherServlet} which is the main dispatcher for Spring WS.
+     * It handles SOAP messages and dispatches them to appropriate endpoints.
+     *
+     * @param context the Spring application context
+     * @return servlet registration bean mapped to the /ws/* URI
+     */
+    @Bean
+    public ServletRegistrationBean<MessageDispatcherServlet> messageDispatcherServlet(ApplicationContext context) {
+        MessageDispatcherServlet servlet = new MessageDispatcherServlet();
+        servlet.setApplicationContext(context);
+        servlet.setTransformWsdlLocations(true);
+        return new ServletRegistrationBean<>(servlet, "/ws/*");
+    }
+
+    /**
+     * Adds a custom interceptor for schema validation. This interceptor validates incoming SOAP
+     * messages against the configured XSD schema.
+     *
+     * @param interceptors list of interceptors to which this validation interceptor is added
+     */
+    @Override
+    public void addInterceptors(List<EndpointInterceptor> interceptors) {
+        SchemaValidationInterceptor validatingInterceptor = new SchemaValidationInterceptor();
+        validatingInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
+        validatingInterceptor.setValidateResponse(false); // Do not validate outgoing responses
+        try {
+            validatingInterceptor.setXsdSchemaCollection(updateContactXsd());
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
+        }
+        interceptors.add(validatingInterceptor);
+    }
+
+    /**
+     * Publishes a WSDL endpoint based on the `ArrValidationForPaymentParameters.xsd` file.
+     * This exposes the WSDL dynamically under /ws/ArrValidationForPaymentParameters.wsdl
+     *
+     * @return a configured WSDL definition bean
+     * @throws SchemaValidationException if XSD loading fails
+     */
+    @Bean(name = "ArrValidationForPaymentParameters")
+    public DefaultWsdl11Definition accountValidationWSDL() throws SchemaValidationException {
+        DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
+        wsdl11Definition.setPortTypeName("IArrValidationForPayment");
+        wsdl11Definition.setLocationUri("/ws");
+        wsdl11Definition.setTargetNamespace("http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/");
+        wsdl11Definition.setSchemaCollection(updateContactXsd());
+        return wsdl11Definition;
+    }
+
+    /**
+     * Loads the primary XSD schema (`ArrValidationForPaymentParameters.xsd`) from the classpath
+     * and enables inlining for WSDL generation and schema validation.
+     *
+     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
+     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     */
+    @Bean
+    public XsdSchemaCollection updateContactXsd() {
+        try {
+            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
+                    new ClassPathResource("xsd/account-validation/ArrValidationForPaymentParameters.xsd"));
+            xsd.setInline(true);
+            return xsd;
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
+        }
+    }
+
+
+    /**
+     * Publishes a WSDL endpoint based on the `CustomerRetrievalForPaymentParameters.xsd` file.
+     * This exposes the WSDL dynamically under /ws/CustomerRetrievalForPaymentParameters.wsdl
+     *
+     * @return a configured WSDL definition bean
+     * @throws SchemaValidationException if XSD loading fails
+     */
+    @Bean(name = "CustomerRetrievalForPaymentParameters")
+    public DefaultWsdl11Definition customerRetrievalWSDL() throws SchemaValidationException {
+        DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
+        wsdl11Definition.setPortTypeName("ICustomerRetrievalForPayment");
+        wsdl11Definition.setLocationUri("/ws");
+        wsdl11Definition.setTargetNamespace("http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/");
+        wsdl11Definition.setSchemaCollection(updateCustomerRetrievalXsd());
+        return wsdl11Definition;
+    }
+
+
+    /**
+     * Loads the primary XSD schema (`CustomerRetrievalForPaymentParameters.xsd`) from the classpath
+     * and enables inlining for WSDL generation and schema validation.
+     *
+     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
+     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     */
+    @Bean
+    public XsdSchemaCollection updateCustomerRetrievalXsd() {
+        /*
+        try {
+            System.out.println("Inside the try ");
+
+            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
+                    new ClassPathResource( new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd")));
+//            ClassPathResource resource = new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd");
+            System.out.println("Resource Exist :"+resource.exists());
+            Stream.of("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd",
+                    "xsd/shared/ServiceDefinitions",
+                    "xsd/shared/PrimitiveDatatypes").
+                    forEach(path-> {
+                                System.out.println("> " + path + "= " + new ClassPathResource(path).exists());
+                            });
+            xsd.setInline(true);
+            return xsd;
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
+        }
+
+         */
+        try {
+            System.out.println("Inside updateCustomerRetrievalXsd");
+
+            ClassPathResource main = new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd");
+            ClassPathResource transfer = new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd");
+            ClassPathResource serviceDefs = new ClassPathResource("xsd/shared/ServiceDefinitions.xsd");
+            ClassPathResource primitiveTypes = new ClassPathResource("xsd/shared/PrimitiveDatatypes.xsd");
+
+            // Print checks
+            System.out.println("CustomerRetrievalForPaymentParameters: " + main.exists());
+            System.out.println("TransferObjects: " + transfer.exists());
+            System.out.println("ServiceDefinitions: " + serviceDefs.exists());
+            System.out.println("PrimitiveDatatypes: " + primitiveTypes.exists());
+
+            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
+                    new ClassPathResource[] { main, transfer, serviceDefs, primitiveTypes }
+            );
+            xsd.setInline(true);
+            return xsd;
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
+        }
     }
 }
+
