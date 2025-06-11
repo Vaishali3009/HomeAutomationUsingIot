@@ -1,187 +1,372 @@
-Getting the belwo error :-
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.rbs.bdd</groupId>
+    <artifactId>bdd-ms-esp-simulation-service-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <groupId>com.rbs.bdd</groupId>
+  <artifactId>bdd-ms-esp-simulation-service</artifactId>
+  <name>bdd-ms-esp-simulation-service</name>
+  <description>BDD ESP Simulator microservice - This is an example of a BDD ESP Simulator Service.</description>
+
+  <properties>
+    <validation-api.version>1.1.0.Final</validation-api.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.ws.commons.schema</groupId>
+        <artifactId>XmlSchema</artifactId>
+        <version>1.4.3</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <!-- enabling actuator to expose management endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <!-- Used to add hyperlinks to the actuator's endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-hateoas</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ws.xmlschema</groupId>
+      <artifactId>xmlschema-core</artifactId>
+      <version>2.2.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.ws.commons.schema</groupId>
+      <artifactId>XmlSchema</artifactId>
+      <version>1.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-xml</artifactId>
+      <version>4.0.12</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.ws.commons.schema</groupId>
+          <artifactId>XmlSchema</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Dependency added to do bean validation in spring boot app as it's packaged with jakarta.validation-api.jar -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>software.amazon.awssdk</groupId>-->
+<!--      <artifactId>apache-client</artifactId>-->
+<!--    </dependency>-->
+    <!-- Required for UserIdentityFilter -->
+<!--    <dependency>-->
+<!--      <groupId>org.json</groupId>-->
+<!--      <artifactId>json</artifactId>-->
+<!--      <version>20240303</version>-->
+<!--    </dependency>-->
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>${httpcore.version}</version>
+    </dependency>
 
 
-Inside updateCustomerRetrievalXsd
-CustomerRetrievalForPaymentParameters: true
-TransferObjects: true
-ServiceDefinitions: true
-PrimitiveDatatypes: true
-2025-06-11T10:50:13.086+01:00  WARN 428 --- [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'CustomerRetrievalForPaymentParameters' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-2025-06-11T10:50:13.109+01:00  INFO 428 --- [           main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
-2025-06-11T10:50:13.201+01:00  INFO 428 --- [           main] .s.b.a.l.ConditionEvaluationReportLogger :
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+    </dependency>
 
-Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
-2025-06-11T10:50:13.341+01:00 ERROR 428 --- [           main] o.s.boot.SpringApplication               : Application run failed
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>4.0.2</version>
+    </dependency>
 
-org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'CustomerRetrievalForPaymentParameters' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-        at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:657) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:489) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1367) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1197) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1221) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1187) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1122) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:987) ~[spring-context-6.2.6.jar:6.2.6]
-        at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627) ~[spring-context-6.2.6.jar:6.2.6]
-        at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:753) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.run(SpringApplication.java:1362) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.run(SpringApplication.java:1351) ~[spring-boot-3.4.5.jar:3.4.5]
-        at com.rbs.bdd.EspSimulatorEngine.main(EspSimulatorEngine.java:21) ~[classes/:na]
-        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15) ~[test-classes/:na]
-        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
-        at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
-        at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767) ~[junit-platform-commons-1.11.4.jar:1.11.4]
-        at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$8(TestMethodTestDescriptor.java:217) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68) ~[junit-jupiter-engine-5.11.4.jar:5.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:156) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
-        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
-        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54) ~[junit-platform-engine-1.11.4.jar:1.11.4]
-        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:220) ~[junit-platform-launcher-1.3.1.jar:1.3.1]
-        at org.junit.platform.launcher.core.DefaultLauncher.lambda$execute$6(DefaultLauncher.java:188) ~[junit-platform-launcher-1.3.1.jar:1.3.1]
-        at org.junit.platform.launcher.core.DefaultLauncher.withInterceptedStreams(DefaultLauncher.java:202) ~[junit-platform-launcher-1.3.1.jar:1.3.1]
-        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:181) ~[junit-platform-launcher-1.3.1.jar:1.3.1]
-        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:128) ~[junit-platform-launcher-1.3.1.jar:1.3.1]
-        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:150) ~[surefire-junit-platform-2.22.2.jar:2.22.2]
-        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:124) ~[surefire-junit-platform-2.22.2.jar:2.22.2]
-        at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:384) ~[surefire-booter-2.22.2.jar:2.22.2]
-        at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:345) ~[surefire-booter-2.22.2.jar:2.22.2]
-        at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:126) ~[surefire-booter-2.22.2.jar:2.22.2]
-        at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:418) ~[surefire-booter-2.22.2.jar:2.22.2]
-Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:199) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiateWithFactoryMethod(SimpleInstantiationStrategy.java:88) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:168) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653) ~[spring-beans-6.2.6.jar:6.2.6]
-        ... 85 common frames omitted
-Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1818) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.resolveBeanReference(ConfigurationClassEnhancer.java:425) ~[spring-context-6.2.6.jar:6.2.6]
-        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:396) ~[spring-context-6.2.6.jar:6.2.6]
-        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0.updateCustomerRetrievalXsd(<generated>) ~[classes/:na]
-        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig.customerRetrievalWSDL(SoapWebServiceConfig.java:119) ~[classes/:na]
-        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0.CGLIB$customerRetrievalWSDL$3(<generated>) ~[classes/:na]
-        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$FastClass$$1.invoke(<generated>) ~[classes/:na]
-        at org.springframework.cglib.proxy.MethodProxy.invokeSuper(MethodProxy.java:258) ~[spring-core-6.2.6.jar:6.2.6]
-        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:393) ~[spring-context-6.2.6.jar:6.2.6]
-        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0.customerRetrievalWSDL(<generated>) ~[classes/:na]
-        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
-        at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
-        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:171) ~[spring-beans-6.2.6.jar:6.2.6]
-        ... 88 common frames omitted
-Caused by: org.springframework.xml.xsd.commons.CommonsXsdSchemaException: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-        at org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection.afterPropertiesSet(CommonsXsdSchemaCollection.java:150) ~[spring-xml-4.0.12.jar:4.0.12]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1865) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1814) ~[spring-beans-6.2.6.jar:6.2.6]
-        ... 106 common frames omitted
-Caused by: java.lang.IllegalArgumentException: The resource path [/../shared/PrimitiveDatatypes.xsd] has been normalized to [null] which is not valid
-        at org.apache.catalina.webresources.StandardRoot.validate(StandardRoot.java:259) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
-        at org.apache.catalina.webresources.StandardRoot.getResource(StandardRoot.java:208) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
-        at org.apache.catalina.webresources.StandardRoot.getResource(StandardRoot.java:203) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
-        at org.apache.catalina.core.ApplicationContext.getResource(ApplicationContext.java:491) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
-        at org.apache.catalina.core.ApplicationContextFacade.getResource(ApplicationContextFacade.java:195) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
-        at org.springframework.web.context.support.ServletContextResource.exists(ServletContextResource.java:105) ~[spring-web-6.2.6.jar:6.2.6]
-        at org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection$ClasspathUriResolver.resolveEntity(CommonsXsdSchemaCollection.java:245) ~[spring-xml-4.0.12.jar:4.0.12]
-        at org.apache.ws.commons.schema.SchemaBuilder.resolveXmlSchema(SchemaBuilder.java:684) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.SchemaBuilder.handleImport(SchemaBuilder.java:538) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.SchemaBuilder.handleSchemaElementChild(SchemaBuilder.java:1516) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.SchemaBuilder.handleXmlSchemaElement(SchemaBuilder.java:659) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.SchemaBuilder.build(SchemaBuilder.java:157) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:508) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:717) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.SchemaBuilder.resolveXmlSchema(SchemaBuilder.java:706) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.SchemaBuilder.handleImport(SchemaBuilder.java:538) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.SchemaBuilder.handleSchemaElementChild(SchemaBuilder.java:1516) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.SchemaBuilder.handleXmlSchemaElement(SchemaBuilder.java:659) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.SchemaBuilder.build(SchemaBuilder.java:157) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:508) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:717) ~[xmlschema-core-2.2.1.jar:na]
-        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:565) ~[xmlschema-core-2.2.1.jar:na]
-        at org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection.afterPropertiesSet(CommonsXsdSchemaCollection.java:141) ~[spring-xml-4.0.12.jar:4.0.12]
-        ... 108 common frames omitted
+    <!--    JAXB API-->
 
-[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 18.977 s <<< FAILURE! - in com.rbs.bdd.application.service.EspSimulatorEngineTest
-[ERROR] testMainMethodCoverage  Time elapsed: 18.977 s  <<< ERROR!
-org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'CustomerRetrievalForPaymentParameters' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
-Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
-Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
-Caused by: org.springframework.xml.xsd.commons.CommonsXsdSchemaException: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
-        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
-Caused by: java.lang.IllegalArgumentException: The resource path [/../shared/PrimitiveDatatypes.xsd] has been normalized to [null] which is not valid
-        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
-
-[INFO] Running com.rbs.bdd.application.service.SchemaValidationInterceptorTest
-WARNING: A Java agent has been loaded dynamically (C:\dev\devtools\cache\m2_repository\net\bytebuddy\byte-buddy-agent\1.15.11\byte-buddy-agent-1.15.11.jar)
-WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
-WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
-WARNING: Dynamic loading of agents will be disallowed by default in a future release
-2025-06-11T10:50:19.185+01:00  WARN 428 --- [           main] c.r.b.i.s.i.SchemaValidationInterceptor  : Schema validation failed. Returning custom schemaValidationError.xml
+    <!-- SOAP Dependencies Start-->
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-core</artifactId>
+      <version>4.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.messaging.saaj</groupId>
+      <artifactId>saaj-impl</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-test</artifactId>
+      <version>4.0.10</version>
+      <scope>test</scope>
+    </dependency
 
 
 
------------------------------
 
+
+    >
+    <dependency>
+      <groupId>jakarta.xml.ws</groupId>
+      <artifactId>jakarta.xml.ws-api</artifactId>
+      <version>4.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.ws</groupId>
+      <artifactId>jaxws-ri</artifactId>
+      <version>4.0.1</version>
+      <type>pom</type>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.woodstox</groupId>
+          <artifactId>woodstox-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Dependency to convert xml to json -->
+    <dependency>
+      <groupId>com.github.javadev</groupId>
+      <artifactId>underscore</artifactId>
+      <version>1.89</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>xml-resolver</groupId>
+      <artifactId>xml-resolver</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <!-- Dependency for caching -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>wsdl4j</groupId>
+      <artifactId>wsdl4j</artifactId>
+      <version>1.6.3</version>
+    </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.vaadin.external.google</groupId>
+          <artifactId>android-json</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.7.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>**/*.xsd</include>
+          <include>**/*.xml</include>
+          <include>**/*.xjb</include>
+        </includes>
+      </resource>
+    </resources>
+    <plugins>
+<!--     Adding JAXB2 Maven Plugin     -->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.10.1</version>
+        <configuration>
+          <excludePackageNames>com.rbs.bdd.generated</excludePackageNames>
+        </configuration>
+      </plugin>
+      <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.13</version>
+          <configuration>
+            <excludes>
+              <exclude>com/rbs/bdd/generated/**</exclude>
+            </excludes>
+          </configuration>
+
+      </plugin>
+      <!-- JAXB Code Generation -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>jaxb2-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>xjc</id>
+            <goals>
+              <goal>xjc</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <arguments>
+                <argument>-b</argument>
+                <argument>${project.basedir}/src/main/resources/jaxb-bindings/bindings.xjb</argument>
+              </arguments>
+              <sources>
+                <source>${project.basedir}/src/main/resources/xsd/account-validation</source>
+                <source>${project.basedir}/src/main/resources/xsd/customer-retrieval</source>
+                <source>${project.basedir}/src/main/resources/xsd/shared</source>
+              </sources>
+              <outputDirectory>${project.build.directory}/generated-sources/jaxb</outputDirectory>
+              <clearOutputDir>false</clearOutputDir>
+              <verbose>true</verbose>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Add generated source to compilation -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/jaxb</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <!--to be imported on other projects-->
+              <classifier>original</classifier>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <scm>
+    <connection>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</connection>
+    <url>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</url>
+    <developerConnection>scm:git:${stash.ssh.url}/CPBD/${project.artifactId}-archetype-template.git
+    </developerConnection>
+  </scm>
+
+</project>
+
+--------------------
 <?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" version="RBS_20210325_Baseline" xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/">
   <xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" schemaLocation="CustomerRetrievalForPaymentTransferObjects.xsd"/>
   <xsd:import namespace="http://com/rbsg/soa/Services/Definitions/V03/" schemaLocation="../shared/ServiceDefinitions.xsd"/>
@@ -215,7 +400,40 @@ WARNING: Dynamic loading of agents will be disallowed by default in a future rel
 </xsd:schema>
 
 
----------------------------------
+-----------------
+<jaxb:bindings xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
+               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+               jaxb:version="3.0">
+
+    <!-- Custom package for shared/common XSD types -->
+    <jaxb:bindings schemaLocation="ServiceDefinitions.xsd" node="/xsd:schema">
+        <jaxb:schemaBindings>
+            <jaxb:package name="com.rbs.bdd.generated.shared"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+     <jaxb:bindings schemaLocation="PrimitiveDatatypes.xsd" node="/xsd:schema">
+            <jaxb:schemaBindings>
+                <jaxb:package name="com.rbs.bdd.generated.shared"/>
+            </jaxb:schemaBindings>
+        </jaxb:bindings>
+
+
+    <!-- Avoid conflict for BaseTransferObject, GeographicAreaTO etc. -->
+    <jaxb:bindings schemaLocation="../xsd/account-validation/ArrValidationForPaymentTransferObjects.xsd" node="/xsd:schema">
+        <jaxb:schemaBindings>
+            <jaxb:package name="com.rbs.bdd.generated.accountvalidation"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+
+    <jaxb:bindings schemaLocation="../xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd" node="/xsd:schema">
+        <jaxb:schemaBindings>
+            <jaxb:package name="com.rbs.bdd.generated.customerretrieval"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+
+</jaxb:bindings>
+
+----------------
 package com.rbs.bdd.infrastructure.config;
 
 import com.rbs.bdd.application.exception.SchemaValidationException;
@@ -348,44 +566,27 @@ public class SoapWebServiceConfig extends WsConfigurerAdapter {
      */
     @Bean
     public XsdSchemaCollection updateCustomerRetrievalXsd() {
-        /*
+
         try {
             System.out.println("Inside the try ");
 
             CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
-                    new ClassPathResource( new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd")));
+                    new ClassPathResource[] {
+                            new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd"),
+                            new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd"),
+                            new ClassPathResource("xsd/shared/ServiceDefinitions.xsd"),
+                            new ClassPathResource("xsd/shared/PrimitiveDatatypes.xsd")});
+
+
+
 //            ClassPathResource resource = new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd");
-            System.out.println("Resource Exist :"+resource.exists());
-            Stream.of("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd",
-                    "xsd/shared/ServiceDefinitions",
-                    "xsd/shared/PrimitiveDatatypes").
-                    forEach(path-> {
-                                System.out.println("> " + path + "= " + new ClassPathResource(path).exists());
-                            });
-            xsd.setInline(true);
-            return xsd;
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
-        }
-
-         */
-        try {
-            System.out.println("Inside updateCustomerRetrievalXsd");
-
-            ClassPathResource main = new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd");
-            ClassPathResource transfer = new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd");
-            ClassPathResource serviceDefs = new ClassPathResource("xsd/shared/ServiceDefinitions.xsd");
-            ClassPathResource primitiveTypes = new ClassPathResource("xsd/shared/PrimitiveDatatypes.xsd");
-
-            // Print checks
-            System.out.println("CustomerRetrievalForPaymentParameters: " + main.exists());
-            System.out.println("TransferObjects: " + transfer.exists());
-            System.out.println("ServiceDefinitions: " + serviceDefs.exists());
-            System.out.println("PrimitiveDatatypes: " + primitiveTypes.exists());
-
-            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
-                    new ClassPathResource[] { main, transfer, serviceDefs, primitiveTypes }
-            );
+           // System.out.println("Resource Exist :" + resource.exists());
+//            Stream.of("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd",
+//                            "xsd/shared/ServiceDefinitions",
+//                            "xsd/shared/PrimitiveDatatypes").
+//                    forEach(path -> {
+//                        System.out.println("> " + path + "= " + new ClassPathResource(path).exists());
+//                    });
             xsd.setInline(true);
             return xsd;
         } catch (Exception e) {
@@ -394,3 +595,71 @@ public class SoapWebServiceConfig extends WsConfigurerAdapter {
     }
 }
 
+
+-----------------
+Error :-
+
+    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:314)
+[ERROR] file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/jaxb-bindings/bindings.xjb [11,80]
+com.sun.istack.SAXParseException2: "file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/jaxb-bindings/PrimitiveDatatypes.xsd" is not a part of this compilation. Is this a mistake for "file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/shared/PrimitiveDatatypes.xsd"?
+    at com.sun.tools.xjc.reader.internalizer.Internalizer.reportError (Internalizer.java:570)
+    at com.sun.tools.xjc.reader.internalizer.Internalizer.reportError (Internalizer.java:563)
+    at com.sun.tools.xjc.reader.internalizer.Internalizer.buildTargetNodeMap (Internalizer.java:206)
+    at com.sun.tools.xjc.reader.internalizer.Internalizer.buildTargetNodeMap (Internalizer.java:335)
+    at com.sun.tools.xjc.reader.internalizer.Internalizer.transform (Internalizer.java:116)
+    at com.sun.tools.xjc.reader.internalizer.Internalizer.transform (Internalizer.java:77)
+    at com.sun.tools.xjc.reader.internalizer.DOMForest.transform (DOMForest.java:410)
+    at com.sun.tools.xjc.ModelLoader.buildDOMForest (ModelLoader.java:286)
+    at com.sun.tools.xjc.ModelLoader.loadXMLSchema (ModelLoader.java:318)
+    at com.sun.tools.xjc.ModelLoader.load (ModelLoader.java:121)
+    at com.sun.tools.xjc.ModelLoader.load (ModelLoader.java:76)
+    at com.sun.tools.xjc.Driver.run (Driver.java:324)
+    at org.codehaus.mojo.jaxb2.javageneration.AbstractJavaGeneratorMojo.performExecution (AbstractJavaGeneratorMojo.java:476)
+    at org.codehaus.mojo.jaxb2.AbstractJaxbMojo.execute (AbstractJaxbMojo.java:337)
+    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:126)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:328)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
+    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
+    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:73)
+    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:53)
+    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:118)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:261)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:173)
+    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:101)
+    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:906)
+    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:283)
+    at org.apache.maven.cli.MavenCli.main (MavenCli.java:206)
+    at jdk.internal.reflect.DirectMethodHandleAccessor.invoke (DirectMethodHandleAccessor.java:103)
+    at java.lang.reflect.Method.invoke (Method.java:580)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:255)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:201)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:361)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:314)
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.650 s
+[INFO] Finished at: 2025-06-11T13:44:24+01:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.codehaus.mojo:jaxb2-maven-plugin:3.1.0:xjc (xjc) on project bdd-ms-esp-simulation-service:
+[ERROR] +=================== [XJC Error]
+[ERROR] |
+[ERROR] | 0: file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/account-validation/ArrValidationForPaymentParameters.xsd
+[ERROR] | 1: file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/account-validation/ArrValidationForPaymentTransferObjects.xsd
+[ERROR] | 2: file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd
+[ERROR] | 3: file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd
+[ERROR] | 4: file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/shared/PrimitiveDatatypes.xsd
+[ERROR] | 5: file:/F:/NatWest_Code/ESPPOC/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/resources/xsd/shared/ServiceDefinitions.xsd
+[ERROR] |
+[ERROR] +=================== [End XJC Error]
+[ERROR]
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
