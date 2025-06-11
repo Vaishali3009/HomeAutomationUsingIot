@@ -1,162 +1,94 @@
-package com.rbs.bdd.infrastructure.config;
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-06-11T15:41:06.807+01:00 ERROR 648 --- [  restartedMain] o.s.boot.SpringApplication               : Application run failed
 
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import com.rbs.bdd.application.exception.XsdSchemaLoadingException;
-import com.rbs.bdd.infrastructure.soap.interceptor.SchemaValidationInterceptor;
-import org.springframework.boot.web.servlet.ServletRegistrationBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.ws.config.annotation.EnableWs;
-import org.springframework.ws.config.annotation.WsConfigurerAdapter;
-import org.springframework.ws.server.EndpointInterceptor;
-import org.springframework.ws.transport.http.MessageDispatcherServlet;
-import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
-import org.springframework.xml.xsd.XsdSchemaCollection;
-import org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection;
-import org.springframework.core.io.FileSystemResource;
-import java.util.stream.Stream;
-import java.util.List;
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'CustomerRetrievalForPayment' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:657) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:489) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1367) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1197) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1221) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1187) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1122) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:987) ~[spring-context-6.2.6.jar:6.2.6]
+        at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627) ~[spring-context-6.2.6.jar:6.2.6]
+        at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.4.5.jar:3.4.5]
+        at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:753) ~[spring-boot-3.4.5.jar:3.4.5]
+        at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) ~[spring-boot-3.4.5.jar:3.4.5]
+        at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) ~[spring-boot-3.4.5.jar:3.4.5]
+        at org.springframework.boot.SpringApplication.run(SpringApplication.java:1362) ~[spring-boot-3.4.5.jar:3.4.5]
+        at org.springframework.boot.SpringApplication.run(SpringApplication.java:1351) ~[spring-boot-3.4.5.jar:3.4.5]
+        at com.rbs.bdd.EspSimulatorEngine.main(EspSimulatorEngine.java:21) ~[classes/:na]
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+        at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:50) ~[spring-boot-devtools-3.4.5.jar:3.4.5]
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition]: Factory method 'customerRetrievalWSDL' threw exception with message: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:199) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiateWithFactoryMethod(SimpleInstantiationStrategy.java:88) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:168) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653) ~[spring-beans-6.2.6.jar:6.2.6]
+        ... 24 common frames omitted
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'updateCustomerRetrievalXsd' defined in class path resource [com/rbs/bdd/infrastructure/config/SoapWebServiceConfig.class]: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1818) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.resolveBeanReference(ConfigurationClassEnhancer.java:425) ~[spring-context-6.2.6.jar:6.2.6]
+        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:396) ~[spring-context-6.2.6.jar:6.2.6]
+        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0.updateCustomerRetrievalXsd(<generated>) ~[classes/:na]
+        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig.customerRetrievalWSDL(SoapWebServiceConfig.java:120) ~[classes/:na]
+        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0.CGLIB$customerRetrievalWSDL$5(<generated>) ~[classes/:na]
+        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$FastClass$$1.invoke(<generated>) ~[classes/:na]
+        at org.springframework.cglib.proxy.MethodProxy.invokeSuper(MethodProxy.java:258) ~[spring-core-6.2.6.jar:6.2.6]
+        at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:393) ~[spring-context-6.2.6.jar:6.2.6]
+        at com.rbs.bdd.infrastructure.config.SoapWebServiceConfig$$SpringCGLIB$$0.customerRetrievalWSDL(<generated>) ~[classes/:na]
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+        at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:171) ~[spring-beans-6.2.6.jar:6.2.6]
+        ... 27 common frames omitted
+Caused by: org.springframework.xml.xsd.commons.CommonsXsdSchemaException: Schema [class path resource [xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd]] could not be loaded
+        at org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection.afterPropertiesSet(CommonsXsdSchemaCollection.java:150) ~[spring-xml-4.0.12.jar:4.0.12]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1865) ~[spring-beans-6.2.6.jar:6.2.6]
+        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1814) ~[spring-beans-6.2.6.jar:6.2.6]
+        ... 45 common frames omitted
+Caused by: java.lang.IllegalArgumentException: The resource path [/../shared/PrimitiveDatatypes.xsd] has been normalized to [null] which is not valid
+        at org.apache.catalina.webresources.StandardRoot.validate(StandardRoot.java:259) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
+        at org.apache.catalina.webresources.StandardRoot.getResource(StandardRoot.java:208) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
+        at org.apache.catalina.webresources.StandardRoot.getResource(StandardRoot.java:203) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
+        at org.apache.catalina.core.ApplicationContext.getResource(ApplicationContext.java:491) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
+        at org.apache.catalina.core.ApplicationContextFacade.getResource(ApplicationContextFacade.java:195) ~[tomcat-embed-core-10.1.40.jar:10.1.40]
+        at org.springframework.web.context.support.ServletContextResource.exists(ServletContextResource.java:105) ~[spring-web-6.2.6.jar:6.2.6]
+        at org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection$ClasspathUriResolver.resolveEntity(CommonsXsdSchemaCollection.java:245) ~[spring-xml-4.0.12.jar:4.0.12]
+        at org.apache.ws.commons.schema.SchemaBuilder.resolveXmlSchema(SchemaBuilder.java:684) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleImport(SchemaBuilder.java:538) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleSchemaElementChild(SchemaBuilder.java:1516) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleXmlSchemaElement(SchemaBuilder.java:659) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.build(SchemaBuilder.java:157) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:508) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:717) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.resolveXmlSchema(SchemaBuilder.java:706) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleImport(SchemaBuilder.java:538) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleSchemaElementChild(SchemaBuilder.java:1516) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.handleXmlSchemaElement(SchemaBuilder.java:659) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.SchemaBuilder.build(SchemaBuilder.java:157) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:508) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:717) ~[xmlschema-core-2.2.1.jar:na]
+        at org.apache.ws.commons.schema.XmlSchemaCollection.read(XmlSchemaCollection.java:565) ~[xmlschema-core-2.2.1.jar:na]
+        at org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection.afterPropertiesSet(CommonsXsdSchemaCollection.java:141) ~[spring-xml-4.0.12.jar:4.0.12]
+        ... 47 common frames omitted
 
-/**
- * Configures Spring Web Services (Spring WS) for the application.
- * <p>
- * This configuration includes:
- * <ul>
- *     <li>Publishing WSDL endpoints for SOAP web services</li>
- *     <li>Enabling automatic XML Schema (XSD) validation of incoming SOAP requests</li>
- *     <li>Registering interceptors for request validation</li>
- * </ul>
- */
-@Configuration
-@EnableWs
-public class SoapWebServiceConfig extends WsConfigurerAdapter {
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  27.696 s
+[INFO] Finished at: 2025-06-11T15:41:06+01:00
+[INFO] ------------------------------------------------------------------------
 
-    /**
-     * Registers the {@link MessageDispatcherServlet} which is the main dispatcher for Spring WS.
-     * It handles SOAP messages and dispatches them to appropriate endpoints.
-     *
-     * @param context the Spring application context
-     * @return servlet registration bean mapped to the /ws/* URI
-     */
-    @Bean
-    public ServletRegistrationBean<MessageDispatcherServlet> messageDispatcherServlet(ApplicationContext context) {
-        MessageDispatcherServlet servlet = new MessageDispatcherServlet();
-        servlet.setApplicationContext(context);
-        servlet.setTransformWsdlLocations(true);
-        return new ServletRegistrationBean<>(servlet, "/ws/*");
-    }
-
-    /**
-     * Adds a custom interceptor for schema validation. This interceptor validates incoming SOAP
-     * messages against the configured XSD schema.
-     *
-     * @param interceptors list of interceptors to which this validation interceptor is added
-     */
-    @Override
-    public void addInterceptors(List<EndpointInterceptor> interceptors) {
-        SchemaValidationInterceptor validatingInterceptor = new SchemaValidationInterceptor();
-        validatingInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
-        validatingInterceptor.setValidateResponse(false); // Do not validate outgoing responses
-        try {
-            validatingInterceptor.setXsdSchemaCollection(updateContactXsd());
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
-        }
-        interceptors.add(validatingInterceptor);
-    }
-
-    /**
-     * Publishes a WSDL endpoint based on the `ArrValidationForPaymentParameters.xsd` file.
-     * This exposes the WSDL dynamically under /ws/ArrValidationForPaymentParameters.wsdl
-     *
-     * @return a configured WSDL definition bean
-     * @throws SchemaValidationException if XSD loading fails
-     */
-    @Bean(name = "ArrValidationForPaymentParameters")
-    public DefaultWsdl11Definition accountValidationWSDL() throws SchemaValidationException {
-        DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
-        wsdl11Definition.setPortTypeName("IArrValidationForPayment");
-        wsdl11Definition.setLocationUri("/ws");
-        wsdl11Definition.setTargetNamespace("http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/");
-        wsdl11Definition.setSchemaCollection(updateContactXsd());
-        return wsdl11Definition;
-    }
-
-    /**
-     * Loads the primary XSD schema (`ArrValidationForPaymentParameters.xsd`) from the classpath
-     * and enables inlining for WSDL generation and schema validation.
-     *
-     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
-     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
-     */
-    @Bean
-    public XsdSchemaCollection updateContactXsd() {
-        try {
-            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
-                    new ClassPathResource("xsd/account-validation/ArrValidationForPaymentParameters.xsd"));
-            xsd.setInline(true);
-            return xsd;
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
-        }
-    }
-
-
-    /**
-     * Publishes a WSDL endpoint based on the `CustomerRetrievalForPaymentParameters.xsd` file.
-     * This exposes the WSDL dynamically under /ws/CustomerRetrievalForPaymentParameters.wsdl
-     *
-     * @return a configured WSDL definition bean
-     * @throws SchemaValidationException if XSD loading fails
-     */
-    @Bean(name = "CustomerRetrievalForPayment")
-    public DefaultWsdl11Definition customerRetrievalWSDL() throws SchemaValidationException {
-        DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
-        wsdl11Definition.setPortTypeName("ICustomerRetrievalForPayment");
-        wsdl11Definition.setLocationUri("/ws");
-        wsdl11Definition.setTargetNamespace("http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/");
-        wsdl11Definition.setSchemaCollection(updateCustomerRetrievalXsd());
-        System.out.println("Here");
-        return wsdl11Definition;
-    }
-
-
-    /**
-     * Loads the primary XSD schema (`CustomerRetrievalForPaymentParameters.xsd`) from the classpath
-     * and enables inlining for WSDL generation and schema validation.
-     *
-     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
-     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
-     */
-    @Bean
-    public XsdSchemaCollection updateCustomerRetrievalXsd() {
-
-        try {
-            System.out.println("Inside the try ");
-
-        /*   CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
-                    new ClassPathResource[] {
-                            new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd"),
-                            new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd"),
-                            new ClassPathResource("xsd/shared/ServiceDefinitions.xsd"),
-                            new ClassPathResource("xsd/shared/PrimitiveDatatypes.xsd")});
-
-            Stream.of("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd",
-                            "xsd/shared/ServiceDefinitions.xsd",
-                            "xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd",
-                            "xsd/shared/PrimitiveDatatypes.xsd").
-                    forEach(path -> {
-                        System.out.println("> " + path + "= " + new ClassPathResource(path).exists());
-                    });*/
-            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
-                    new ClassPathResource("xsd/ustomer-retrieval/CustomerRetrievalForPaymentParameters.xsd"));
-            xsd.setInline(true);
-
-            return xsd;
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
-        }
-    }
-}
