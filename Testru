@@ -136,7 +136,7 @@ public class SoapWebServiceConfig extends WsConfigurerAdapter {
         try {
             System.out.println("Inside the try ");
 
-           CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
+        /*   CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
                     new ClassPathResource[] {
                             new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd"),
                             new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd"),
@@ -149,14 +149,14 @@ public class SoapWebServiceConfig extends WsConfigurerAdapter {
                             "xsd/shared/PrimitiveDatatypes.xsd").
                     forEach(path -> {
                         System.out.println("> " + path + "= " + new ClassPathResource(path).exists());
-                    });
-
+                    });*/
+            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
+                    new ClassPathResource("xsd/ustomer-retrieval/CustomerRetrievalForPaymentParameters.xsd"));
             xsd.setInline(true);
+
             return xsd;
         } catch (Exception e) {
             throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
         }
     }
 }
-
-
