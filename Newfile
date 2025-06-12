@@ -1,706 +1,571 @@
-package com.rbs.bdd.infrastructure.soap.interceptor;
-
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import jakarta.servlet.http.HttpServletResponse;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor; import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
-
-import static com.rbs.bdd.common.ServiceConstants.SCHEMA_VALIDATION_ERROR_XML;
-import static com.rbs.bdd.common.ServiceConstants.TAG_TRANSACTION_ID;
-
-
-/**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
- */
-public class AccountSchemaValidationInterceptor extends PayloadValidatingInterceptor {
-
-    private static final Logger logger = LoggerFactory.getLogger(AccountSchemaValidationInterceptor.class);
-
-    private static final String PLACEHOLDER_TXN = "TXN_ID_PLACEHOLDER";
-    private static final String PLACEHOLDER_RESPONSE = "RESPONSE_ID_PLACEHOLDER";
-
-    /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
-     */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        logger.warn("Schema validation failed. Returning custom schemaValidationError.xml");
-
-        try (InputStream staticXml = getClass().getClassLoader().getResourceAsStream(SCHEMA_VALIDATION_ERROR_XML)) {
-            if (staticXml == null) {
-                logger.error("schemaValidationError.xml not found");
-                return true;
-            }
-
-            DocumentBuilder builder = getSecureDocumentBuilder();
-            Document errorDoc = builder.parse(staticXml);
-            Document requestDoc = extractRequestDocument(messageContext, builder);
-
-            updateDynamicFields(errorDoc, requestDoc);
-
-            sendCustomSoapFault(errorDoc);
-            return false;
-        } catch (Exception e) {
-            logger.error("Error during schema validation interception", e);
-            throw new SchemaValidationException("Schema validation failure", e);
-        }
-    }
-
-    /**
-     * Creates a secure, namespace-aware {@link DocumentBuilderFactory}.
-     * <p>
-     * This method disables external entity processing to prevent XML External Entity (XXE)
-     * attacks and other injection vulnerabilities.
-     *
-     *
-     * @return configured {@link DocumentBuilderFactory} instance
-     * @throws ParserConfigurationException if security features cannot be set
-     */
-    private DocumentBuilder getSecureDocumentBuilder() throws ParserConfigurationException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-        factory.setXIncludeAware(false);
-        factory.setExpandEntityReferences(false);
-        return factory.newDocumentBuilder();
-    }
-
-
-
-    /**
-     * Parses the incoming request message into a Document.
-     */
-    private Document extractRequestDocument(MessageContext messageContext, DocumentBuilder builder) throws IOException, SAXException {
-        WebServiceMessage request = messageContext.getRequest();
-        ByteArrayOutputStream requestBytes = new ByteArrayOutputStream();
-        request.writeTo(requestBytes);
-        return builder.parse(new ByteArrayInputStream(requestBytes.toByteArray()));
-    }
-
-    /**
-     * Updates transaction ID, timestamp, and cleans up the response XML dynamically.
-     */
-    private void updateDynamicFields(Document errorDoc, Document requestDoc) throws XPathExpressionException {
-        String txnId = getValueFromRequest(requestDoc, TAG_TRANSACTION_ID);
-        String systemId = getValueFromRequest(requestDoc, "systemId");
-
-        replaceTextNode(errorDoc, PLACEHOLDER_RESPONSE, generateTxnId());
-        replaceTextNode(errorDoc, PLACEHOLDER_TXN, txnId != null ? txnId : PLACEHOLDER_TXN);
-        setXPathValue(errorDoc, "//*[local-name()='timestamp']",
-                OffsetDateTime.now(ZoneId.of("Europe/London")).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-
-        handleRefRequestIds(errorDoc, requestDoc, txnId, systemId);
-    }
-
-    /**
-     * Handles removal of <refRequestIds> node if <requestIds> is missing or empty.
-     */
-    private void handleRefRequestIds(Document errorDoc, Document requestDoc, String txnId, String systemId) {
-        Node requestIds = getNode(requestDoc, "requestIds");
-        boolean isEmpty = isNodeEmpty(requestIds);
-
-        Node refRequestIds = getNode(errorDoc, "refRequestIds");
-
-        if (isEmpty  && refRequestIds != null) {
-            refRequestIds.getParentNode().removeChild(refRequestIds);
-            return;
-        }
-
-        if (refRequestIds != null) {
-            if (txnId == null) removeNode(refRequestIds, "transactionId");
-            if (systemId == null) removeNode(refRequestIds, "systemId");
-            if (!refRequestIds.hasChildNodes()) {
-                refRequestIds.getParentNode().removeChild(refRequestIds);
-            }
-        }
-    }
-
-    /**
-     * Sends the final SOAP error response with HTTP 500.
-     */
-    private void sendCustomSoapFault(Document errorDoc) throws TransformerException, IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");
-        Transformer transformer = transformerFactory.newTransformer();
-        transformer.transform(new DOMSource(errorDoc), new StreamResult(out));
-
-        HttpServletResponse servletResponse =
-                ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse();
-
-        if (servletResponse != null && !servletResponse.isCommitted()) {
-            servletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            servletResponse.setContentType("text/xml;charset=UTF-8");
-            servletResponse.getOutputStream().write(out.toByteArray());
-            servletResponse.flushBuffer();
-        }
-    }
-
-    /**
-     * Retrieves the text content of a given tag from the request document.
-     */
-    private String getValueFromRequest(Document doc, String tag) {
-        NodeList list = doc.getElementsByTagNameNS("*", tag);
-        return list.getLength() > 0 ? list.item(0).getTextContent() : null;
-    }
-
-    /**
-     * Finds a node by its local name using wildcard namespace.
-     */
-    private Node getNode(Document doc, String localName) {
-        NodeList nodes = doc.getElementsByTagNameNS("*", localName);
-        return nodes.getLength() > 0 ? nodes.item(0) : null;
-    }
-
-    /**
-     * Replaces a text node matching a placeholder with a new value.
-     */
-    private void replaceTextNode(Document doc, String placeholder, String newValue) {
-        NodeList nodes = doc.getElementsByTagNameNS("*", "transactionId");
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Node txn = nodes.item(i);
-            if (placeholder.equals(txn.getTextContent())) {
-                txn.setTextContent(newValue);
-            }
-        }
-    }
-
-    /**
-     * Sets a value for the node matching the given XPath expression.
-     */
-    private void setXPathValue(Document doc, String path, String value) throws XPathExpressionException {
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
-        if (node != null) {
-            node.setTextContent(value);
-        }
-    }
-
-    /**
-     * Removes a specific child element from the parent node.
-     */
-    private void removeNode(Node parent, String tagName) {
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (tagName.equals(child.getLocalName())) {
-                parent.removeChild(child);
-                break;
-            }
-        }
-    }
-
-    /**
-     * Checks if the given node is empty or only contains non-element children.
-     */
-    private boolean isNodeEmpty(Node node) {
-        if (node == null) return true;
-        NodeList children = node.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            if (children.item(i).getNodeType() == Node.ELEMENT_NODE) return false;
-        }
-        return true;
-    }
-
-    /**
-     * Generates a unique transaction ID using UUID.
-     */
-    private String generateTxnId() {
-        return "1alN" + UUID.randomUUID().toString().replace("-", "") + "h";
-    }
-
-    /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
-     */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
-    }
-
-}
-
------------------------------
-
-package com.rbs.bdd.infrastructure.soap.interceptor;
-
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import jakarta.servlet.http.HttpServletResponse;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
-
-import static com.rbs.bdd.common.ServiceConstants.SCHEMA_VALIDATION_ERROR_XML;
-import static com.rbs.bdd.common.ServiceConstants.TAG_TRANSACTION_ID;
-
-
-/**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
- */
-public class CustomerSchemaValidationInterceptor extends PayloadValidatingInterceptor {
-
-    private static final Logger logger = LoggerFactory.getLogger(CustomerSchemaValidationInterceptor.class);
-
-    private static final String PLACEHOLDER_TXN = "TXN_ID_PLACEHOLDER";
-    private static final String PLACEHOLDER_RESPONSE = "RESPONSE_ID_PLACEHOLDER";
-
-    /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
-     */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        logger.warn("Schema validation failed. Returning custom schemaValidationError.xml");
-
-        try (InputStream staticXml = getClass().getClassLoader().getResourceAsStream(SCHEMA_VALIDATION_ERROR_XML)) {
-            if (staticXml == null) {
-                logger.error("schemaValidationError.xml not found");
-                return true;
-            }
-
-            DocumentBuilder builder = getSecureDocumentBuilder();
-            Document errorDoc = builder.parse(staticXml);
-            Document requestDoc = extractRequestDocument(messageContext, builder);
-
-            updateDynamicFields(errorDoc, requestDoc);
-
-            sendCustomSoapFault(errorDoc);
-            return false;
-        } catch (Exception e) {
-            logger.error("Error during schema validation interception", e);
-            throw new SchemaValidationException("Schema validation failure", e);
-        }
-    }
-
-    /**
-     * Creates a secure, namespace-aware {@link DocumentBuilderFactory}.
-     * <p>
-     * This method disables external entity processing to prevent XML External Entity (XXE)
-     * attacks and other injection vulnerabilities.
-     *
-     *
-     * @return configured {@link DocumentBuilderFactory} instance
-     * @throws ParserConfigurationException if security features cannot be set
-     */
-    private DocumentBuilder getSecureDocumentBuilder() throws ParserConfigurationException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-        factory.setXIncludeAware(false);
-        factory.setExpandEntityReferences(false);
-        return factory.newDocumentBuilder();
-    }
-
-
-
-    /**
-     * Parses the incoming request message into a Document.
-     */
-    private Document extractRequestDocument(MessageContext messageContext, DocumentBuilder builder) throws IOException, SAXException {
-        WebServiceMessage request = messageContext.getRequest();
-        ByteArrayOutputStream requestBytes = new ByteArrayOutputStream();
-        request.writeTo(requestBytes);
-        return builder.parse(new ByteArrayInputStream(requestBytes.toByteArray()));
-    }
-
-    /**
-     * Updates transaction ID, timestamp, and cleans up the response XML dynamically.
-     */
-    private void updateDynamicFields(Document errorDoc, Document requestDoc) throws XPathExpressionException {
-        String txnId = getValueFromRequest(requestDoc, TAG_TRANSACTION_ID);
-        String systemId = getValueFromRequest(requestDoc, "systemId");
-
-        replaceTextNode(errorDoc, PLACEHOLDER_RESPONSE, generateTxnId());
-        replaceTextNode(errorDoc, PLACEHOLDER_TXN, txnId != null ? txnId : PLACEHOLDER_TXN);
-        setXPathValue(errorDoc, "//*[local-name()='timestamp']",
-                OffsetDateTime.now(ZoneId.of("Europe/London")).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-
-        handleRefRequestIds(errorDoc, requestDoc, txnId, systemId);
-    }
-
-    /**
-     * Handles removal of <refRequestIds> node if <requestIds> is missing or empty.
-     */
-    private void handleRefRequestIds(Document errorDoc, Document requestDoc, String txnId, String systemId) {
-        Node requestIds = getNode(requestDoc, "requestIds");
-        boolean isEmpty = isNodeEmpty(requestIds);
-
-        Node refRequestIds = getNode(errorDoc, "refRequestIds");
-
-        if (isEmpty  && refRequestIds != null) {
-            refRequestIds.getParentNode().removeChild(refRequestIds);
-            return;
-        }
-
-        if (refRequestIds != null) {
-            if (txnId == null) removeNode(refRequestIds, "transactionId");
-            if (systemId == null) removeNode(refRequestIds, "systemId");
-            if (!refRequestIds.hasChildNodes()) {
-                refRequestIds.getParentNode().removeChild(refRequestIds);
-            }
-        }
-    }
-
-    /**
-     * Sends the final SOAP error response with HTTP 500.
-     */
-    private void sendCustomSoapFault(Document errorDoc) throws TransformerException, IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");
-        Transformer transformer = transformerFactory.newTransformer();
-        transformer.transform(new DOMSource(errorDoc), new StreamResult(out));
-
-        HttpServletResponse servletResponse =
-                ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse();
-
-        if (servletResponse != null && !servletResponse.isCommitted()) {
-            servletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            servletResponse.setContentType("text/xml;charset=UTF-8");
-            servletResponse.getOutputStream().write(out.toByteArray());
-            servletResponse.flushBuffer();
-        }
-    }
-
-    /**
-     * Retrieves the text content of a given tag from the request document.
-     */
-    private String getValueFromRequest(Document doc, String tag) {
-        NodeList list = doc.getElementsByTagNameNS("*", tag);
-        return list.getLength() > 0 ? list.item(0).getTextContent() : null;
-    }
-
-    /**
-     * Finds a node by its local name using wildcard namespace.
-     */
-    private Node getNode(Document doc, String localName) {
-        NodeList nodes = doc.getElementsByTagNameNS("*", localName);
-        return nodes.getLength() > 0 ? nodes.item(0) : null;
-    }
-
-    /**
-     * Replaces a text node matching a placeholder with a new value.
-     */
-    private void replaceTextNode(Document doc, String placeholder, String newValue) {
-        NodeList nodes = doc.getElementsByTagNameNS("*", "transactionId");
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Node txn = nodes.item(i);
-            if (placeholder.equals(txn.getTextContent())) {
-                txn.setTextContent(newValue);
-            }
-        }
-    }
-
-    /**
-     * Sets a value for the node matching the given XPath expression.
-     */
-    private void setXPathValue(Document doc, String path, String value) throws XPathExpressionException {
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
-        if (node != null) {
-            node.setTextContent(value);
-        }
-    }
-
-    /**
-     * Removes a specific child element from the parent node.
-     */
-    private void removeNode(Node parent, String tagName) {
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (tagName.equals(child.getLocalName())) {
-                parent.removeChild(child);
-                break;
-            }
-        }
-    }
-
-    /**
-     * Checks if the given node is empty or only contains non-element children.
-     */
-    private boolean isNodeEmpty(Node node) {
-        if (node == null) return true;
-        NodeList children = node.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            if (children.item(i).getNodeType() == Node.ELEMENT_NODE) return false;
-        }
-        return true;
-    }
-
-    /**
-     * Generates a unique transaction ID using UUID.
-     */
-    private String generateTxnId() {
-        return "1alN" + UUID.randomUUID().toString().replace("-", "") + "h";
-    }
-
-    /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
-     */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
-    }
-
-}
-
---------------------------
-
-package com.rbs.bdd.infrastructure.config;
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import com.rbs.bdd.application.exception.XsdSchemaLoadingException;
-import com.rbs.bdd.infrastructure.soap.interceptor.AccountSchemaValidationInterceptor;
-import com.rbs.bdd.infrastructure.soap.interceptor.CustomerSchemaValidationInterceptor;
-import org.springframework.boot.web.servlet.ServletRegistrationBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.ws.config.annotation.EnableWs;
-import org.springframework.ws.config.annotation.WsConfigurerAdapter;
-import org.springframework.ws.server.EndpointInterceptor;
-import org.springframework.ws.transport.http.MessageDispatcherServlet;
-import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
-import org.springframework.xml.xsd.XsdSchemaCollection;
-import org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection;
-import org.springframework.core.io.FileSystemResource;
-import java.util.stream.Stream;
-import java.util.List;
-
-import static com.rbs.bdd.common.ServiceConstants.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL;
-
-/**
- * Configures Spring Web Services (Spring WS) for the application.
- * <p>
- * This configuration includes:
- * <ul>
- *     <li>Publishing WSDL endpoints for SOAP web services</li>
- *     <li>Enabling automatic XML Schema (XSD) validation of incoming SOAP requests</li>
- *     <li>Registering interceptors for request validation</li>
- * </ul>
- */
-@Configuration
-@EnableWs
-public class SoapWebServiceConfig extends WsConfigurerAdapter {
-
-    /**
-     * Registers the {@link MessageDispatcherServlet} which is the main dispatcher for Spring WS.
-     * It handles SOAP messages and dispatches them to appropriate endpoints.
-     *
-     * @param context the Spring application context
-     * @return servlet registration bean mapped to the /ws/* URI
-     */
-    @Bean
-    public ServletRegistrationBean<MessageDispatcherServlet> messageDispatcherServlet(ApplicationContext context) {
-        MessageDispatcherServlet servlet = new MessageDispatcherServlet();
-        servlet.setApplicationContext(context);
-        servlet.setTransformWsdlLocations(true);
-        return new ServletRegistrationBean<>(servlet, "/ws/*");
-    }
-
-    /**
-     * Adds a custom interceptor for schema validation. This interceptor validates incoming SOAP
-     * messages against the configured XSD schema.
-     *
-     * @param interceptors list of interceptors to which this validation interceptor is added
-     */
-    @Override
-    public void addInterceptors(List<EndpointInterceptor> interceptors) {
-
-
-        CustomerSchemaValidationInterceptor customerRetrievalInterceptor = new CustomerSchemaValidationInterceptor();
-        customerRetrievalInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
-        customerRetrievalInterceptor.setValidateResponse(false); // Do not validate outgoing responses
-        try {
-            customerRetrievalInterceptor.setXsdSchemaCollection(updateCustomerRetrievalXsd());
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
-        }
-        interceptors.add(customerRetrievalInterceptor);
-
-        AccountSchemaValidationInterceptor validatingInterceptor = new AccountSchemaValidationInterceptor();
-        validatingInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
-        validatingInterceptor.setValidateResponse(false); // Do not validate outgoing responses
-        customerRetrievalInterceptor.setIncludeNamespaces(List.of());
-        try {
-            validatingInterceptor.setXsdSchemaCollection(updateContactXsd());
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
-        }
-        interceptors.add(validatingInterceptor);
-
-
-    }
-
-    /**
-     * Publishes a WSDL endpoint based on the `ArrValidationForPaymentParameters.xsd` file.
-     * This exposes the WSDL dynamically under /ws/ArrValidationForPaymentParameters.wsdl
-     *
-     * @return a configured WSDL definition bean
-     * @throws SchemaValidationException if XSD loading fails
-     */
-    @Bean(name = "ArrValidationForPaymentParameters")
-    public DefaultWsdl11Definition accountValidationWSDL() throws SchemaValidationException {
-        DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
-        wsdl11Definition.setPortTypeName("IArrValidationForPayment");
-        wsdl11Definition.setLocationUri("/ws");
-        wsdl11Definition.setTargetNamespace("http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/");
-        wsdl11Definition.setSchemaCollection(updateContactXsd());
-        return wsdl11Definition;
-    }
-
-    /**
-     * Loads the primary XSD schema (`ArrValidationForPaymentParameters.xsd`) from the classpath
-     * and enables inlining for WSDL generation and schema validation.
-     *
-     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
-     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
-     */
-    @Bean
-    public XsdSchemaCollection updateContactXsd() {
-        try {
-            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
-                    new ClassPathResource("xsd/account-validation/ArrValidationForPaymentParameters.xsd"));
-            xsd.setInline(true);
-            return xsd;
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
-        }
-    }
-
-
-    /**
-     * Publishes a WSDL endpoint based on the `CustomerRetrievalForPaymentParameters.xsd` file.
-     * This exposes the WSDL dynamically under /ws/CustomerRetrievalForPaymentParameters.wsdl
-     *
-     * @return a configured WSDL definition bean
-     * @throws SchemaValidationException if XSD loading fails
-     */
-    @Bean(name = "CustomerRetrievalForPayment")
-    public DefaultWsdl11Definition customerRetrievalWSDL() throws SchemaValidationException {
-        DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
-        wsdl11Definition.setPortTypeName("ICustomerRetrievalForPayment");
-        wsdl11Definition.setLocationUri("/ws");
-        wsdl11Definition.setTargetNamespace("http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/");
-        wsdl11Definition.setSchemaCollection(updateCustomerRetrievalXsd());
-        System.out.println("Here");
-        return wsdl11Definition;
-    }
-
-
-    /**
-     * Loads the primary XSD schema (`CustomerRetrievalForPaymentParameters.xsd`) from the classpath
-     * and enables inlining for WSDL generation and schema validation.
-     *
-     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
-     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
-     */
-    @Bean
-    public XsdSchemaCollection updateCustomerRetrievalXsd() {
-
-        try {
-            System.out.println("Inside the try ");
-            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
-                    new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd"));
-            xsd.setInline(true);
-
-            return xsd;
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
-        }
-    }
-}
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/" version="RBS_20210526_Baseline" xmlns:avfpSP="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/" xmlns:avfpTO="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/">
+  <!-- <?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/ServiceParameters/V01/" version="RBS_20210526_Baseline" xmlns:avfpSP="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/ServiceParameters/V01/" xmlns:avfpTO="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/"> -->
+<xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" schemaLocation="ArrValidationForPaymentTransferObjects.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/Services/Definitions/V03/" schemaLocation="../shared/ServiceDefinitions.xsd"/>
+  <xsd:complexType name="validateArrangementForPaymentRequest">
+    <xsd:sequence>
+      <xsd:element name="requestHeader" type="sdef:RequestHeader"/>
+      <xsd:element name="arrangementIdentifier" type="pdt:ObjectReference">
+        <xsd:annotation>
+          <xsd:documentation>The identifier for the arrangement being validated, a variety of formats are supported by the service.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="processingParameter" type="pdt:Property">
+        <xsd:annotation>
+          <xsd:documentation>Optional parameter used to satisfy any consumer driven technical provider requirements</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ValidateArrangementForPaymentContent">
+    <xsd:sequence>
+      <xsd:element name="responseHeader" type="sdef:ResponseHeader"/>
+      <xsd:element minOccurs="0" name="validatedArrangement" type="avfpTO:ProductArrangement_TO">
+        <xsd:annotation>
+          <xsd:documentation>Details of the arrangement being validated by the service</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="validateArrangementForPaymentResponse">
+    <xsd:sequence>
+      <xsd:choice>
+        <xsd:element name="response" type="avfpSP:ValidateArrangementForPaymentContent"/>
+        <xsd:element name="exception" type="sdef:Exception"/>
+      </xsd:choice>
+    </xsd:sequence>
+  </xsd:complexType>
+  <!-- Global elements required for WSDL operation binding -->
+  <xsd:element name="validateArrangementForPayment" type="avfpSP:validateArrangementForPaymentRequest"/>
+  <xsd:element name="validateArrangementForPaymentResponse" type="avfpSP:validateArrangementForPaymentResponse"/>
+
+</xsd:schema>
+
+-------
+
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" version="RBS_20210526_Baseline" xmlns:avfpTO="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/">
+  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
+  <xsd:complexType name="BaseTransferObject">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="extendedProperties" type="pdt:Property"/>
+      <xsd:element minOccurs="0" name="lastUpdateToken" type="pdt:PropertyVariant">
+        <xsd:annotation>
+          <xsd:documentation>Datetime for objects that require optimistic locking on update.  The datetime retrieved is passed back on the update operation and validated against the last updated datetime stored for the object.  If they are the same, the update can go ahead.  If not, another update has occurred in the interim and the update is rejected.
+
+As this is on the BaseTransferObject, it can be used selectively for those objects within a retrieve and update operation response / request parameter set, that require such optimistic locking.  This a a set on BMOs and the constituent dependent types, can be used to form a set of lock tokens.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedPartyName_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a name associated with an Involved Party. Multiple names are possible both concurrently and over time, varying by the use of the name such as the birth name or marriage name.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="nameText" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The complete aggregated name used for identifying a Role Player</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Organization_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party that is a group of Individuals bound by a common purpose. This includes commercial Organizations such as limited companies, publicly quoted multinationals, subsidiaries, etc. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:InvolvedParty_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="parentOrganization" type="avfpTO:Organization_TO">
+            <xsd:annotation>
+              <xsd:documentation>Returns the parent Organization for given Organization.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="AccountArrangementIdentifierAssessment_TO">
+    <xsd:annotation>
+      <xsd:documentation>An Assessment that has an ArrangementIdentifier as its subject - to verify the correctness of an Arrangement identifier.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:Assessment_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="modulusCheckStatus" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Represents the result of the account arrangement identifier (Modulus Check) assessment. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Assessment_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the result of an evaluation, based on a subjective opinion or on a scientific result. This includes Financial Valuation of Involved Partys, Market Segments, policies, places or other objects and scores calculated for risk assessment, marketing or other purposes.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="referred" type="pdt:Boolean">
+            <xsd:annotation>
+              <xsd:documentation>An arrangement assessment that results in certain payments to be referred to the Relationship Manager/Relationship Support Team for authorisation. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="BusinessModelObject_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the highest class of objects in the hierarchy of the Financial Services Business Object Model representing a thing or a concept that is meaningful to the modeled Organization. Business Model Objects are superclasses of many objects that have business significance to business people and are used to provide common behavior across many object definitions. Examples of Business Model Object subclasses are Accounting Unit, Arrangement, Channel, Event, Product etc.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="alternativeIdentifier" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>An alternative identifier for the Business Object</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="isSubjectOf" type="avfpTO:Assessment_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the result of an assessment based on a subjective opinion or on a scientific result. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="universalUniqueIdentifier" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>The unique identifier for the Business Object</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="isClassifiedBy" type="avfpTO:ClassificationValue_TO">
+            <xsd:annotation>
+              <xsd:documentation>The reference classification values that classify the given Business Object </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ClassificationValue_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a grouping of Business Model Objects, for example; Single Males Under 30, Married People over 50, etc... A Classification Value can be further partitioned into several sub-classifications according to different criteria, each of which is represented in turn by a Classification Scheme.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="schemeName" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="codeValue" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="name" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The word or phrase that identifies (but not uniquely) the object</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="shortName" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>An abridged version of classificationValue name Example: For retrieving job title reference data, If the name of the value is AGRICULTURAL WORKER, the shortName is AG</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="lifecycleStatus" type="pdt:LifecycleStatus">
+            <xsd:annotation>
+              <xsd:documentation>The lifeyclestatus of the ClassificationValue. Eg If retrieving  reference data related to customer titles, a ClassificationValue by the name of 'Mr' or "Mrs" may have the lifecycle status of 'Current'</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="displayOrder" type="pdt:String"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="GeographicArea_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a Location that is a place or a bounded area that is defined by nature, by an external authority, such as a government, or for an internal business purpose. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:ClassificationValue_TO"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType abstract="true" name="Registration_TO">
+    <xsd:annotation>
+      <xsd:documentation>A formal granting, by an authorized body, of rights, privileges, favors, statuses, or qualifications. Registrations are important from the perspective of being a qualified source of information. Note that a Registration represents the actual granting, not the Document that represents those rights. that document is a Registration Document.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="lifeCycleStatus" type="pdt:LifecycleStatus">
+            <xsd:annotation>
+              <xsd:documentation>The position of the registration within a life-cycle model consisting of a number of statuses.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isIssuedIn" type="avfpTO:GeographicArea_TO">
+            <xsd:annotation>
+              <xsd:documentation>The place of the registration</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="SortCodeRegistration_TO">
+    <xsd:annotation>
+      <xsd:documentation>A class representing the internal registration of a SortCode within the RBS Group</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:Registration_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="isTrainingBranch" type="pdt:Boolean">
+            <xsd:annotation>
+              <xsd:documentation>The traning branch of the sortcode registration</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="sortCodeRegistrationType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The sortcode registration type</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="paymentServicesProviderType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The Payment service provider type</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="agencyIndicator" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Indicates if the registration unit is an agency</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="activeIndicator" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Performs a dual purpose - indicates if the SortCode under the registration is Active, or Inactive as an internal SortCode, but in additional will indicate if the sort code is External (i.e. active/inactive are not relevant).</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="nonFPSettlementSortCode" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The sortcode aspect of a Settlement Account associated with a HOCA or Agency for Non-Faster Payments (eg paper and BACS payments)</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="nonFPSettlementAccountNumber" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The account number aspect of a Settlement Account associated with a HOCA or Agency for Non-Faster Payments (eg paper and BACS payments)</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isCreditCardHOCA" type="pdt:Boolean">
+            <xsd:annotation>
+              <xsd:documentation>Used to distinguish credit card HOCA sortcodes from other HOCA’s due to the need to apply special processing for to meet PSD2 Credit Card processing rules.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="FPSettlementSortCode" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The sortcode aspect of a Settlement Account associated with Faster Payments for a HOCA or Agency.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="FPSettlementAccountNumber" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The account number aspect of a Settlement Account associated with Faster Payments for a HOCA or Agency.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="FPSettlementType" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether or not this is an FP enabled Agency or a Credit Card HOCA.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isFPEnabled" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether the Sortcode is FP Enabled as a Member, Agency or not FP Enabled.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isInternalFunction" type="pdt:Boolean">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether the business processing carried out under the SortCode is deemed to be internal to RBS or not.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="OrganizationUnit_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party that is a component or subdivision of an &lt;Organization&gt; established for the purpose of performing discrete functional responsibilities. This typically represents the Organizational structure of the modeled Organization including sections, departments, district offices, projects, and employment positions.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:InvolvedParty_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="parentOrganization" type="avfpTO:Organization_TO">
+            <xsd:annotation>
+              <xsd:documentation>Returns the parent Organization for given Organization Unit. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="sortCodeRegistration" type="avfpTO:SortCodeRegistration_TO">
+            <xsd:annotation>
+              <xsd:documentation>Details of the internal registration of a SortCode within the Natwest Group</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType abstract="true" name="RolePlayer_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies an Involved Party or a role played by an Involved Party within the context of the modeled organization.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedParty_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Role Player that is any participant that may have contact with, or that is of interest to the modeled organization, and about which the Financial Institution wishes to maintain information. This includes the modeled organization itself.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:RolePlayer_TO">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasForName" type="avfpTO:InvolvedPartyName_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies a name associated with an Involved Party</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Balance_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a value that is the net of all debits and credits posted to an Accounting Unit at a particular point in time (usually covering a defined time period, such as day, month, year.)</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="balanceDerivationType" type="pdt:BalanceType">
+            <xsd:annotation>
+              <xsd:documentation>The kind of balance of this object represents. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="postedAmount" type="pdt:CurrencyAmount">
+            <xsd:annotation>
+              <xsd:documentation>Specifies the monetary (e.g. currency amount) or non-monetary (e.g. an integer counter) value of the Period Balance Type for the associated Accounting Unit and Scenario at the time designated by the Point Balance Type, before any later adjustments are made. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="AccountingUnit_TO">
+    <xsd:annotation>
+      <xsd:documentation>A repository used to monitor both monetary and non-monetary standings and used to support the operation of an Arrangement. An Accounting Unit can stand independently, or it can combine the values of other Accounting Units as in summarizing the position of the Financial Institution in a General Ledger or accounting for groups of arrangements.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The non-unique label by which an instance of Accounting Unit is known.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasBalance" type="avfpTO:Balance_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the Balances associated with the Accounting Unit.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="status" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Distinguishes between Accounting Units according to their standing in relation to legal and bank-imposed parameters and restrictions</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="badDebtStatus" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether the Accounting Unit has been assigned a bad debt status by the Debt Manager process. Bad debt accounts are those accounts which are unable to pay their liabilities back to the bank or to its lenders. The account receivables that will not be collected, can be identified as Bad Debt Accounts. There is specific processing of the Bad Debt accounts and they need to be identified differently in comparison to the other accounts. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isManagedBy" type="avfpTO:OrganizationUnit_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the Organization Unit that has ownership and responsibility for the maintenance of the Accounting Unit.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Arrangement_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a potential or actual agreement between an Organization and one or more Involved Partys that provides and affirms the rules and obligations associated with that agreement.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>A label given to a specific Arrangement used to distinguish it from other Arrangements. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="accountingUnits" type="avfpTO:AccountingUnit_TO">
+            <xsd:annotation>
+              <xsd:documentation>The Accounting Unit(s) which records and maintains the amounts involved in business dealings based on the specifications of the AccountArrangement.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="managingOrganizationUnit" type="avfpTO:OrganizationUnit_TO">
+            <xsd:annotation>
+              <xsd:documentation>The organisation unit which is managing the registration of the Arrangement, eg an organisation unit identified by a sort code</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isServicedBy" type="avfpTO:InvolvedParty_TO">
+            <xsd:annotation>
+              <xsd:documentation>Financial Institution that manages the product arrangement for a customer</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ContactPreference_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the characteristics related to the way a Role Player wants to be contacted. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="correspondenceAddressee" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The addressee text specified for use on the correspondence address. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="correspondenceDestinationPreference" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>In relation to Arrangements held by the RolePlayer, the destination preference for correspondence on that Arrangement. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="noMailIndicator" type="pdt:Boolean">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether the customer is opted for paperless communication.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Currency_TO">
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="numberOfDecimalPlaces" type="pdt:Number"/>
+          <xsd:element minOccurs="0" name="numericCode" type="pdt:Number">
+            <xsd:annotation>
+              <xsd:documentation>The numeric code for the given currency, used when codes need to be understood in countries that do not use latin scripts</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="restrictedStatus" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Indicates whether the currency has a restriction placed against it, for reasons like currency sanctions/controls or the currency is deemed worthless. Used by payments processing to know whether to process a payment. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="alphabeticCode" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The alphabetic currency code for the given currency. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="AccountArrangement_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of ProductArrangement in which there is an agreement between two or more Individuals, Organizations or OrganizationUnits, that provides and affirms the rules and obligations associated with the sale, exchange, or provision of financial goods, services or resources.An AccountArrangement is a ProductArrangement whose activities are tracked by a customer account; for example, Deposit Arrangements, Loan Arrangements, Credit Card Arrangements.The alternative is a NonAccountArrangement which is a Product Arrangement whose activities are not tracked by a customer account; for example, Travelers Check provision, Consulting Service.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:ProductArrangement_TO"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="AccountSwitchingArrangement_TO">
+    <xsd:annotation>
+      <xsd:documentation>A type of Account Facility Arrangement whereby a relationship is maintained between a source AccountArrangment and a target AccountArrangement, for a set period of time, to enable facilities such as inpayment forwarding Facilities are deteremined by the Arrangement Switch Status</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:ProductArrangement_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="targetArrangement" type="avfpTO:AccountArrangement_TO">
+            <xsd:annotation>
+              <xsd:documentation>Specifies the details relating to the (new) switched to target Account Arrangement</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="switchTargetDate" type="pdt:Date">
+            <xsd:annotation>
+              <xsd:documentation>The target date by when it is expected that facilities such as balances, inpayments, and scheduled outpayments will be successfully switched from the source Account Arrangement to the target Account Arrangement.  This is calculated based on the current industry aspirational SLA for switching services.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="switchStartDate" type="pdt:DateTime">
+            <xsd:annotation>
+              <xsd:documentation>The Date and Time after which an AccountSwitchingArangement is/will be in force</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ProductArrangement_TO">
+    <xsd:annotation>
+      <xsd:documentation>A Product Arrangement identifies an Arrangement between Involved Partys and the modeled organization specifying the terms by which the Involved Party obtains the use of the Products of the modeled organization.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="avfpTO:Arrangement_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="switchingStatus" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The Status of an SwitchedAccountArrangement </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="switchingArrangement" type="avfpTO:AccountSwitchingArrangement_TO">
+            <xsd:annotation>
+              <xsd:documentation>Switching arrangement that handles the account switching process</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isBasedOnProduct" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>The Arrangement based Product that forms the basis of a Product Arrangement</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="currency" type="avfpTO:Currency_TO">
+            <xsd:annotation>
+              <xsd:documentation>Base currency of the Product Arrangement, i.e. the Currency in which the accounting of transactions is done.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="contactPreferences" type="avfpTO:ContactPreference_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the contact preferences whioch relate directly to the Arrangement. Eg Statement preference information</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+</xsd:schema>
+
+
+------------
+Request for Account valid
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v01="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <v01:validateArrangementForPayment>
+         <requestHeader>
+            <operatingBrand>ALL</operatingBrand>
+            <!--Zero or more repetitions:-->
+            <requestIds>
+               <systemId>RequestID</systemId>
+               <transactionId>123456789</transactionId>
+            </requestIds>
+            <cmdType>Request</cmdType>
+         </requestHeader>
+         <arrangementIdentifier>
+            <identifier>GB94BARC10201530093422</identifier>
+            <context>
+               <schemeName>ArrangementEnterpriseIdType</schemeName>
+               <codeValue>InternationalBankAccountNumber</codeValue>
+            </context>
+         </arrangementIdentifier>
+      </v01:validateArrangementForPayment>
+   </soapenv:Body>
+</soapenv:Envelope>
