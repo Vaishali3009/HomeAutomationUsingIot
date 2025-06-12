@@ -1,3 +1,56 @@
+Original request which i need to pass:-
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                  xmlns:v01="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <v01:retrievePrimaryCustomerForArr>
+            <requestHeader>
+                <operatingBrand>NWB</operatingBrand>
+                <!--Zero or more repetitions:-->
+                <requestIds>
+                    <!--Optional:-->
+                    <systemId>RequestID</systemId>
+                    <!--Optional:-->
+                    <transactionId>123456789</transactionId>
+                </requestIds>
+                <requestIds>
+                 <systemId>SourceID</systemId>
+                 <transactionId>ISO</transactionId>
+             </requestIds>
+              <cmdType>Request</cmdType>
+            </requestHeader>
+            <processingParameter>
+              <objectReference>
+                 <identifier>NWB</identifier>
+                 <context>
+                    <schemeName>OrganizationEnterpriseIdType</schemeName>
+                    <codeValue>OperatingBrandIdentifier</codeValue>
+                 </context>
+              </objectReference>
+          </processingParameter>
+
+            <arrangementIdentifier>
+                <identifier>600001457620742222</identifier>
+                <context>
+                    <schemeName>ArrangementEnterpriseIdType</schemeName>
+                    <codeValue>UKBasicBankAccountNumber</codeValue>
+                    <!--Optional:-->
+                    <description>aslkjdslahbkjdf</description>
+                </context>
+                <!--Optional:-->
+                <description>aslkjdslahbkjdf</description>
+            </arrangementIdentifier>
+        </v01:retrievePrimaryCustomerForArr>
+    </soapenv:Body>
+</soapenv:Envelope>
+
+
+----------------------
+
+Sample working request :-
+
+
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
                   xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/">
    <soapenv:Header/>
