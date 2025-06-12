@@ -1,43 +1,44 @@
-private static final String NAMESPACE_URI_FOR_ACCOUNT_VALIDATION =
-    "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/";
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                  xmlns:v01="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <v01:retrievePrimaryCustomerForArr>
+            <requestHeader>
+                <operatingBrand>NWB</operatingBrand>
+                <!--Zero or more repetitions:-->
+                <requestIds>
+                    <!--Optional:-->
+                    <systemId>RequestID</systemId>
+                    <!--Optional:-->
+                    <transactionId>123456789</transactionId>
+                </requestIds>
+                <requestIds>
+                 <systemId>SourceID</systemId>
+                 <transactionId>ISO</transactionId>
+             </requestIds>
+              <cmdType>Request</cmdType>
+            </requestHeader>
+            <processingParameter>
+              <objectReference>
+                 <identifier>NWB</identifier>
+                 <context>
+                    <schemeName>OrganizationEnterpriseIdType</schemeName>
+                    <codeValue>OperatingBrandIdentifier</codeValue>
+                 </context>
+              </objectReference>
+          </processingParameter>
 
-@Override
-public boolean handleRequest(MessageContext messageContext, Object endpoint) {
-    try {
-        WebServiceMessage request = messageContext.getRequest();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        request.writeTo(out);
-        String xml = out.toString();
-
-        if (!xml.contains(NAMESPACE_URI_FOR_ACCOUNT_VALIDATION)) {
-            return true; // Skip this interceptor
-        }
-    } catch (Exception e) {
-        logger.error("Error in namespace filtering for Account Validation", e);
-    }
-
-    return super.handleRequest(messageContext, endpoint);
-}
-
-
------
-private static final String NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL =
-    "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/";
-
-@Override
-public boolean handleRequest(MessageContext messageContext, Object endpoint) {
-    try {
-        WebServiceMessage request = messageContext.getRequest();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        request.writeTo(out);
-        String xml = out.toString();
-
-        if (!xml.contains(NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL)) {
-            return true; // Skip this interceptor
-        }
-    } catch (Exception e) {
-        logger.error("Error in namespace filtering for Customer Retrieval", e);
-    }
-
-    return super.handleRequest(messageContext, endpoint);
-}
+            <arrangementIdentifier>
+                <identifier>600001457620742222</identifier>
+                <context>
+                    <schemeName>ArrangementEnterpriseIdType</schemeName>
+                    <codeValue>UKBasicBankAccountNumber</codeValue>
+                    <!--Optional:-->
+                    <description>aslkjdslahbkjdf</description>
+                </context>
+                <!--Optional:-->
+                <description>aslkjdslahbkjdf</description>
+            </arrangementIdentifier>
+        </v01:retrievePrimaryCustomerForArr>
+    </soapenv:Body>
+</soapenv:Envelope>
