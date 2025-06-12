@@ -38,33 +38,51 @@ This is working request for which schema validation is successful
 ------------------------------------------
 
 but i want for the below request the schema validation should be done 
-
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/">
-   <soapenv:Header/>
-   <soapenv:Body>
-    <crfpSP:retrievePrimaryCustomerForArrRequest xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/ CustomerRetrievalForPaymentParameters.xsd ">
-<requestHeader>
-<operatingBrand>NWB</operatingBrand>
-<requestIds>
-<systemId>RequestID</systemId>
-<transactionId>FPMB6107012345678</transactionId>
-</requestIds>
-<requestIds>
-<systemId>SourceID</systemId>
-<transactionId>XCT</transactionId>
-</requestIds>
-</requestHeader>
-<arrangementIdentifier>
-<identifier>CLRFRUK AUD 1</identifier>
-<context>
-<schemeName>ArrangementEnterpriseIdType</schemeName>
-<codeValue>InternationalCustomerAccountNumber</codeValue>
-</context>
-</arrangementIdentifier>
-</crfpSP:retrievePrimaryCustomerForArrRequest>
-   </soapenv:Body>
+                  xmlns:v01="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <v01:retrievePrimaryCustomerForArr>
+            <requestHeader>
+                <operatingBrand>NWB</operatingBrand>
+                <!--Zero or more repetitions:-->
+                <requestIds>
+                    <!--Optional:-->
+                    <systemId>RequestID</systemId>
+                    <!--Optional:-->
+                    <transactionId>123456789</transactionId>
+                </requestIds>
+                <requestIds>
+                 <systemId>SourceID</systemId>
+                 <transactionId>ISO</transactionId>
+             </requestIds>
+              <cmdType>Request</cmdType>
+            </requestHeader>
+            <processingParameter>
+              <objectReference>
+                 <identifier>NWB</identifier>
+                 <context>
+                    <schemeName>OrganizationEnterpriseIdType</schemeName>
+                    <codeValue>OperatingBrandIdentifier</codeValue>
+                 </context>
+              </objectReference>
+          </processingParameter>
+
+            <arrangementIdentifier>
+                <identifier>600001457620742222</identifier>
+                <context>
+                    <schemeName>ArrangementEnterpriseIdType</schemeName>
+                    <codeValue>UKBasicBankAccountNumber</codeValue>
+                    <!--Optional:-->
+                    <description>aslkjdslahbkjdf</description>
+                </context>
+                <!--Optional:-->
+                <description>aslkjdslahbkjdf</description>
+            </arrangementIdentifier>
+        </v01:retrievePrimaryCustomerForArr>
+    </soapenv:Body>
 </soapenv:Envelope>
+ 
 
 ------------------------------------
 
