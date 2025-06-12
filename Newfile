@@ -1,3 +1,577 @@
+CustomerRetrievalForPaymentParameters.xsd
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" version="RBS_20210325_Baseline" xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/"
+            xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/" elementFormDefault="unqualified" >
+  <xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" schemaLocation="CustomerRetrievalForPaymentTransferObjects.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/Services/Definitions/V03/" schemaLocation="../shared/ServiceDefinitions.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
+  <xsd:complexType name="retrievePrimaryCustomerForArrRequest">
+    <xsd:sequence>
+      <xsd:element name="requestHeader" type="sdef:RequestHeader"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="processingParameter" type="pdt:Property"/>
+      <xsd:element name="arrangementIdentifier" type="pdt:ObjectReference">
+        <xsd:annotation>
+          <xsd:documentation>Identifier of the account for which the Customer is identified as the Primary Customer (Account Owner).</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="RetrievePrimaryCustomerForArrContent">
+    <xsd:sequence>
+      <xsd:element name="responseHeader" type="sdef:ResponseHeader"/>
+      <xsd:element minOccurs="0" name="customer" type="crfpTO:InvolvedParty_TO"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="modifyToken" type="pdt:Property"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="retrievePrimaryCustomerForArrResponse">
+    <xsd:sequence>
+      <xsd:choice>
+        <xsd:element name="response" type="crfpSP:RetrievePrimaryCustomerForArrContent"/>
+        <xsd:element name="exception" type="sdef:Exception"/>
+      </xsd:choice>
+    </xsd:sequence>
+  </xsd:complexType>
+  <!-- Global elements required for WSDL operation binding -->
+  <xsd:element name="retrievePrimaryCustomerForArrRequest" type="crfpSP:retrievePrimaryCustomerForArrRequest"/>
+  <xsd:element name="retrievePrimaryCustomerForArrResponse" type="crfpSP:retrievePrimaryCustomerForArrResponse"/>
+
+</xsd:schema>
+
+
+--------------------
+
+CustomerRetrievalForPaymentTransferObjects.xsd
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" version="RBS_20210325_Baseline"
+             xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" elementFormDefault="unqualified">
+  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
+  <xsd:complexType name="BaseTransferObject">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="extendedProperties" type="pdt:Property"/>
+      <xsd:element minOccurs="0" name="lastUpdateToken" type="pdt:PropertyVariant">
+        <xsd:annotation>
+          <xsd:documentation>Datetime for objects that require optimistic locking on update.  The datetime retrieved is passed back on the update operation and validated against the last updated datetime stored for the object.  If they are the same, the update can go ahead.  If not, another update has occurred in the interim and the update is rejected.
+
+As this is on the BaseTransferObject, it can be used selectively for those objects within a retrieve and update operation response / request parameter set, that require such optimistic locking.  This a a set on BMOs and the constituent dependent types, can be used to form a set of lock tokens.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ContactPoint_TO">
+    <xsd:annotation>
+      <xsd:documentation>The method and destination of a communication contact with a Role Player. This relates to specific communication media: Postal Address, Telephone Number, Electronic Address, Care Of Address </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="priorityLevel" type="pdt:Number">
+            <xsd:annotation>
+              <xsd:documentation>The relative priority level of one Contact Point over another.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="usage" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The context in which a Role Player uses this Contact Point. eg Primary Residence, Work etc</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasComponent" type="pdt:AddressComponent">
+            <xsd:annotation>
+              <xsd:documentation>Individual components of a postal address e.g. City, PostCode etc</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="lifecycleStatus" type="pdt:LifecycleStatus">
+            <xsd:annotation>
+              <xsd:documentation>Lifecycle status of the Contact Point e.g Active, Inactive etc </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="contactPointType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the type of Contact Point under consideration eg Postal Address, Telephone number etc </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="PostalAddress_TO">
+    <xsd:annotation>
+      <xsd:documentation>An address used for the delivery of letters and packages by an external mailing or package service, at a place where the recipient usually lives or works. The structure of a postal address depends on the country of the postal address, for this reason a Postal Address is made up of a number of Postal Address Components. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:ContactPoint_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="postalCodeExemptionReason" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The exempt type of the Postal Address, which indicates whether the postal address is exempted in having a Postal Code.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="GeographicArea_TO">
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:ClassificationValue_TO"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ClassificationValue_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a grouping of Business Model Objects, for example; Single Males Under 30, Married People over 50, etc... A Classification Value can be further partitioned into several sub-classifications according to different criteria, each of which is represented in turn by a Classification Scheme.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="schemeName" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="codeValue" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="name" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The word or phrase that identifies (but not uniquely) the classification value.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="shortName" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>An abridged version of classificationValue name Example: For retrieving job title reference data, If the name of the value is AGRICULTURAL WORKER, the shortName is AG</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ConditionContext_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the &lt;Business&gt; to which a &lt;Condition&gt; relates</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="priority" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="occurrenceNumber" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>A reference number which signifies the occurrence of the Condition applying to the product Arrangement </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="startDate" type="pdt:DateTime">
+            <xsd:annotation>
+              <xsd:documentation>The date on which this Condition becomes appicable to the ProductArrangement.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="endDate" type="pdt:Date">
+            <xsd:annotation>
+              <xsd:documentation>The date from when this Condition is no longer applicable to the ProductArrangement. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Condition_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the specific requirements that pertain to how the business of the modeled organization is conducted and includes information such as prerequisite or qualification criteria and restrictions or limits associated with the requirements. Conditions can apply to various aspects of a Financial Institution's operations, such as the sale and servicing of Products or the determination of eligibility to purchase a product.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The word or phrase used to identify (but not uniquely) the Condition.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="conditionValue" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Identifies a Condition Descriptor that defines the measurable content that applies to a Condition. A Condition Value can be numeric, textual or an indicator (Yes, No). Numeric Condition Values can be qualified by a Unit Of Measure.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="code" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>This can be used for any Condition codes.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="hasConditionContext" type="crfpTO:ConditionContext_TO"/>
+          <xsd:element minOccurs="0" name="purposeType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Distinguishes between Conditions according to the business activity they support or assist in accomplishing. Values within this Scheme are not mutually exclusive. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType abstract="true" name="BusinessModelObject_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the highest class of objects in the hierarchy of the Financial Services Business Object Model representing a thing or a concept that is meaningful to the modeled Organization. Business Model Objects are superclasses of many objects that have business significance to business people and are used to provide common behavior across many object definitions. Examples of Business Model Object subclasses are Accounting Unit, Arrangement, Channel, Event, Product etc.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="universalUniqueIdentifier" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>Unique identifier for the Business Model Object</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="alternativeIdentifier" type="pdt:ObjectReference"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="isClassifiedBy" type="crfpTO:ClassificationValue_TO"/>
+          <xsd:element minOccurs="0" name="objectType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The dynamic type for an instance of an object. E.g. for a DepositArrangement, this might specify FixedTermDepositArrangement to qualify what attributes are meaningful.Used to dynamically type an object as an instance of the specified type.Where an object has been created as a Testing/Training or Production object (e.g operationalNature), then the objectType Reference will be replaced by ObjectType, which includes an additional operationalNature element to reflect this where meaningful (e.g. "DepositArrangementType", "FixedTermDeposit", "Training"). The default value if a Reference is used rather than ObjectType, should be "Production"</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasConditions" type="crfpTO:Condition_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the Conditions to which the Business Model Objects refers</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="description" type="pdt:String"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Registration_TO">
+    <xsd:annotation>
+      <xsd:documentation>A formal granting, by an authorized body, of rights, privileges, favors, statuses, or qualifications. Registrations are important from the perspective of being a qualified source of information. Note that a Registration represents the actual granting, not the Document that represents those rights. that document is a Registration Document.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="isIssuedIn" type="crfpTO:GeographicArea_TO"/>
+          <xsd:element minOccurs="0" name="lifeCycleStatus" type="pdt:LifecycleStatus">
+            <xsd:annotation>
+              <xsd:documentation>Life cycle status of the Registration</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="placeOfIssue" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>Place of the registration</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Customer_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party Role played by an Involved Party that is considered to be receiving services or products from the modeled organization or one of its Organization Units, or who is a potential recipient of such services or products.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:InvolvedPartyRole_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="kycAssessmentChannel" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Specifies which channel carried out the Know Your Customer (KYC) assessment for the given customer. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedPartyRole_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular role played by a Role Player in a specific context. This role can specify additional information specific to the context, such as a mailing address for an account holder. The role can be identified independently of the context if the details are unavailable or irrelevant.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:RolePlayer_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="hasForContext" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>The identification of a Business Model Object as the context of an Involved Party Role</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="roleType" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="lifecycleStatus" type="pdt:LifecycleStatus"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ContactPreference_TO">
+    <xsd:annotation>
+      <xsd:documentation>The characteristics related to the way a Role Player wants to be contacted. This includes the contact points, the language, medium, name and timing preferences, the preferred contacting Individual as well as restrictions on the contact frequency. It also defines the usage such as business or private and the purpose, such as billing or mailing. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="contactPoint" type="crfpTO:ContactPoint_TO">
+            <xsd:annotation>
+              <xsd:documentation>One or more points of contact for the Role Player under this Contact Preference</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="coveredArrangements" type="pdt:ObjectReference">
+            <xsd:annotation>
+              <xsd:documentation>Returns the Arrangements that are covered by this Contact Preference </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="correspondenceDestinationPreference" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>In relation to Arrangements held by the RolePlayer, the destination preference for correspondence on that Arrangement. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType abstract="true" name="RolePlayer_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies an Involved Party or a role played by an Involved Party within the context of the modeled organization.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BusinessModelObject_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="firstContactDate" type="pdt:String"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="isPlayingRole" type="crfpTO:InvolvedPartyRole_TO"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="isRegisteredIn" type="crfpTO:PartyRegistration_TO"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasForContactPreference" type="crfpTO:ContactPreference_TO"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="PartyRegistration_TO">
+    <xsd:annotation>
+      <xsd:documentation>An official recognition related to a Role Player. A Party Registration may be backed up by a Documentation Item</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:Registration_TO">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="registersParty" type="crfpTO:RolePlayer_TO">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the Involved Partys that are the subjects of a Party Registration.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="NationalRegistration_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Party Registration that certifies an Involved Party as belonging to or governed by a national governmental entity. For example, social security registration, taxpayer identification, passport, citizenship identity card are forms of National Registration.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:PartyRegistration_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="countryCode" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="hasPrimaryResidence" type="pdt:Boolean"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="IndividualName_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a name structure used to specify a particular Individual or an Involved Party Role played by an Individual. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:InvolvedPartyName_TO">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="middleNames" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The additional names given to an Individual, usually at birth, and which appear sequentially between the first name and last name.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="prefixTitle" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The honorifics or titles that precede the name when addressing an Individual in polite, somewhat formal circumstances.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="suffixTitle" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The titles, qualifications, or positions that follow the &lt;Individual&gt;'s name when addressing her formally or professionally, usually when writing.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="firstName" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The Individual's name normally preceding the last name and typically used to refer to the person in informal circumstances. For Example: John, Mary</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="lastName" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The part of a Individual's name arising from family identifications. e.g. Murphy.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedPartyName_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a name associated with an Involved Party. Multiple names are possible both concurrently and over time, varying by the use of the name such as the birth name or marriage name.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="nameText" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Name text</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="description" type="pdt:Text"/>
+          <xsd:element minOccurs="0" name="startDate" type="pdt:Date"/>
+          <xsd:element minOccurs="0" name="endDate" type="pdt:Date"/>
+          <xsd:element minOccurs="0" name="aliasType" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="usage" type="pdt:Reference"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Organization_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party that is a group of Individuals bound by a common purpose. This includes commercial Organizations such as limited companies, publicly quoted multinationals, subsidiaries, etc. Organizations include Financial Organizations that provides products and services related to the financial services sector of the economy. Examples of such products and services include accepting deposits, making of loans, exchanging foreign currency, providing bill finance, handling foreign trade, managing investments and financing corporations. These financial organizations include the various types of banks (e.g.: retail banks, merchant banks, accepting houses, discount houses, foreign banks), building societies, pension funds, unit trusts, investment trusts and insurance companies. Financial organizations are either recognized as such by law or are regulated by a self regulating organization.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:InvolvedParty_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="incorporationDate" type="pdt:Date">
+            <xsd:annotation>
+              <xsd:documentation>Identifies the date of the Incorporation of the Organization </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isIncorporatedIn" type="crfpTO:GeographicArea_TO"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasTradingAddress" type="crfpTO:PostalAddress_TO">
+            <xsd:annotation>
+              <xsd:documentation>Attribute of the relationship between an Organization and a PostalAddress where the address is registered as a trading address for the Organization. Creation Date: 06/04/2018 Last Change Modeler: Julie Williamson Initiative: Party MDM</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="organizationClassificationType" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="tradeStartMonth" type="pdt:Number">
+            <xsd:annotation>
+              <xsd:documentation>Month the Organization started trading.  Facilitates the requirement to break the trading start date into separate Month and Year elements.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="tradeStartYear" type="pdt:Number">
+            <xsd:annotation>
+              <xsd:documentation>Year the Organization started trading.  Facilitates the requirement to break the trading start date into separate Month and Year elements.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="fiscalYearEnd" type="pdt:Number"/>
+          <xsd:element minOccurs="0" name="areaOfOperation" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="hasInternationalTrade" type="pdt:Reference"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="OrganizationUnit_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party that is a component or subdivision of an Organization established for the purpose of performing discrete functional responsibilities. This typically represents the Organizational structure of the modeled Organization including sections, departments, district offices, projects, and employment positions.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:InvolvedParty_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="parentOrganization" type="crfpTO:Organization_TO">
+            <xsd:annotation>
+              <xsd:documentation>Returns the parent Organization for given Organization Unit. </xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedPartyAssociation_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies additional details about the association of one Involved Party to another Involved Party, for example, the delegated duty.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="associationStart" type="pdt:DateTime"/>
+          <xsd:element minOccurs="0" name="associatedInvolvedParty" type="crfpTO:InvolvedParty_TO"/>
+          <xsd:element minOccurs="0" name="associationEnd" type="pdt:DateTime"/>
+          <xsd:element minOccurs="0" name="associationType" type="pdt:Reference"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="EducationCourse_TO">
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:BaseTransferObject">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="startDate" type="pdt:Date"/>
+          <xsd:element minOccurs="0" name="endDate" type="pdt:Date"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Individual_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Involved Party that is a natural person who is of interest to the modeled organization.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:InvolvedParty_TO">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="birthDate" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The birth date of the Individual</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="gender" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The Individual's sex or gender.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="maritalStatus" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="deathDate" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>The date of the Individual's death. IBM Unique ID: IDM09020</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="occupation" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="birthPlace" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="hasBirthCountry" type="pdt:Reference"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasCitizenships" type="crfpTO:NationalRegistration_TO"/>
+          <xsd:element minOccurs="0" name="additionalCitizenships" type="pdt:String">
+            <xsd:annotation>
+              <xsd:documentation>Identifies whether the &lt;Individual&gt; is a citizen of multiple countries and that the number of countries exceeds that in which RBS records the details. Note: In the current Core provider implementation, this indicator represents the situation where there are more than 4 countries of citizenship</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="primaryNationalityRegistration" type="crfpTO:NationalRegistration_TO"/>
+          <xsd:element minOccurs="0" name="isStaff" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="employmentStatus" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="isHighNetWorth" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="specialCreditIndicatorType" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="mainSourceOfWealth" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="mainSourceOfIncome" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="consentToDataUsage" type="pdt:String"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="records" type="crfpTO:EducationCourse_TO"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="InvolvedParty_TO">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a particular type of Role Player that is any participant that may have contact with, or that is of interest to the modeled organization, and about which the Financial Institution wishes to maintain information. This includes the modeled organization itself.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="crfpTO:RolePlayer_TO">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasForName" type="crfpTO:InvolvedPartyName_TO">
+            <xsd:annotation>
+              <xsd:documentation>name of the party</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="isSensitive" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="hasLegalAddress" type="crfpTO:PostalAddress_TO"/>
+          <xsd:element minOccurs="0" name="hasPartyType" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>The PartyType of the Involved Party</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasInvolvedPartyAssociation" type="crfpTO:InvolvedPartyAssociation_TO"/>
+          <xsd:element minOccurs="0" name="hasRiskCountry" type="pdt:Reference"/>
+          <xsd:element minOccurs="0" name="residesAt" type="pdt:Reference">
+            <xsd:annotation>
+              <xsd:documentation>Specifies the Country the Involved Party resides at, for example John Doe resides in Canada.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="hasTaxRegistrations" type="crfpTO:NationalRegistration_TO"/>
+          <xsd:element minOccurs="0" name="isPoliticallyExposed" type="pdt:String"/>
+          <xsd:element minOccurs="0" name="isPrivateBankParty" type="pdt:String"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+</xsd:schema>
+
+
+-----------------------
+ArrValidationForPaymentParameters.xsd
+
 <?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/" version="RBS_20210526_Baseline" xmlns:avfpSP="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/" xmlns:avfpTO="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/">
   <!-- <?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/ServiceParameters/V01/" version="RBS_20210526_Baseline" xmlns:avfpSP="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/ServiceParameters/V01/" xmlns:avfpTO="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/"> -->
 <xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" schemaLocation="ArrValidationForPaymentTransferObjects.xsd"/>
@@ -42,7 +616,9 @@
 
 </xsd:schema>
 
--------
+--------------
+
+ArrValidationForPaymentTransferObjects.xsd 
 
 <?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" version="RBS_20210526_Baseline" xmlns:avfpTO="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/">
   <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
@@ -542,30 +1118,38 @@ As this is on the BaseTransferObject, it can be used selectively for those objec
   </xsd:complexType>
 </xsd:schema>
 
-
-------------
-Request for Account valid
-
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v01="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/">
+------------------\
+<soapenv:Envelope xsi:schemaLocation="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/ CustomerRetrievalForPaymentParameters.xsd " xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:v01="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/">
    <soapenv:Header/>
    <soapenv:Body>
-      <v01:validateArrangementForPayment>
+      <v01:retrievePrimaryCustomerForArr>
          <requestHeader>
-            <operatingBrand>ALL</operatingBrand>
-            <!--Zero or more repetitions:-->
+            <operatingBrand>NWB</operatingBrand>
             <requestIds>
                <systemId>RequestID</systemId>
                <transactionId>123456789</transactionId>
             </requestIds>
+            <requestIds>
+               <systemId>SourceID</systemId>
+               <transactionId>CPO</transactionId>
+            </requestIds>
             <cmdType>Request</cmdType>
          </requestHeader>
+         <processingParameter>
+            <objectReference>
+               <identifier>NWB</identifier>
+               <context>
+                  <schemeName>OrganizationEnterpriseIdType</schemeName>
+                  <codeValue>OperatingBrandIdentifier</codeValue>
+               </context>
+            </objectReference>
+         </processingParameter>
          <arrangementIdentifier>
-            <identifier>GB94BARC10201530093422</identifier>
+            <identifier>60000145762074</identifier>
             <context>
                <schemeName>ArrangementEnterpriseIdType</schemeName>
-               <codeValue>InternationalBankAccountNumber</codeValue>
+               <codeValue>UKBasicBankAccountNumber</codeValue>
             </context>
          </arrangementIdentifier>
-      </v01:validateArrangementForPayment>
+      </v01:retrievePrimaryCustomerForArr>
    </soapenv:Body>
-</soapenv:Envelope>
