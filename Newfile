@@ -1,164 +1,164 @@
-package com.rbs.bdd.infrastructure.config;
+package com.rbs.bdd.infrastructure.soap.api;
 
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import com.rbs.bdd.application.exception.XsdSchemaLoadingException;
-import com.rbs.bdd.infrastructure.soap.interceptor.SchemaValidationInterceptor;
-import org.springframework.boot.web.servlet.ServletRegistrationBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.ws.config.annotation.EnableWs;
-import org.springframework.ws.config.annotation.WsConfigurerAdapter;
-import org.springframework.ws.server.EndpointInterceptor;
-import org.springframework.ws.transport.http.MessageDispatcherServlet;
-import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
-import org.springframework.xml.xsd.XsdSchemaCollection;
-import org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection;
-import org.springframework.core.io.FileSystemResource;
-import java.util.stream.Stream;
-import java.util.List;
+import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
+import com.rbs.bdd.application.port.in.PaymentValidationPort;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.server.endpoint.annotation.Endpoint;
+import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
+import org.springframework.ws.server.endpoint.annotation.RequestPayload;
+import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
+
 
 /**
- * Configures Spring Web Services (Spring WS) for the application.
- * <p>
- * This configuration includes:
- * <ul>
- *     <li>Publishing WSDL endpoints for SOAP web services</li>
- *     <li>Enabling automatic XML Schema (XSD) validation of incoming SOAP requests</li>
- *     <li>Registering interceptors for request validation</li>
- * </ul>
+ * SOAP endpoint adapter class for handling the `validateArrangementForPayment` operation.
+ * It uses Spring WS annotations to route incoming SOAP requests to the appropriate service layer.
  */
-@Configuration
-@EnableWs
-public class SoapWebServiceConfig extends WsConfigurerAdapter {
+@Endpoint
+public class PaymentValidationSoapAdapter {
+
+    /**Changes for the request*/
+
+    private static final String NAMESPACE_URI_FOR_ACCOUNT_VALIDATION = "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/";
+    private static final String NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL = "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/";
+
+    private final PaymentValidationPort paymentValidationPort;
+    private final CustomerRetrievalPort customerRetrievalPort;
 
     /**
-     * Registers the {@link MessageDispatcherServlet} which is the main dispatcher for Spring WS.
-     * It handles SOAP messages and dispatches them to appropriate endpoints.
+     * Constructor-based injection of the orchestrator that handles business logic.
      *
-     * @param context the Spring application context
-     * @return servlet registration bean mapped to the /ws/* URI
+     * @param paymentValidationPort the orchestrator service
      */
-    @Bean
-    public ServletRegistrationBean<MessageDispatcherServlet> messageDispatcherServlet(ApplicationContext context) {
-        MessageDispatcherServlet servlet = new MessageDispatcherServlet();
-        servlet.setApplicationContext(context);
-        servlet.setTransformWsdlLocations(true);
-        return new ServletRegistrationBean<>(servlet, "/ws/*");
-    }
-
-    /**
-     * Adds a custom interceptor for schema validation. This interceptor validates incoming SOAP
-     * messages against the configured XSD schema.
-     *
-     * @param interceptors list of interceptors to which this validation interceptor is added
-     */
-    @Override
-    public void addInterceptors(List<EndpointInterceptor> interceptors) {
-        SchemaValidationInterceptor validatingInterceptor = new SchemaValidationInterceptor();
-        validatingInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
-        validatingInterceptor.setValidateResponse(false); // Do not validate outgoing responses
-        try {
-            validatingInterceptor.setXsdSchemaCollection(updateContactXsd());
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
-        }
-        interceptors.add(validatingInterceptor);
-        
-        
-    }
-
-    /**
-     * Publishes a WSDL endpoint based on the `ArrValidationForPaymentParameters.xsd` file.
-     * This exposes the WSDL dynamically under /ws/ArrValidationForPaymentParameters.wsdl
-     *
-     * @return a configured WSDL definition bean
-     * @throws SchemaValidationException if XSD loading fails
-     */
-    @Bean(name = "ArrValidationForPaymentParameters")
-    public DefaultWsdl11Definition accountValidationWSDL() throws SchemaValidationException {
-        DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
-        wsdl11Definition.setPortTypeName("IArrValidationForPayment");
-        wsdl11Definition.setLocationUri("/ws");
-        wsdl11Definition.setTargetNamespace("http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/");
-        wsdl11Definition.setSchemaCollection(updateContactXsd());
-        return wsdl11Definition;
-    }
-
-    /**
-     * Loads the primary XSD schema (`ArrValidationForPaymentParameters.xsd`) from the classpath
-     * and enables inlining for WSDL generation and schema validation.
-     *
-     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
-     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
-     */
-    @Bean
-    public XsdSchemaCollection updateContactXsd() {
-        try {
-            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
-                    new ClassPathResource("xsd/account-validation/ArrValidationForPaymentParameters.xsd"));
-            xsd.setInline(true);
-            return xsd;
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
-        }
+    public PaymentValidationSoapAdapter(PaymentValidationPort paymentValidationPort,CustomerRetrievalPort customerRetrievalPort) {
+        this.paymentValidationPort = paymentValidationPort;
+        this.customerRetrievalPort = customerRetrievalPort;
     }
 
 
-    /**
-     * Publishes a WSDL endpoint based on the `CustomerRetrievalForPaymentParameters.xsd` file.
-     * This exposes the WSDL dynamically under /ws/CustomerRetrievalForPaymentParameters.wsdl
-     *
-     * @return a configured WSDL definition bean
-     * @throws SchemaValidationException if XSD loading fails
-     */
-    @Bean(name = "CustomerRetrievalForPayment")
-    public DefaultWsdl11Definition customerRetrievalWSDL() throws SchemaValidationException {
-        DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
-        wsdl11Definition.setPortTypeName("ICustomerRetrievalForPayment");
-        wsdl11Definition.setLocationUri("/ws");
-        wsdl11Definition.setTargetNamespace("http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/");
-        wsdl11Definition.setSchemaCollection(updateCustomerRetrievalXsd());
-        System.out.println("Here");
-        return wsdl11Definition;
-    }
-
 
     /**
-     * Loads the primary XSD schema (`CustomerRetrievalForPaymentParameters.xsd`) from the classpath
-     * and enables inlining for WSDL generation and schema validation.
+     * Handles the `validateArrangementForPayment` SOAP request.
+     * Delegates request processing to the orchestrator which modifies the response message directly.
      *
-     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
-     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     * @param request the SOAP request payload
+     * @param context the Spring WS message context
      */
-    @Bean
-    public XsdSchemaCollection updateCustomerRetrievalXsd() {
+    @PayloadRoot(namespace = NAMESPACE_URI_FOR_ACCOUNT_VALIDATION, localPart = "validateArrangementForPayment")
+    @ResponsePayload
+    public void validateArrangementForPayment(@RequestPayload ValidateArrangementForPaymentRequest request,
+                                                MessageContext context) {
 
-        try {
-            System.out.println("Inside the try ");
+        WebServiceMessage response = context.getResponse();
+        paymentValidationPort.validateArrangementForPayment(request, response);
+         }
 
-        /*   CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
-                    new ClassPathResource[] {
-                            new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd"),
-                            new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd"),
-                            new ClassPathResource("xsd/shared/ServiceDefinitions.xsd"),
-                            new ClassPathResource("xsd/shared/PrimitiveDatatypes.xsd")});
+    /**
+     * Handles the `RetrieveCustomerRequest` SOAP request.
+     * Delegates request processing to the orchestrator which modifies the response message directly.
+     *
+     * @param request the SOAP request payload
+     * @param context the Spring WS message context
+     */
+    @PayloadRoot(namespace = NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL, localPart = "retrievePrimaryCustomerForArr")
+    @ResponsePayload
+    public void validateCustomerRetrieval(@RequestPayload RetrievePrimaryCustomerForArrRequest request,
+                                              MessageContext context) {
+        System.out.println("Reached here in customer");
+        WebServiceMessage response = context.getResponse();
 
-            Stream.of("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd",
-                            "xsd/shared/ServiceDefinitions.xsd",
-                            "xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd",
-                            "xsd/shared/PrimitiveDatatypes.xsd").
-                    forEach(path -> {
-                        System.out.println("> " + path + "= " + new ClassPathResource(path).exists());
-                    });*/
-            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
-                    new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd"));
-            xsd.setInline(true);
-
-            return xsd;
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
-        }
+        customerRetrievalPort.validateCustomerRetrieval(request, response);
     }
+
 }
+
+------------------------
+
+<?xml version="1.0" encoding="UTF-8"?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" name="CustomerRetrievalForPayment" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:documentation>[generationDate='2021-03-25 05:32:21 PM']
+[generator info ='rbs.transformation.extension.uml2wsdlxsd,0.9.0.18']</wsdl:documentation>
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/" xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/">
+      <xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" schemaLocation="CustomerRetrievalForPaymentParameters.xsd"/>
+      <xsd:element name="retrievePrimaryCustomerForArr" type="crfpSP:retrievePrimaryCustomerForArrRequest"/>
+      <xsd:element name="retrievePrimaryCustomerForArrResponse" type="crfpSP:retrievePrimaryCustomerForArrResponse"/>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="retrievePrimaryCustomerForArrRequest">
+    <wsdl:part element="tns:retrievePrimaryCustomerForArr" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="retrievePrimaryCustomerForArrResponse">
+    <wsdl:part element="tns:retrievePrimaryCustomerForArrResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:portType name="ICustomerRetrievalForPayment">
+    <wsdl:documentation>This service encompasses the operations required to retrieve a core set of information about a Customer in order to validate a Payment. The current scope of usage is retrieval for use in Payment Processing only. </wsdl:documentation>
+    <wsdl:operation name="retrievePrimaryCustomerForArr">
+      <wsdl:documentation>This operation enables the retrieval of the Primary or Owning Customer (Personal or Non Personal) of an Account (Domestic or International).  Returns limited party and address details. The current scope of usage is retrieval for use in Payment Processing only. </wsdl:documentation>
+      <wsdl:input message="tns:retrievePrimaryCustomerForArrRequest"/>
+      <wsdl:output message="tns:retrievePrimaryCustomerForArrResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="ICustomerRetrievalForPaymentJMSBinding" type="tns:ICustomerRetrievalForPayment">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/jms"/>
+    <wsdl:operation name="retrievePrimaryCustomerForArr">
+      <soap:operation soapAction="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/retrievePrimaryCustomerForArr/"/>
+      <wsdl:input>
+        <soap:body parts="parameters" use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body parts="parameters" use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="ICustomerRetrievalForPaymentHTTPBinding" type="tns:ICustomerRetrievalForPayment">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="retrievePrimaryCustomerForArr">
+      <soap:operation soapAction="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/retrievePrimaryCustomerForArr/"/>
+      <wsdl:input>
+        <soap:body parts="parameters" use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body parts="parameters" use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="CustomerRetrievalForPayment">
+    <wsdl:documentation>This service encompasses the operations required to retrieve a core set of information about a Customer in order to validate a Payment. The current scope of usage is retrieval for use in Payment Processing only. 
+[serviceVersion='ALL_20210325_Baseline']</wsdl:documentation>
+    <wsdl:port binding="tns:ICustomerRetrievalForPaymentJMSBinding" name="CUSTFORPAYMT040_01.ALL.X_D_H">
+      <soap:address location="dpmq:/CUSTFORPAYMT040_01_FSH?RequestQueue=CUSTFORPAYMT040_01.ALL.X_D.REQ;ReplyQueue=CUSTFORPAYMT040_01.ALL.D_X.RESP"/>
+    </wsdl:port>
+    <wsdl:port binding="tns:ICustomerRetrievalForPaymentHTTPBinding" name="ICustomerRetrievalForPaymentPortHTTP_ALL_X">
+      <soap:address location="http://0.0.0.0:3001/ALL/CUSTFORPAYMT040/01"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+
+
+------------------------
+
+
+Error :-
+
+BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2025-06-12T09:30:01.804+01:00  INFO 21908 --- [  restartedMain] .w.s.a.s.AnnotationActionEndpointMapping : Supporting [WS-Addressing August 2004, WS-Addressing 1.0]
+2025-06-12T09:30:02.553+01:00  INFO 21908 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-06-12T09:30:02.583+01:00  INFO 21908 --- [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-12T09:30:02.583+01:00  INFO 21908 --- [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.40]
+2025-06-12T09:30:02.689+01:00  INFO 21908 --- [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-12T09:30:02.690+01:00  INFO 21908 --- [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4749 ms
+Here
+2025-06-12T09:30:04.815+01:00  INFO 21908 --- [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-06-12T09:30:04.832+01:00  INFO 21908 --- [  restartedMain] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2025-06-12T09:30:05.009+01:00  INFO 21908 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-06-12T09:30:05.033+01:00  INFO 21908 --- [  restartedMain] com.rbs.bdd.EspSimulatorEngine           : Started EspSimulatorEngine in 8.375 seconds (process running for 9.31)
+2025-06-12T09:30:28.541+01:00  INFO 21908 --- [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring MessageDispatcherServlet 'messageDispatcherServlet'
+2025-06-12T09:30:28.542+01:00  INFO 21908 --- [nio-8080-exec-1] o.s.w.t.http.MessageDispatcherServlet    : Initializing Servlet 'messageDispatcherServlet'
+2025-06-12T09:30:28.581+01:00  INFO 21908 --- [nio-8080-exec-1] o.s.ws.soap.saaj.SaajSoapMessageFactory  : Creating SAAJ 1.3 MessageFactory with SOAP 1.1 Protocol
+2025-06-12T09:30:28.667+01:00  INFO 21908 --- [nio-8080-exec-1] o.s.w.t.http.MessageDispatcherServlet    : Completed initialization in 125 ms
+2025-06-12T09:30:29.040+01:00  WARN 21908 --- [nio-8080-exec-1] o.s.ws.server.EndpointNotFound           : No endpoint mapping found for [SaajSoapMessage {http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/}retrievePrimaryCustomerForArr]
+
+
+
