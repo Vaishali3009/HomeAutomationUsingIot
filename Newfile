@@ -1,373 +1,164 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+package com.rbs.bdd.infrastructure.config;
 
-  <parent>
-    <groupId>com.rbs.bdd</groupId>
-    <artifactId>bdd-ms-esp-simulation-service-parent</artifactId>
-    <version>${revision}</version>
-    <relativePath>../pom.xml</relativePath>
-  </parent>
+import com.rbs.bdd.application.exception.SchemaValidationException;
+import com.rbs.bdd.application.exception.XsdSchemaLoadingException;
+import com.rbs.bdd.infrastructure.soap.interceptor.SchemaValidationInterceptor;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.ws.config.annotation.EnableWs;
+import org.springframework.ws.config.annotation.WsConfigurerAdapter;
+import org.springframework.ws.server.EndpointInterceptor;
+import org.springframework.ws.transport.http.MessageDispatcherServlet;
+import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
+import org.springframework.xml.xsd.XsdSchemaCollection;
+import org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection;
+import org.springframework.core.io.FileSystemResource;
+import java.util.stream.Stream;
+import java.util.List;
 
-  <groupId>com.rbs.bdd</groupId>
-  <artifactId>bdd-ms-esp-simulation-service</artifactId>
-  <name>bdd-ms-esp-simulation-service</name>
-  <description>BDD ESP Simulator microservice - This is an example of a BDD ESP Simulator Service.</description>
+/**
+ * Configures Spring Web Services (Spring WS) for the application.
+ * <p>
+ * This configuration includes:
+ * <ul>
+ *     <li>Publishing WSDL endpoints for SOAP web services</li>
+ *     <li>Enabling automatic XML Schema (XSD) validation of incoming SOAP requests</li>
+ *     <li>Registering interceptors for request validation</li>
+ * </ul>
+ */
+@Configuration
+@EnableWs
+public class SoapWebServiceConfig extends WsConfigurerAdapter {
 
-  <properties>
-    <validation-api.version>1.1.0.Final</validation-api.version>
-  </properties>
+    /**
+     * Registers the {@link MessageDispatcherServlet} which is the main dispatcher for Spring WS.
+     * It handles SOAP messages and dispatches them to appropriate endpoints.
+     *
+     * @param context the Spring application context
+     * @return servlet registration bean mapped to the /ws/* URI
+     */
+    @Bean
+    public ServletRegistrationBean<MessageDispatcherServlet> messageDispatcherServlet(ApplicationContext context) {
+        MessageDispatcherServlet servlet = new MessageDispatcherServlet();
+        servlet.setApplicationContext(context);
+        servlet.setTransformWsdlLocations(true);
+        return new ServletRegistrationBean<>(servlet, "/ws/*");
+    }
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.apache.ws.commons.schema</groupId>
-        <artifactId>XmlSchema</artifactId>
-        <version>1.4.3</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-  <dependencies>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    <!-- enabling actuator to expose management endpoints -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>
-    <!-- Used to add hyperlinks to the actuator's endpoints -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-hateoas</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-devtools</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>3.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.glassfish.jaxb</groupId>
-      <artifactId>jaxb-runtime</artifactId>
-      <version>3.0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.ws.xmlschema</groupId>
-      <artifactId>xmlschema-core</artifactId>
-      <version>2.2.1</version>
-    </dependency>
+    /**
+     * Adds a custom interceptor for schema validation. This interceptor validates incoming SOAP
+     * messages against the configured XSD schema.
+     *
+     * @param interceptors list of interceptors to which this validation interceptor is added
+     */
+    @Override
+    public void addInterceptors(List<EndpointInterceptor> interceptors) {
+        SchemaValidationInterceptor validatingInterceptor = new SchemaValidationInterceptor();
+        validatingInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
+        validatingInterceptor.setValidateResponse(false); // Do not validate outgoing responses
+        try {
+            validatingInterceptor.setXsdSchemaCollection(updateContactXsd());
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
+        }
+        interceptors.add(validatingInterceptor);
+        
+        
+    }
 
-    <dependency>
-      <groupId>org.apache.ws.commons.schema</groupId>
-      <artifactId>XmlSchema</artifactId>
-      <version>1.4.3</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.ws</groupId>
-      <artifactId>spring-xml</artifactId>
-      <version>4.0.12</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.ws.commons.schema</groupId>
-          <artifactId>XmlSchema</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <!-- Dependency added to do bean validation in spring boot app as it's packaged with jakarta.validation-api.jar -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-validation</artifactId>
-    </dependency>
-<!--    <dependency>-->
-<!--      <groupId>software.amazon.awssdk</groupId>-->
-<!--      <artifactId>apache-client</artifactId>-->
-<!--    </dependency>-->
-    <!-- Required for UserIdentityFilter -->
-<!--    <dependency>-->
-<!--      <groupId>org.json</groupId>-->
-<!--      <artifactId>json</artifactId>-->
-<!--      <version>20240303</version>-->
-<!--    </dependency>-->
+    /**
+     * Publishes a WSDL endpoint based on the `ArrValidationForPaymentParameters.xsd` file.
+     * This exposes the WSDL dynamically under /ws/ArrValidationForPaymentParameters.wsdl
+     *
+     * @return a configured WSDL definition bean
+     * @throws SchemaValidationException if XSD loading fails
+     */
+    @Bean(name = "ArrValidationForPaymentParameters")
+    public DefaultWsdl11Definition accountValidationWSDL() throws SchemaValidationException {
+        DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
+        wsdl11Definition.setPortTypeName("IArrValidationForPayment");
+        wsdl11Definition.setLocationUri("/ws");
+        wsdl11Definition.setTargetNamespace("http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/");
+        wsdl11Definition.setSchemaCollection(updateContactXsd());
+        return wsdl11Definition;
+    }
 
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>${httpclient.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-      <version>${httpcore.version}</version>
-    </dependency>
+    /**
+     * Loads the primary XSD schema (`ArrValidationForPaymentParameters.xsd`) from the classpath
+     * and enables inlining for WSDL generation and schema validation.
+     *
+     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
+     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     */
+    @Bean
+    public XsdSchemaCollection updateContactXsd() {
+        try {
+            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
+                    new ClassPathResource("xsd/account-validation/ArrValidationForPaymentParameters.xsd"));
+            xsd.setInline(true);
+            return xsd;
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
+        }
+    }
 
 
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-to-slf4j</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>4.0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
-      <version>4.0.2</version>
-    </dependency>
-
-    <!--    JAXB API-->
-
-    <!-- SOAP Dependencies Start-->
-    <dependency>
-      <groupId>org.springframework.ws</groupId>
-      <artifactId>spring-ws-core</artifactId>
-      <version>4.0.10</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.ws</groupId>
-      <artifactId>spring-ws-support</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.xml.messaging.saaj</groupId>
-      <artifactId>saaj-impl</artifactId>
-      <version>3.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.ws</groupId>
-      <artifactId>spring-ws-test</artifactId>
-      <version>4.0.10</version>
-      <scope>test</scope>
-    </dependency
+    /**
+     * Publishes a WSDL endpoint based on the `CustomerRetrievalForPaymentParameters.xsd` file.
+     * This exposes the WSDL dynamically under /ws/CustomerRetrievalForPaymentParameters.wsdl
+     *
+     * @return a configured WSDL definition bean
+     * @throws SchemaValidationException if XSD loading fails
+     */
+    @Bean(name = "CustomerRetrievalForPayment")
+    public DefaultWsdl11Definition customerRetrievalWSDL() throws SchemaValidationException {
+        DefaultWsdl11Definition wsdl11Definition = new DefaultWsdl11Definition();
+        wsdl11Definition.setPortTypeName("ICustomerRetrievalForPayment");
+        wsdl11Definition.setLocationUri("/ws");
+        wsdl11Definition.setTargetNamespace("http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/");
+        wsdl11Definition.setSchemaCollection(updateCustomerRetrievalXsd());
+        System.out.println("Here");
+        return wsdl11Definition;
+    }
 
 
+    /**
+     * Loads the primary XSD schema (`CustomerRetrievalForPaymentParameters.xsd`) from the classpath
+     * and enables inlining for WSDL generation and schema validation.
+     *
+     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
+     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     */
+    @Bean
+    public XsdSchemaCollection updateCustomerRetrievalXsd() {
 
+        try {
+            System.out.println("Inside the try ");
 
+        /*   CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
+                    new ClassPathResource[] {
+                            new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd"),
+                            new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd"),
+                            new ClassPathResource("xsd/shared/ServiceDefinitions.xsd"),
+                            new ClassPathResource("xsd/shared/PrimitiveDatatypes.xsd")});
 
-    >
-    <dependency>
-      <groupId>jakarta.xml.ws</groupId>
-      <artifactId>jakarta.xml.ws-api</artifactId>
-      <version>4.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.xml.ws</groupId>
-      <artifactId>jaxws-ri</artifactId>
-      <version>4.0.1</version>
-      <type>pom</type>
-      <exclusions>
-        <exclusion>
-          <groupId>com.fasterxml.woodstox</groupId>
-          <artifactId>woodstox-core</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+            Stream.of("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd",
+                            "xsd/shared/ServiceDefinitions.xsd",
+                            "xsd/customer-retrieval/CustomerRetrievalForPaymentTransferObjects.xsd",
+                            "xsd/shared/PrimitiveDatatypes.xsd").
+                    forEach(path -> {
+                        System.out.println("> " + path + "= " + new ClassPathResource(path).exists());
+                    });*/
+            CommonsXsdSchemaCollection xsd = new CommonsXsdSchemaCollection(
+                    new ClassPathResource("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd"));
+            xsd.setInline(true);
 
-    <!-- Dependency to convert xml to json -->
-    <dependency>
-      <groupId>com.github.javadev</groupId>
-      <artifactId>underscore</artifactId>
-      <version>1.89</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <version>${lombok.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>xml-resolver</groupId>
-      <artifactId>xml-resolver</artifactId>
-      <version>1.2</version>
-    </dependency>
-    <!-- Dependency for caching -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-cache</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>wsdl4j</groupId>
-      <artifactId>wsdl4j</artifactId>
-      <version>1.6.3</version>
-    </dependency>
-
-    <!-- Test dependencies -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>com.vaadin.external.google</groupId>
-          <artifactId>android-json</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jacoco</groupId>
-      <artifactId>jacoco-maven-plugin</artifactId>
-      <version>0.8.13</version>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>5.7.0</version>
-      <scope>test</scope>
-    </dependency>
-    <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
-  <build>
-    <plugins>
-<!--     Adding JAXB2 Maven Plugin     -->
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.10.1</version>
-        <configuration>
-          <excludePackageNames>com.rbs.bdd.generated</excludePackageNames>
-        </configuration>
-      </plugin>
-      <plugin>
-          <groupId>org.jacoco</groupId>
-          <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.13</version>
-          <configuration>
-            <excludes>
-              <exclude>com/rbs/bdd/generated/**</exclude>
-            </excludes>
-          </configuration>
-
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.2.0</version>
-        <executions>
-          <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>${project.build.directory}/generated-sources/jaxb</source>
-              </sources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>jaxb2-maven-plugin</artifactId>
-          <version>3.1.0</version>
-          <executions>
-            <execution>
-              <id>xjc</id>
-              <goals>
-                <goal>xjc</goal>
-              </goals>
-              <phase>generate-sources</phase>
-              <configuration>
-                <bindingDirectory>${project.basedir}/src/main/resources</bindingDirectory>
-                <bindingFiles>
-                  <bindingFile>bindings.xjb</bindingFile>
-                </bindingFiles>
-<!--                <verbose>true</verbose>-->
-               <extension>true</extension>
-                <sources>
-<!--                  <source>src/main/resources/xsd</source>-->
-                  <source>${project.basedir}/src/main/resources/xsd/account-validation/ArrValidationForPaymentParameters.xsd</source>
-                  <source>${project.basedir}/src/main/resources/xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd</source>
-                  <source>${project.basedir}/src/main/resources/xsd/shared</source>
-                </sources>
-                <outputDirectory>${project.build.directory}/generated-sources/jaxb</outputDirectory>
-                <packageName>com.rbs.bdd.generated</packageName>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>${maven-jar-plugin.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-            <phase>package</phase>
-            <configuration>
-              <!--to be imported on other projects-->
-              <classifier>original</classifier>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.22.2</version>
-      </plugin>
-    </plugins>
-  </build>
-
-  <scm>
-    <connection>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</connection>
-    <url>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</url>
-    <developerConnection>scm:git:${stash.ssh.url}/CPBD/${project.artifactId}-archetype-template.git
-    </developerConnection>
-  </scm>
-
-</project>
-
-
-------------------------
-
-bindings.xjb
-
-
-<jaxb:bindings
-    xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
-    xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    jaxb:version="2.1">
-
-    <jaxb:globalBindings>
-        <!-- Prevent default constructors in enums -->
-        <jaxb:javaType name="java.lang.String" xmlType="xs:string" printMethod="javax.xml.bind.DatatypeConverter.printString" parseMethod="javax.xml.bind.DatatypeConverter.parseString"/>
-    </jaxb:globalBindings>
-</jaxb:bindings>
+            return xsd;
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Failed to load XSD schema for SOAP validation", e);
+        }
+    }
+}
