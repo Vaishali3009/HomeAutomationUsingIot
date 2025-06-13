@@ -1,133 +1,41 @@
-package com.rbs.bdd.application.service;
-
-import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.*;
-import com.rbs.bdd.domain.enums.ServiceConstants;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.soap.saaj.SaajSoapMessage;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.soap.MessageFactory;
-import javax.xml.soap.SOAPMessage;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-class CustomerRetrievalServiceTest {
-
-    private CustomerRetrievalService service;
-
-    @BeforeEach
-    void setUp() {
-        service = new CustomerRetrievalService();
-    }
-
-    private RetrievePrimaryCustomerForArrRequest buildRequest(String identifier, String codeValue) {
-        RetrievePrimaryCustomerForArrRequest request = new RetrievePrimaryCustomerForArrRequest();
-
-        Identification id = new Identification();
-        id.setIdentifier(identifier);
-        Context context = new Context();
-        context.setCodeValue(codeValue);
-        id.setContext(context);
-        request.setArrangementIdentifier(id);
-
-        RequestId reqId = new RequestId();
-        reqId.setTransactionId("Txn123");
-        reqId.setSystemId("Sys001");
-
-        RequestHeader header = new RequestHeader();
-        header.setRequestIds(List.of(reqId));
-        request.setRequestHeader(header);
-
-        return request;
-    }
-
-    private org.w3c.dom.Document extractSoapDom(SOAPMessage message) throws Exception {
-        ByteArrayInputStream in = new ByteArrayInputStream(message.getSOAPPart().getContent().toString().getBytes(StandardCharsets.UTF_8));
-        DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        return builder.parse(in);
-    }
-
-    private String extractTextByXPath(org.w3c.dom.Document doc, String xpathExpr) throws Exception {
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        return xpath.evaluate(xpathExpr, doc);
-    }
-
-    @Test
-    void testSuccessCustomerMatch() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = buildRequest("31926801", ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT);
-
-        SOAPMessage soapMessage = MessageFactory.newInstance().createMessage();
-        WebServiceMessage springMessage = new SaajSoapMessage(soapMessage);
-
-        service.retrieveCustomer(request, springMessage);
-
-        org.w3c.dom.Document doc = extractSoapDom(soapMessage);
-        assertEquals("John", extractTextByXPath(doc, ServiceConstants.XPath.XPATH_FIRST_NAME));
-        assertEquals("Mr", extractTextByXPath(doc, ServiceConstants.XPath.XPATH_PREFIX_TYPE));
-    }
-
-    @Test
-    void testError_InvalidIbanLength() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = buildRequest("GB29NWBK6016", ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT);
-
-        SOAPMessage soapMessage = MessageFactory.newInstance().createMessage();
-        WebServiceMessage springMessage = new SaajSoapMessage(soapMessage);
-
-        service.retrieveCustomer(request, springMessage);
-
-        org.w3c.dom.Document doc = extractSoapDom(soapMessage);
-        assertEquals("Length of IBAN is Invalid", extractTextByXPath(doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION));
-    }
-
-    @Test
-    void testError_InvalidCountryCode() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = buildRequest("FR2934INVALID", ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT);
-
-        SOAPMessage soapMessage = MessageFactory.newInstance().createMessage();
-        WebServiceMessage springMessage = new SaajSoapMessage(soapMessage);
-
-        service.retrieveCustomer(request, springMessage);
-
-        org.w3c.dom.Document doc = extractSoapDom(soapMessage);
-        assertEquals("Country code is not found in Db, try  with the correct country code", extractTextByXPath(doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION));
-    }
-
-    @Test
-    void testError_UBANGBShouldFail() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = buildRequest("GB12345678901234", ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT);
-
-        SOAPMessage soapMessage = MessageFactory.newInstance().createMessage();
-        WebServiceMessage springMessage = new SaajSoapMessage(soapMessage);
-
-        service.retrieveCustomer(request, springMessage);
-
-        org.w3c.dom.Document doc = extractSoapDom(soapMessage);
-        assertTrue(extractTextByXPath(doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION).contains("MOD97 failure"));
-    }
-
-    @Test
-    void testError_InvalidUBANLength() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = buildRequest("123456789", ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT);
-
-        SOAPMessage soapMessage = MessageFactory.newInstance().createMessage();
-        WebServiceMessage springMessage = new SaajSoapMessage(soapMessage);
-
-        service.retrieveCustomer(request, springMessage);
-
-        org.w3c.dom.Document doc = extractSoapDom(soapMessage);
-        assertEquals("UBAN should be 14 digits", extractTextByXPath(doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION));
-    }
-}
-
-
---------
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                  xmlns:crfpSP9="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <crfpSP9:retrievePrimaryCustomerForArr>
+            <requestHeader>
+                <operatingBrand>NWB</operatingBrand>
+                <requestIds>
+                    <systemId>RequestID</systemId>
+                    <transactionId>123454444</transactionId>
+                </requestIds>
+                <requestIds>
+               <systemId>SourceID</systemId>
+               <transactionId>ISO</transactionId>
+        </requestIds>
+            <cmdType>Request</cmdType>
+            </requestHeader>
+            <processingParameter>
+            <objectReference>
+               <identifier>NWB</identifier>
+               <context>
+                  <schemeName>OrganizationEnterpriseIdType</schemeName>
+                  <codeValue>OperatingBrandIdentifier</codeValue>
+               </context>
+            </objectReference>
+        </processingParameter>
+            <arrangementIdentifier>
+                <identifier>GB29NWBK60161331926801</identifier>
+                <context>
+                    <schemeName>ArrangementEnterpriseIdType</schemeName>
+                    <codeValue>InternationalBankAccountNumber</codeValue>
+                    <!--Optional:-->
+                    <description>aslkjdslahbkjdf</description>
+                </context>
+                <!--Optional:-->
+                <description>aslkjdslahbkjdf</description>
+            </arrangementIdentifier>
+        </crfpSP9:retrievePrimaryCustomerForArr>
+    </soapenv:Body>
+</soapenv:Envelope>
+ 
