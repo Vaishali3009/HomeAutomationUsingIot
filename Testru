@@ -1,364 +1,53 @@
-In the below code not working :-
-
- private void handleRefRequestIds(Document errorDoc, Document requestDoc, String txnId, String systemId) {
-        Node requestIds = getNode(requestDoc, "requestIds");
-        boolean isEmpty = isNodeEmpty(requestIds);
-
-      
-
-        if (isEmpty  && refRequestIds != null) {
-            refRequestIds.getParentNode().removeChild(refRequestIds);
-            return;
-        }
-
-        if (requestIds != null) {
-            if (txnId == null) removeNode(refRequestIds, "transactionId");
-            if (systemId == null) removeNode(refRequestIds, "systemId");
-            if (!requestIds.hasChildNodes()) {
-                requestIds.getParentNode().removeChild(requestIds);
-            }
-        }
-    }
-
-
--------------------------------------------------
-
-
-package com.rbs.bdd.infrastructure.soap.interceptor;
-
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import jakarta.servlet.http.HttpServletResponse;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
-
-import static com.rbs.bdd.common.ServiceConstants.*;
-
-
 /**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
+ * Dynamically updates or removes fields inside <refRequestIds> block based on the <requestIds> content.
  */
-public class CustomerSchemaValidationInterceptor extends PayloadValidatingInterceptor {
+private void handleRefRequestIds(Document errorDoc, Document requestDoc, String txnId, String systemId) {
+    NodeList requestIdNodes = requestDoc.getElementsByTagNameNS("*", "requestIds");
+    Node refRequestIds = getNode(errorDoc, "refRequestIds");
 
-    private static final Logger logger = LoggerFactory.getLogger(CustomerSchemaValidationInterceptor.class);
+    boolean foundRequestIDSystemId = false;
+    boolean hasTxnId = false;
+    boolean hasSystemId = false;
 
-    private static final String PLACEHOLDER_TXN = "TXN_ID_PLACEHOLDER";
-    private static final String PLACEHOLDER_RESPONSE = "RESPONSE_ID_PLACEHOLDER";
+    for (int i = 0; i < requestIdNodes.getLength(); i++) {
+        Node requestIdsNode = requestIdNodes.item(i);
+        NodeList children = requestIdsNode.getChildNodes();
 
+        String currentSystemId = null;
+        boolean txnIdPresent = false;
+        boolean systemIdPresent = false;
 
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
-        try {
-            WebServiceMessage request = messageContext.getRequest();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            request.writeTo(out);
-            String xml = out.toString();
-
-            if (!xml.contains(NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL)) {
-                return true; // Skip this interceptor
+        for (int j = 0; j < children.getLength(); j++) {
+            Node child = children.item(j);
+            if ("systemId".equals(child.getLocalName())) {
+                currentSystemId = child.getTextContent();
+                systemIdPresent = true;
+            } else if ("transactionId".equals(child.getLocalName())) {
+                txnIdPresent = true;
             }
-        } catch (Exception e) {
-            logger.error("Error in namespace filtering for Account Validation", e);
         }
 
-        return super.handleRequest(messageContext, endpoint);
-    }
-
-
-    /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
-     */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        logger.warn("Schema validation failed. Returning custom schemaValidationError.xml");
-
-        try (InputStream staticXml = getClass().getClassLoader().getResourceAsStream(SCHEMA_VALIDATION_ERROR_XML)) {
-            if (staticXml == null) {
-                logger.error("schemaValidationError.xml not found");
-                return true;
-            }
-
-            DocumentBuilder builder = getSecureDocumentBuilder();
-            Document errorDoc = builder.parse(staticXml);
-            Document requestDoc = extractRequestDocument(messageContext, builder);
-
-            updateDynamicFields(errorDoc, requestDoc);
-
-            sendCustomSoapFault(errorDoc);
-            return false;
-        } catch (Exception e) {
-            logger.error("Error during schema validation interception", e);
-            throw new SchemaValidationException("Schema validation failure", e);
+        if ("RequestID".equals(currentSystemId)) {
+            foundRequestIDSystemId = true;
+            hasTxnId = txnIdPresent;
+            hasSystemId = systemIdPresent;
+            break;
         }
     }
 
-    /**
-     * Creates a secure, namespace-aware {@link DocumentBuilderFactory}.
-     * <p>
-     * This method disables external entity processing to prevent XML External Entity (XXE)
-     * attacks and other injection vulnerabilities.
-     *
-     *
-     * @return configured {@link DocumentBuilderFactory} instance
-     * @throws ParserConfigurationException if security features cannot be set
-     */
-    private DocumentBuilder getSecureDocumentBuilder() throws ParserConfigurationException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-        factory.setXIncludeAware(false);
-        factory.setExpandEntityReferences(false);
-        return factory.newDocumentBuilder();
-    }
+    if (refRequestIds != null) {
+        if (!foundRequestIDSystemId) {
+            // No matching <requestIds> with systemId=RequestID → remove entire block
+            refRequestIds.getParentNode().removeChild(refRequestIds);
+        } else {
+            // Remove missing child nodes
+            if (!hasTxnId) removeNode(refRequestIds, "transactionId");
+            if (!hasSystemId) removeNode(refRequestIds, "systemId");
 
-
-
-    /**
-     * Parses the incoming request message into a Document.
-     */
-    private Document extractRequestDocument(MessageContext messageContext, DocumentBuilder builder) throws IOException, SAXException {
-        WebServiceMessage request = messageContext.getRequest();
-        ByteArrayOutputStream requestBytes = new ByteArrayOutputStream();
-        request.writeTo(requestBytes);
-        return builder.parse(new ByteArrayInputStream(requestBytes.toByteArray()));
-    }
-
-    /**
-     * Updates transaction ID, timestamp, and cleans up the response XML dynamically.
-     */
-    private void updateDynamicFields(Document errorDoc, Document requestDoc) throws XPathExpressionException {
-        String txnId = getValueFromRequest(requestDoc, TAG_TRANSACTION_ID);
-        String systemId = getValueFromRequest(requestDoc, "systemId");
-
-        replaceTextNode(errorDoc, PLACEHOLDER_RESPONSE, generateTxnId());
-        replaceTextNode(errorDoc, PLACEHOLDER_TXN, txnId != null ? txnId : PLACEHOLDER_TXN);
-        setXPathValue(errorDoc, "//*[local-name()='timestamp']",
-                OffsetDateTime.now(ZoneId.of("Europe/London")).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-
-        handleRefRequestIds(errorDoc, requestDoc, txnId, systemId);
-    }
-
-    /**
-     * Handles removal of <refRequestIds> node if <requestIds> is missing or empty.
-     */
-    private void handleRefRequestIds(Document errorDoc, Document requestDoc, String txnId, String systemId) {
-        Node requestIds = getNode(requestDoc, "requestIds");
-        boolean isEmpty = isNodeEmpty(requestIds);
-
-
-
-
-
-        if (requestIds != null) {
-            if (txnId == null) removeNode(requestIds, "transactionId");
-            if (systemId == null) removeNode(requestIds, "systemId");
-            if (!requestIds.hasChildNodes()) {
-                requestIds.getParentNode().removeChild(requestIds);
+            // If nothing left inside, remove the entire block
+            if (!refRequestIds.hasChildNodes()) {
+                refRequestIds.getParentNode().removeChild(refRequestIds);
             }
         }
     }
-
-    /**
-     * Sends the final SOAP error response with HTTP 500.
-     */
-    private void sendCustomSoapFault(Document errorDoc) throws TransformerException, IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");
-        Transformer transformer = transformerFactory.newTransformer();
-        transformer.transform(new DOMSource(errorDoc), new StreamResult(out));
-
-        HttpServletResponse servletResponse =
-                ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse();
-
-        if (servletResponse != null && !servletResponse.isCommitted()) {
-            servletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            servletResponse.setContentType("text/xml;charset=UTF-8");
-            servletResponse.getOutputStream().write(out.toByteArray());
-            servletResponse.flushBuffer();
-        }
-    }
-
-    /**
-     * Retrieves the text content of a given tag from the request document.
-     */
-    private String getValueFromRequest(Document doc, String tag) {
-        NodeList list = doc.getElementsByTagNameNS("*", tag);
-        return list.getLength() > 0 ? list.item(0).getTextContent() : null;
-    }
-
-    /**
-     * Finds a node by its local name using wildcard namespace.
-     */
-    private Node getNode(Document doc, String localName) {
-        NodeList nodes = doc.getElementsByTagNameNS("*", localName);
-        return nodes.getLength() > 0 ? nodes.item(0) : null;
-    }
-
-    /**
-     * Replaces a text node matching a placeholder with a new value.
-     */
-    private void replaceTextNode(Document doc, String placeholder, String newValue) {
-        NodeList nodes = doc.getElementsByTagNameNS("*", "transactionId");
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Node txn = nodes.item(i);
-            if (placeholder.equals(txn.getTextContent())) {
-                txn.setTextContent(newValue);
-            }
-        }
-    }
-
-    /**
-     * Sets a value for the node matching the given XPath expression.
-     */
-    private void setXPathValue(Document doc, String path, String value) throws XPathExpressionException {
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
-        if (node != null) {
-            node.setTextContent(value);
-        }
-    }
-
-    /**
-     * Removes a specific child element from the parent node.
-     */
-    private void removeNode(Node parent, String tagName) {
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (tagName.equals(child.getLocalName())) {
-                parent.removeChild(child);
-                break;
-            }
-        }
-    }
-
-    /**
-     * Checks if the given node is empty or only contains non-element children.
-     */
-    private boolean isNodeEmpty(Node node) {
-        if (node == null) return true;
-        NodeList children = node.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            if (children.item(i).getNodeType() == Node.ELEMENT_NODE) return false;
-        }
-        return true;
-    }
-
-    /**
-     * Generates a unique transaction ID using UUID.
-     */
-    private String generateTxnId() {
-        return "1alN" + UUID.randomUUID().toString().replace("-", "") + "h";
-    }
-
-    /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
-     */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
-    }
-
 }
-
-
---------------------
-
-
-Request:-
-
-
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/">
-    <soapenv:Header/>
-    <soapenv:Body>
-        <crfpSP:retrievePrimaryCustomerForArr>
-            <requestHeader>
-                <operatingBrand>NWB</operatingBrand>
-                <requestIds>
-                    <systemId>RequestID</systemId>
-                    <transactionId>123454444</transactionId>
-                </requestIds>
-                <requestIds>
-               <systemId>SourceID</systemId>
-               <transactionId>ISO</transactionId>
-        </requestIds>
-            <cmdType>Request</cmdType>
-            </requestHeader>
-            <processingParameter>
-            <objectReference>
-               <identifier>NWB</identifier>
-               
-            </objectReference>
-        </processingParameter>
-            <arrangementIdentifier>
-                <identifier>GB98MIDL07009312345678</identifier>
-                <context>
-                    <schemeName>ArrangementEnterpriseIdType</schemeName>
-                    <codeValue>InternationalBankAccountNumber</codeValue>
-                    <!--Optional:-->
-                    <description>aslkjdslahbkjdf</description>
-                </context>
-                <!--Optional:-->
-                <description>aslkjdslahbkjdf</description>
-            </arrangementIdentifier>
-        </crfpSP:retrievePrimaryCustomerForArr>
-    </soapenv:Body>
-</soapenv:Envelope>
- 
-------------------------------------
-I want the if transactionId tag is not there then remove it from response ,if systemId tag is not there then replace it from response .
-If requestIds is not there then remove complete requestIds tag.(Note there are multiple requestIds) .So do for the one where systemId is RequestID.
-
-  <requestIds>
-                    <systemId>RequestID</systemId>
-                    <transactionId>123454444</transactionId>
-                </requestIds>
