@@ -1,3 +1,27 @@
+package com.rbs.bdd.domain.enums.model;
+
+
+
+/**
+ * Model representing error details used in SOAP error responses.
+ * Includes return code, user-facing description, and system notification code/description.
+ */
+public class ErrorDetail {
+    public final String returnCode;
+    public final String description;
+    public final String systemNotificationCode;
+    public final String systemNotificationDesc;
+
+    public ErrorDetail(String returnCode, String description, String systemNotificationCode, String systemNotificationDesc) {
+        this.returnCode = returnCode;
+        this.description = description;
+        this.systemNotificationCode = systemNotificationCode;
+        this.systemNotificationDesc = systemNotificationDesc;
+    }
+}
+
+-----------------------------------------
+
 package com.rbs.bdd.common;
 
 import com.rbs.bdd.domain.enums.model.ErrorDetail;
