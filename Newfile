@@ -1,210 +1,414 @@
-This is working request for which schema validation is successful
+package com.rbs.bdd.application.service;
 
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/">
-   <soapenv:Header/>
-   <soapenv:Body>
-      <crfpSP:retrievePrimaryCustomerForArr>
-         <requestHeader>
-            <operatingBrand>NWB</operatingBrand>
-            <requestIds>
-               <systemId>RequestID</systemId>
-               <transactionId>123456789</transactionId>
-            </requestIds>
-            <cmdType>Request</cmdType>
-         </requestHeader>
-         <processingParameter>
-            <objectReference>
-               <identifier>NWB</identifier>
-               <context>
-                  <schemeName>OrganizationEnterpriseIdType</schemeName>
-                  <codeValue>OperatingBrandIdentifier</codeValue>
-               </context>
-            </objectReference>
-         </processingParameter>
-         <arrangementIdentifier>
-            <identifier>600001457620742222</identifier>
-            <context>
-               <schemeName>ArrangementEnterpriseIdType</schemeName>
-               <codeValue>UKBasicBankAccountNumber</codeValue>
-               <description>Some Description</description>
-            </context>
-            <description>Some Description</description>
-         </arrangementIdentifier>
-      </crfpSP:retrievePrimaryCustomerForArr>
-   </soapenv:Body>
-</soapenv:Envelope>
-
-------------------------------------------
-
-but i want for the below request the schema validation should be done 
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:v01="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/">
-    <soapenv:Header/>
-    <soapenv:Body>
-        <v01:retrievePrimaryCustomerForArr>
-            <requestHeader>
-                <operatingBrand>NWB</operatingBrand>
-                <!--Zero or more repetitions:-->
-                <requestIds>
-                    <!--Optional:-->
-                    <systemId>RequestID</systemId>
-                    <!--Optional:-->
-                    <transactionId>123456789</transactionId>
-                </requestIds>
-                <requestIds>
-                 <systemId>SourceID</systemId>
-                 <transactionId>ISO</transactionId>
-             </requestIds>
-              <cmdType>Request</cmdType>
-            </requestHeader>
-            <processingParameter>
-              <objectReference>
-                 <identifier>NWB</identifier>
-                 <context>
-                    <schemeName>OrganizationEnterpriseIdType</schemeName>
-                    <codeValue>OperatingBrandIdentifier</codeValue>
-                 </context>
-              </objectReference>
-          </processingParameter>
-
-            <arrangementIdentifier>
-                <identifier>600001457620742222</identifier>
-                <context>
-                    <schemeName>ArrangementEnterpriseIdType</schemeName>
-                    <codeValue>UKBasicBankAccountNumber</codeValue>
-                    <!--Optional:-->
-                    <description>aslkjdslahbkjdf</description>
-                </context>
-                <!--Optional:-->
-                <description>aslkjdslahbkjdf</description>
-            </arrangementIdentifier>
-        </v01:retrievePrimaryCustomerForArr>
-    </soapenv:Body>
-</soapenv:Envelope>
- 
-
-------------------------------------
-
-CustomerRetrievalForPaymentParameters.xsd
-
-
-<?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" version="RBS_20210325_Baseline" xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/"
-            xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/"  elementFormDefault="unqualified">
-  <xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" schemaLocation="CustomerRetrievalForPaymentTransferObjects.xsd"/>
-  <xsd:import namespace="http://com/rbsg/soa/Services/Definitions/V03/" schemaLocation="../shared/ServiceDefinitions.xsd"/>
-  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
-  <xsd:complexType name="retrievePrimaryCustomerForArrRequest">
-    <xsd:sequence>
-      <xsd:element name="requestHeader" type="sdef:RequestHeader"/>
-      <xsd:element maxOccurs="unbounded" minOccurs="0" name="processingParameter" type="pdt:Property"/>
-      <xsd:element name="arrangementIdentifier" type="pdt:ObjectReference">
-        <xsd:annotation>
-          <xsd:documentation>Identifier of the account for which the Customer is identified as the Primary Customer (Account Owner).</xsd:documentation>
-        </xsd:annotation>
-      </xsd:element>
-    </xsd:sequence>
-  </xsd:complexType>
-  <xsd:complexType name="RetrievePrimaryCustomerForArrContent">
-    <xsd:sequence>
-      <xsd:element name="responseHeader" type="sdef:ResponseHeader"/>
-      <xsd:element minOccurs="0" name="customer" type="crfpTO:InvolvedParty_TO"/>
-      <xsd:element maxOccurs="unbounded" minOccurs="0" name="modifyToken" type="pdt:Property"/>
-    </xsd:sequence>
-  </xsd:complexType>
-  <xsd:complexType name="retrievePrimaryCustomerForArrResponse">
-    <xsd:sequence>
-      <xsd:choice>
-        <xsd:element name="response" type="crfpSP:RetrievePrimaryCustomerForArrContent"/>
-        <xsd:element name="exception" type="sdef:Exception"/>
-      </xsd:choice>
-    </xsd:sequence>
-  </xsd:complexType>
-  <!-- Global elements required for WSDL operation binding -->
-  <xsd:element name="retrievePrimaryCustomerForArr" type="crfpSP:retrievePrimaryCustomerForArrRequest"/>
-  <xsd:element name="retrievePrimaryCustomerForArrResponse" type="crfpSP:retrievePrimaryCustomerForArrResponse"/>
-
-</xsd:schema>
-
------------------------------------
-package com.rbs.bdd.infrastructure.soap.api;
-
-import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
-import com.rbs.bdd.application.port.in.PaymentValidationPort;
-import com.rbs.bdd.common.ServiceConstants;
-import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
-import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.server.endpoint.annotation.Endpoint;
-import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
-import org.springframework.ws.server.endpoint.annotation.RequestPayload;
-import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import com.rbs.bdd.domain.enums.model.ErrorDetail;
+import com.rbs.bdd.application.exception.AccountValidationException;
+import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
+import com.rbs.bdd.common.ErrorConstants;
+import com.rbs.bdd.common.ServiceConstants;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.ZonedDateTime;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
 
 
-/**
- * SOAP endpoint adapter class for handling the `validateArrangementForPayment` operation.
- * It uses Spring WS annotations to route incoming SOAP requests to the appropriate service layer.
- */
-@Endpoint
-public class PaymentValidationSoapAdapter {
+@Service
+@RequiredArgsConstructor
+public class CustomerRetrievalService implements RetrieveCustomerPort {
 
-    /**Changes for the request*/
+    private static final String HARDCODED_ACCOUNT = "GB98MIDL07009312345678";
+    private static final String STATIC_RESPONSE_PATH = "/static-response/customer/retrieval/success-response.xml";
+    private static final Logger logger = LoggerFactory.getLogger(CustomerRetrievalService.class);
+
+    @Override
+    public void validateSchema(RetrievePrimaryCustomerForArrRequest request)  {
+        // No-op for now if Spring WS validates schema automatically
+        logger.info("Schema validated successfully by Spring WS.");
+        System.out.println("Schema Validation Done Successfully");
+    }
+
+    @Override
+    public void retrieveCustomer(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message) {
+        try {
+            logger.info("Starting business rule validation for request.");
+            RequestParams params = extractParams(request);
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            Document responseDoc;
 
 
-    private final PaymentValidationPort paymentValidationPort;
-    private final CustomerRetrievalPort customerRetrievalPort;
+            Optional<ErrorDetail> error = determineError(params);
+            if (error.isPresent()) {
+                logger.info("Business error condition detected: {}", error.get().description);
+                responseDoc = loadAndParseXml(ServiceConstants.ERROR_XML_PATH);
+                applyErrorResponse(responseDoc, xpath, error.get(), params.originalTxnId);
+            }
+            else {
+                Boolean config = determineMatchingConfig(params,HARDCODED_ACCOUNT);
+                if (config) {
+                    logger.info("Matched account number: {}", HARDCODED_ACCOUNT);
+                    responseDoc = loadAndParseXml("static-response/customer-retrieval/success-response.xml");
+                  //  updateSuccessResponse(responseDoc, xpath, config.get(), params);
+                } else {
+                    logger.warn("No account matched. Returning MOD97 failure.");
+                    responseDoc = loadAndParseXml(ServiceConstants.ERROR_XML_PATH);
+                    applyErrorResponse(responseDoc, xpath, ErrorConstants.ERR_MOD97_IBAN, params.originalTxnId);
+                }
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.transform(new DOMSource(responseDoc), new StreamResult(out));
+            ((SaajSoapMessage) message).getSaajMessage().getSOAPPart()
+                    .setContent(new StreamSource(new ByteArrayInputStream(out.toByteArray())));
+
+            logger.info("Business response prepared and set successfully.");
+
+        } catch (Exception e) {
+            logger.error("Error in customer retrieval logic", e);
+            throw new RuntimeException("Customer retrieval failed", e);
+        }
+    }
 
     /**
-     * Constructor-based injection of the orchestrator that handles business logic.
-     *
-     * @param paymentValidationPort the orchestrator service
+     * Extracts key fields like identifier, codeValue, transactionId, and systemId from the SOAP request.
      */
-    public PaymentValidationSoapAdapter(PaymentValidationPort paymentValidationPort,CustomerRetrievalPort customerRetrievalPort) {
-        this.paymentValidationPort = paymentValidationPort;
-        this.customerRetrievalPort = customerRetrievalPort;
+    private RequestParams extractParams(RetrievePrimaryCustomerForArrRequest request) {
+        String identifier = request.getArrangementIdentifier().getIdentifier();
+        String codeValue = request.getArrangementIdentifier().getContext().getCodeValue();
+        String txnId = request.getRequestHeader().getRequestIds().get(0).getTransactionId();
+        String systemId = request.getRequestHeader().getRequestIds().get(0).getSystemId();
+        logger.debug("Extracted request parameters: identifier={}, codeValue={}, txnId={}, systemId={}",
+                identifier, codeValue, txnId, systemId);
+        return new RequestParams(identifier, codeValue, identifier.length(), txnId, systemId);
+    }
+
+    /**
+     * Validates error conditions such as invalid IBAN/UBAN format or mismatched values.
+     */
+    private Optional<ErrorDetail> determineError(RequestParams p) {
+        ErrorDetail errorDetail = null;
+
+        if (ServiceConstants.INTL_BANK_ACCOUNT.equals(p.codeValue())) {
+            if (!p.identifier().startsWith("GB")) {
+                errorDetail = ErrorConstants.ERR_WRONG_COUNTRY_CODE;
+            } else if (p.length() != 22) {
+                errorDetail = ErrorConstants.ERR_INVALID_IBAN_LENGTH;
+            }
+        } else if (ServiceConstants.UK_BASIC_BANK_ACCOUNT.equals(p.codeValue())) {
+            if (p.identifier().startsWith("GB")) {
+                errorDetail = ErrorConstants.ERR_DB2_SQL;
+            } else if (p.length() != 14) {
+                errorDetail = ErrorConstants.ERR_INVALID_UBAN_LENGTH;
+            } else if (!isUbanValid(p.identifier())) {
+                errorDetail = ErrorConstants.ERR_MOD97_UBAN;
+            }
+        }
+
+        return Optional.ofNullable(errorDetail);
+    }
+
+    /**
+     * Matches the request against known account types and configurations.
+     */
+    private Boolean determineMatchingConfig(RequestParams p,String account) {
+
+        return p.identifier.equals(account) || extractLast14Digits(account).equals(p.identifier);
+
+    }
+    /**
+     * Extracts last 14 digits from a given IBAN string.
+     */
+    private String extractLast14Digits(String iban) {
+        return iban.length() >= 14 ? iban.substring(iban.length() - 14) : "";
     }
 
 
-
     /**
-     * Handles the `validateArrangementForPayment` SOAP request.
-     * Delegates request processing to the orchestrator which modifies the response message directly.
-     *
-     * @param request the SOAP request payload
-     * @param context the Spring WS message context
+     * Verifies if the given UBAN matches the suffix of known IBANs.
      */
-    @PayloadRoot(namespace = ServiceConstants.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION, localPart = "validateArrangementForPayment")
-    @ResponsePayload
-    public void validateArrangementForPayment(@RequestPayload ValidateArrangementForPaymentRequest request,
-                                                MessageContext context) {
-
-        WebServiceMessage response = context.getResponse();
-        paymentValidationPort.validateArrangementForPayment(request, response);
-         }
-
-    /**
-     * Handles the `RetrieveCustomerRequest` SOAP request.
-     * Delegates request processing to the orchestrator which modifies the response message directly.
-     *
-     * @param request the SOAP request payload
-     * @param context the Spring WS message context
-     */
-    @PayloadRoot(namespace = ServiceConstants.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL, localPart = "retrievePrimaryCustomerForArr")
-    @ResponsePayload
-    public void validateCustomerRetrieval(@RequestPayload RetrievePrimaryCustomerForArrRequest request,
-                                              MessageContext context) {
-        System.out.println("Reached here in customer");
-        WebServiceMessage response = context.getResponse();
-
-        customerRetrievalPort.validateCustomerRetrieval(request, response);
+    private boolean isUbanValid(String identifier) {
+        return ServiceConstants.ALL_IBANS.stream()
+                .map(this::extractLast14Digits)
+                .anyMatch(ibanSuffix -> ibanSuffix.equals(identifier));
     }
+
+    /**
+     * Reads and parses a static XML file from the classpath.
+     */
+    private Document loadAndParseXml(String path) throws ParserConfigurationException, IOException, SAXException {
+        logger.debug("Loading XML from path: {}", path);
+        InputStream xml = getClass().getClassLoader().getResourceAsStream(path);
+        if (xml == null) {
+            logger.error("XML file not found at path: {}", path);
+            throw new AccountValidationException("XML not found: " + path);
+        }
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        factory.setXIncludeAware(false);
+        factory.setExpandEntityReferences(false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        return builder.parse(xml);
+    }
+//
+
+    /**
+     * Populates values in the static error response XML.
+     */
+    private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail errorDetail, String txnId) throws XPathExpressionException {
+        updateText(xpath, doc, ErrorConstants.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
+        updateText(xpath, doc, ErrorConstants.XPATH_REF_REQUEST_TXN_ID, txnId);
+        updateText(xpath, doc, ErrorConstants.XPATH_CMD_STATUS, "Failed");
+        updateText(xpath, doc, ErrorConstants.XPATH_CMD_DESCRIPTION, errorDetail.description);
+        updateText(xpath, doc, ErrorConstants.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
+        updateText(xpath, doc, ErrorConstants.XPATH_RETURN_CODE, errorDetail.returnCode);
+        if (errorDetail.systemNotificationDesc != null) {
+            updateText(xpath, doc, ErrorConstants.XPATH_SYS_NOTIFICATION_DESC, errorDetail.systemNotificationDesc);
+            updateText(xpath, doc, ErrorConstants.XPATH_SYS_NOTIFICATION_CODE, errorDetail.returnCode);
+        } else {
+            Node node = (Node) xpath.evaluate(ErrorConstants.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
+            if (node != null && node.getParentNode() != null) {
+                node.getParentNode().removeChild(node);
+                logger.debug("Removed systemNotification block as it was not applicable.");
+            }
+        }
+        logger.info("Updated response XML with error values: {}", errorDetail.description);
+    }
+
+    /**
+     * Utility method to update a specific XML node’s text content.
+     */
+    private void updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
+        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
+        if (node != null && value != null) {
+            node.setTextContent(value);
+            logger.debug("Updated XML node {} with value {}", path, value);
+        }
+    }
+
+    /**
+     * Generates a unique transaction ID string.
+     */
+    private String generateTxnId() {
+        return "1alN" + UUID.randomUUID().toString().replace("-", "") + "h";
+    }
+
+    /**
+     * Immutable container representing a valid request configuration.
+     * this record is left without methods or additional logic,as it is only
+     *  used to group and transport request fields such as
+     *  <ul>
+     *     <li>{@code identifier} - contains account number </li>
+     *     <li>{@code codeValue} - used to identify
+     * whether account is UKBasicBankAccountNumber or InternationalBankAccountNumber</li>
+     *     <li>{@code length} - returns length of account number </li>
+     *      <li>{@code originalTxnId} - return the transactionId of the request </li>
+     *       <li>{@code systemId} - returns the systemId from the request </li>
+     */
+    @SuppressWarnings("unused")
+    private record RequestParams(String identifier, String codeValue, int length, String originalTxnId,String systemId) {
+        // this record is left without methods or additional logic,as it is only used to group and transport request fields
+    }
+
+
 
 }
 
----------------
 
-    public static final String NAMESPACE_URI_FOR_ACCOUNT_VALIDATION = "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/";
-    public static final String NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL = "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/";
+--------------------
+Success-response.xml
+
+<crfpSP:retrievePrimaryCustomerForArrResponse xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/ CustomerRetrievalForPaymentParameters.xsd ">
+    <response>
+        <responseHeader/>
+        <customer xsi:type="crfpTO:Individual_TO">
+            <universalUniqueIdentifier>
+                <identifier>1122334455</identifier>
+                <context>
+                    <schemeName>CustomerEnterpriseIdType</schemeName>
+                    <codeValue>CustomerIdentificationNumber</codeValue>
+                </context>
+            </universalUniqueIdentifier>
+            <isClassifiedBy xsi:type="crfpTO:ClassificationValue_TO">
+                <codeValue>
+                    <!-- Space indicates Personal Customer -->
+                </codeValue>
+                <name>CustomerSegment</name>
+            </isClassifiedBy>
+            <hasForContactPreference>
+                <contactPoint xsi:type="crfpTO:PostalAddress_TO">
+                    <usage>
+                        <schemeName>ContactPointUsage</schemeName>
+                        <codeValue>StatementAddress</codeValue>
+                    </usage>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddresseeLine1</codeValue>
+                        <address>Addressee name 1</address>
+                        <!-- Note: This will not be present for an International Account Customer -->
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine2</codeValue>
+                        <address>Addressee name 2</address>
+                        <!-- Note: This will not be present for an International Account Customer -->
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine1</codeValue>
+                        <address>1 North Street</address>
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine2</codeValue>
+                        <address>North Town</address>
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine3</codeValue>
+                        <address>North City</address>
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine4</codeValue>
+                        <address>Northshire</address>
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>AddressLine5</codeValue>
+                        <address/>
+                    </hasComponent>
+                    <hasComponent>
+                        <schemeName>PostalAddressComponentType</schemeName>
+                        <codeValue>PostalCode</codeValue>
+                        <address>AB123CB</address>
+                    </hasComponent>
+                    <postalCodeExemptionReason>
+                        <schemeName>PostalCodeExemptionReasonType</schemeName>
+                        <codeValue>codevalue</codeValue>
+                    </postalCodeExemptionReason>
+                    <!-- For a domestic account - this element is only present if the /customer/hasForContactPreference/correspondenceDestinationPreference element is NOT present, i.e. Return to Branch has not been specified as a correspondence destination preference.  -->
+                    <!-- This element will always be present for an International account. -->
+                </contactPoint>
+                <correspondenceDestinationPreference>
+                    <schemeName>CorrespondenceDestinationPreferenceType</schemeName>
+                    <codeValue>R</codeValue>
+                    <!-- Note: This will not be present for an International Account Customer -->
+                    <!-- For a domestic account - this element is only present if the /customer/hasForContactPreference/contactPoint element is NOT present.
+                       -->
+                    <!--  A value of R indicates the Return To Branch correspondence preference in which case there will be no address details. -->
+                </correspondenceDestinationPreference>
+            </hasForContactPreference>
+            <hasForName xsi:type="crfpTO:IndividualName_TO">
+                <usage>
+                    <schemeName>InvolvedPartyNameType</schemeName>
+                    <codeValue>LegalName</codeValue>
+                </usage>
+                <middleNames>middleName1</middleNames>
+                <middleNames>middleName2</middleNames>
+                <middleNames>middleName3</middleNames>
+                <prefixTitle>
+                    <schemeName>IndividualNamePrefixType</schemeName>
+                    <codeValue>Ms</codeValue>
+                </prefixTitle>
+                <firstName>firstName</firstName>
+                <lastName>lastName</lastName>
+            </hasForName>
+            <isSensitive>false</isSensitive>
+            <hasLegalAddress>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>AddressLine1</codeValue>
+                    <address>1 North Street</address>
+                </hasComponent>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>AddressLine2</codeValue>
+                    <address>North Town</address>
+                </hasComponent>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>AddressLine3</codeValue>
+                    <address>North City</address>
+                </hasComponent>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>AddressLine4</codeValue>
+                    <address>Northshire</address>
+                </hasComponent>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>AddressLine5</codeValue>
+                    <address/>
+                </hasComponent>
+                <hasComponent>
+                    <schemeName>PostalAddressComponentType</schemeName>
+                    <codeValue>PostalCode</codeValue>
+                    <address>AB123CB</address>
+                </hasComponent>
+                <postalCodeExemptionReason>
+                    <schemeName>PostalCodeExemptionReasonType</schemeName>
+                    <codeValue>codevalue</codeValue>
+                </postalCodeExemptionReason>
+            </hasLegalAddress>
+            <hasPartyType>
+                <schemeName>InvolvedPartyType</schemeName>
+                <codeValue>Individual</codeValue>
+            </hasPartyType>
+            <residesAt>
+                <schemeName>CountryCode</schemeName>
+                <codeValue>GBR</codeValue>
+            </residesAt>
+            <birthDate>1965-03-05</birthDate>
+            <gender>
+                <schemeName>IndividualGenderType</schemeName>
+                <codeValue>F</codeValue>
+            </gender>
+            <primaryNationalityRegistration>
+                <countryCode>
+                    <schemeName>CountryCode</schemeName>
+                    <codeValue>GBR</codeValue>
+                </countryCode>
+            </primaryNationalityRegistration>
+        </customer>
+    </response>
+</crfpSP:retrievePrimaryCustomerForArrResponse>
+
+
+--------------------------
 
