@@ -1,165 +1,172 @@
-Request:-
+package com.rbs.bdd.application.service;
 
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:v01="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/">
-    <soapenv:Header/>
-    <soapenv:Body>
-        <v01:retrievePrimaryCustomerForArr>
-            <requestHeader>
-                <operatingBrand>NWB</operatingBrand>
-                <!--Zero or more repetitions:-->
-                <requestIds>
-                    <!--Optional:-->
-                    <systemId>RequestID</systemId>
-                    <!--Optional:-->
-                    <transactionId>123456789</transactionId>
-                </requestIds>
-                <requestIds>
-                 <systemId>SourceID</systemId>
-                 <transactionId>ISO</transactionId>
-             </requestIds>
-              <cmdType>Request</cmdType>
-            </requestHeader>
-            <processingParameter>
-              <objectReference>
-                 <identifier>NWB</identifier>
-                 <context>
-                    <schemeName>OrganizationEnterpriseIdType</schemeName>
-                    <codeValue>OperatingBrandIdentifier</codeValue>
-                 </context>
-              </objectReference>
-          </processingParameter>
-
-            <arrangementIdentifier>
-                <identifier>600001457620742222</identifier>
-                <context>
-                    <schemeName>ArrangementEnterpriseIdType</schemeName>
-                    <codeValue>UKBasicBankAccountNumber</codeValue>
-                    <!--Optional:-->
-                    <description>aslkjdslahbkjdf</description>
-                </context>
-                <!--Optional:-->
-                <description>aslkjdslahbkjdf</description>
-            </arrangementIdentifier>
-        </v01:retrievePrimaryCustomerForArr>
-    </soapenv:Body>
-</soapenv:Envelope>
-
-
--------------------
-
-package com.rbs.bdd.infrastructure.soap.api;
-
-import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
-import com.rbs.bdd.application.port.in.PaymentValidationPort;
+import com.rbs.bdd.application.exception.AccountValidationException;
+import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
+import com.rbs.bdd.common.ErrorConstants;
 import com.rbs.bdd.common.ServiceConstants;
+import com.rbs.bdd.domain.enums.model.ErrorDetail;
 import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
-import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.server.endpoint.annotation.Endpoint;
-import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
-import org.springframework.ws.server.endpoint.annotation.RequestPayload;
-import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.time.ZonedDateTime;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
- * SOAP endpoint adapter class for handling the `validateArrangementForPayment` operation.
- * It uses Spring WS annotations to route incoming SOAP requests to the appropriate service layer.
+ * Service to handle logic for retrieving customer details based on account number.
+ * Matches specific identifiers and dynamically updates SOAP XML response.
  */
-@Endpoint
-public class PaymentValidationSoapAdapter {
+@Service
+@RequiredArgsConstructor
+public class CustomerRetrievalService implements RetrieveCustomerPort {
 
-    /**Changes for the request*/
+    private static final Logger logger = LoggerFactory.getLogger(CustomerRetrievalService.class);
+    private static final String STATIC_RESPONSE_PATH = "static-response/customer-retrieval/success-response.xml";
+    private static final String HARDCODED_ACCOUNT = "GB98MIDL07009312345678";
 
-
-    private final PaymentValidationPort paymentValidationPort;
-    private final CustomerRetrievalPort customerRetrievalPort;
-
-    /**
-     * Constructor-based injection of the orchestrator that handles business logic.
-     *
-     * @param paymentValidationPort the orchestrator service
-     */
-    public PaymentValidationSoapAdapter(PaymentValidationPort paymentValidationPort,CustomerRetrievalPort customerRetrievalPort) {
-        this.paymentValidationPort = paymentValidationPort;
-        this.customerRetrievalPort = customerRetrievalPort;
+    @Override
+    public void validateSchema(RetrievePrimaryCustomerForArrRequest request) {
+        logger.info("Schema validated successfully by Spring WS.");
     }
 
+    @Override
+    public void retrieveCustomer(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message) {
+        try {
+            RequestParams params = extractParams(request);
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            Document responseDoc;
 
+            Optional<ErrorDetail> error = determineError(params);
+            if (error.isPresent()) {
+                responseDoc = loadAndParseXml(ServiceConstants.ERROR_XML_PATH);
+                applyErrorResponse(responseDoc, xpath, error.get(), params.originalTxnId());
+            } else if (params.identifier().equals(HARDCODED_ACCOUNT)) {
+                responseDoc = loadAndParseXml(STATIC_RESPONSE_PATH);
+                updateName(responseDoc, xpath, CustomerNameConstants.FIRST_NAME.getValue(), CustomerNameConstants.LAST_NAME.getValue());
+                logger.info("Returning matched customer response.");
+            } else {
+                responseDoc = loadAndParseXml(ServiceConstants.ERROR_XML_PATH);
+                applyErrorResponse(responseDoc, xpath, ErrorConstants.ERR_MOD97_IBAN, params.originalTxnId());
+            }
 
-    /**
-     * Handles the `validateArrangementForPayment` SOAP request.
-     * Delegates request processing to the orchestrator which modifies the response message directly.
-     *
-     * @param request the SOAP request payload
-     * @param context the Spring WS message context
-     */
-    @PayloadRoot(namespace = ServiceConstants.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION, localPart = "validateArrangementForPayment")
-    @ResponsePayload
-    public void validateArrangementForPayment(@RequestPayload ValidateArrangementForPaymentRequest request,
-                                                MessageContext context) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.transform(new DOMSource(responseDoc), new StreamResult(out));
 
-        WebServiceMessage response = context.getResponse();
-        paymentValidationPort.validateArrangementForPayment(request, response);
-         }
+            ((SaajSoapMessage) message).getSaajMessage().getSOAPPart()
+                    .setContent(new StreamSource(new ByteArrayInputStream(out.toByteArray())));
 
-    /**
-     * Handles the `RetrieveCustomerRequest` SOAP request.
-     * Delegates request processing to the orchestrator which modifies the response message directly.
-     *
-     * @param request the SOAP request payload
-     * @param context the Spring WS message context
-     */
-    @PayloadRoot(namespace = ServiceConstants.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL, localPart = "retrievePrimaryCustomerForArr")
-    @ResponsePayload
-    public void validateCustomerRetrieval(@RequestPayload RetrievePrimaryCustomerForArrRequest request,
-                                              MessageContext context) {
-        System.out.println("Reached here in customer");
-        WebServiceMessage response = context.getResponse();
-
-        customerRetrievalPort.validateCustomerRetrieval(request, response);
+        } catch (Exception e) {
+            logger.error("Customer retrieval failed", e);
+            throw new RuntimeException("Customer retrieval failed", e);
+        }
     }
 
+    private void updateName(Document doc, XPath xpath, String firstName, String lastName) throws XPathExpressionException {
+        updateText(xpath, doc, "//crfpTO:firstName", firstName);
+        updateText(xpath, doc, "//crfpTO:lastName", lastName);
+    }
+
+    private Optional<ErrorDetail> determineError(RequestParams p) {
+        if (ServiceConstants.INTL_BANK_ACCOUNT.equals(p.codeValue())) {
+            if (!p.identifier().startsWith("GB")) return Optional.of(ErrorConstants.ERR_WRONG_COUNTRY_CODE);
+            if (p.length() != 22) return Optional.of(ErrorConstants.ERR_INVALID_IBAN_LENGTH);
+        } else if (ServiceConstants.UK_BASIC_BANK_ACCOUNT.equals(p.codeValue())) {
+            if (p.identifier().startsWith("GB")) return Optional.of(ErrorConstants.ERR_DB2_SQL);
+            if (p.length() != 14) return Optional.of(ErrorConstants.ERR_INVALID_UBAN_LENGTH);
+        }
+        return Optional.empty();
+    }
+
+    private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail detail, String txnId) throws XPathExpressionException {
+        updateText(xpath, doc, ErrorConstants.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
+        updateText(xpath, doc, ErrorConstants.XPATH_REF_REQUEST_TXN_ID, txnId);
+        updateText(xpath, doc, ErrorConstants.XPATH_CMD_STATUS, "Failed");
+        updateText(xpath, doc, ErrorConstants.XPATH_CMD_DESCRIPTION, detail.description);
+        updateText(xpath, doc, ErrorConstants.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
+        updateText(xpath, doc, ErrorConstants.XPATH_RETURN_CODE, detail.returnCode);
+
+        if (detail.systemNotificationDesc != null) {
+            updateText(xpath, doc, ErrorConstants.XPATH_SYS_NOTIFICATION_DESC, detail.systemNotificationDesc);
+            updateText(xpath, doc, ErrorConstants.XPATH_SYS_NOTIFICATION_CODE, detail.returnCode);
+        } else {
+            Node node = (Node) xpath.evaluate(ErrorConstants.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
+            if (node != null) node.getParentNode().removeChild(node);
+        }
+    }
+
+    private void updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
+        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
+        if (node != null && value != null) node.setTextContent(value);
+    }
+
+    private Document loadAndParseXml(String path) throws Exception {
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(path);
+        if (stream == null) throw new AccountValidationException("XML not found: " + path);
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        return builder.parse(stream);
+    }
+
+    private RequestParams extractParams(RetrievePrimaryCustomerForArrRequest request) {
+        return new RequestParams(
+                request.getArrangementIdentifier().getIdentifier(),
+                request.getArrangementIdentifier().getContext().getCodeValue(),
+                request.getArrangementIdentifier().getIdentifier().length(),
+                request.getRequestHeader().getRequestIds().get(0).getTransactionId(),
+                request.getRequestHeader().getRequestIds().get(0).getSystemId()
+        );
+    }
+
+    private String generateTxnId() {
+        return "1alN" + UUID.randomUUID().toString().replace("-", "") + "h";
+    }
+
+    private record RequestParams(String identifier, String codeValue, int length, String originalTxnId, String systemId) {}
+
+    /**
+     * Enum for customer name constants used in dynamic response transformation.
+     */
+    public enum CustomerNameConstants {
+        FIRST_NAME("ModifiedFirst"),
+        LAST_NAME("ModifiedLast");
+
+        private final String value;
+
+        CustomerNameConstants(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
 }
-
-------------------
-CustomerRetrievalForPaymentParameters.xsd
-
-<?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" version="RBS_20210325_Baseline" xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/"
-            xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/"  elementFormDefault="unqualified">
-  <xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" schemaLocation="CustomerRetrievalForPaymentTransferObjects.xsd"/>
-  <xsd:import namespace="http://com/rbsg/soa/Services/Definitions/V03/" schemaLocation="../shared/ServiceDefinitions.xsd"/>
-  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
-  <xsd:complexType name="retrievePrimaryCustomerForArrRequest">
-    <xsd:sequence>
-      <xsd:element name="requestHeader" type="sdef:RequestHeader"/>
-      <xsd:element maxOccurs="unbounded" minOccurs="0" name="processingParameter" type="pdt:Property"/>
-      <xsd:element name="arrangementIdentifier" type="pdt:ObjectReference">
-        <xsd:annotation>
-          <xsd:documentation>Identifier of the account for which the Customer is identified as the Primary Customer (Account Owner).</xsd:documentation>
-        </xsd:annotation>
-      </xsd:element>
-    </xsd:sequence>
-  </xsd:complexType>
-  <xsd:complexType name="RetrievePrimaryCustomerForArrContent">
-    <xsd:sequence>
-      <xsd:element name="responseHeader" type="sdef:ResponseHeader"/>
-      <xsd:element minOccurs="0" name="customer" type="crfpTO:InvolvedParty_TO"/>
-      <xsd:element maxOccurs="unbounded" minOccurs="0" name="modifyToken" type="pdt:Property"/>
-    </xsd:sequence>
-  </xsd:complexType>
-  <xsd:complexType name="retrievePrimaryCustomerForArrResponse">
-    <xsd:sequence>
-      <xsd:choice>
-        <xsd:element name="response" type="crfpSP:RetrievePrimaryCustomerForArrContent"/>
-        <xsd:element name="exception" type="sdef:Exception"/>
-      </xsd:choice>
-    </xsd:sequence>
-  </xsd:complexType>
-  <!-- Global elements required for WSDL operation binding -->
-  <xsd:element name="retrievePrimaryCustomerForArr" type="crfpSP:retrievePrimaryCustomerForArrRequest"/>
-  <xsd:element name="retrievePrimaryCustomerForArrResponse" type="crfpSP:retrievePrimaryCustomerForArrResponse"/>
-
-</xsd:schema>
