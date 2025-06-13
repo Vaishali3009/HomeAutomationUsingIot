@@ -1,30 +1,4 @@
-
-package com.rbs.bdd.domain.enums.model;
-
-/**
- * Represents a structured error detail used for SOAP fault responses.
- * This record encapsulates:
- * <ul>
- *     <li>Error return code</li>
- *     <li>Human-readable description</li>
- *     <li>System notification code</li>
- *     <li>System notification description</li>
- * </ul>
- *
- * @param returnCode Unique identifier for the error
- * @param description User-friendly description of the error
- * @param systemNotificationCode Optional system-level notification code
- * @param systemNotificationDesc Optional system-level notification description
- */
-public record ErrorDetail(
-        String returnCode,
-        String description,
-        String systemNotificationCode,
-        String systemNotificationDesc
-) {}
-
------
-package com.rbs.bdd.common;
+package com.rbs.bdd.domain.enums;
 
 import java.util.List;
 
@@ -63,7 +37,7 @@ public enum ServiceConstants {
         String IBAN_4 = "GB33BUKB20201555555567";
 
         List<String> ALL_IBANS = List.of(
-            IBAN_1, IBAN_2, IBAN_3, IBAN_4
+                IBAN_1, IBAN_2, IBAN_3, IBAN_4
         );
     }
 
@@ -107,10 +81,10 @@ public enum ServiceConstants {
     }
 }
 
-----
-package com.rbs.bdd.common;
-
-import com.rbs.bdd.domain.enums.model.ErrorDetail;
+---------------------
+package com.rbs.bdd.domain.enums;
+import com.rbs.bdd.domain.model.ErrorDetail;
+import com.rbs.bdd.domain.model.ErrorDetail;
 
 /**
  * Enum representing predefined error types for validation responses.
@@ -143,3 +117,26 @@ public enum ErrorConstants {
         return detail;
     }
 }
+
+-------------
+In the service class XPATH_RESPONSE_ID_TXN_ID,XPATH_REF_REQUEST_TXN_ID and other are not resolved 
+
+ private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail errorDetail, String txnId) throws XPathExpressionException {
+        updateText(xpath, doc, ErrorConstants.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
+        updateText(xpath, doc, ErrorConstants.XPATH_REF_REQUEST_TXN_ID, txnId);
+        updateText(xpath, doc, ErrorConstants.XPATH_CMD_STATUS, "Failed");
+        updateText(xpath, doc, ErrorConstants.XPATH_CMD_DESCRIPTION, errorDetail.description());
+        updateText(xpath, doc, ErrorConstants.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
+        updateText(xpath, doc, ErrorConstants.XPATH_RETURN_CODE, errorDetail.returnCode());
+        if (Objects.nonNull(errorDetail.systemNotificationDesc())) {
+            updateText(xpath, doc, ErrorConstants.XPATH_SYS_NOTIFICATION_DESC, errorDetail.systemNotificationDesc());
+            updateText(xpath, doc, ErrorConstants.XPATH_SYS_NOTIFICATION_CODE, errorDetail.returnCode());
+        } else {
+            Node node = (Node) xpath.evaluate(ErrorConstants.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
+            if (node != null && node.getParentNode() != null) {
+                node.getParentNode().removeChild(node);
+                log.debug("Removed systemNotification block as it was not applicable.");
+            }
+        }
+        log.info("Updated response XML with error values: {}", errorDetail.description());
+    }
