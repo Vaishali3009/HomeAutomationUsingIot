@@ -1,35 +1,282 @@
-private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail detail, String txnId) throws XPathExpressionException {
-    updateText(xpath, doc, ServiceConstants.XPath.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
-    updateText(xpath, doc, ServiceConstants.XPath.XPATH_REF_REQUEST_TXN_ID, txnId);
-    updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_STATUS, "Failed");
-    updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION, detail.description());
-    updateText(xpath, doc, ServiceConstants.XPath.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
-    updateText(xpath, doc, ServiceConstants.XPath.XPATH_RETURN_CODE, detail.returnCode());
+package com.rbs.bdd.application.service;
 
-    // ✅ Always include systemNotification if the UBAN is invalid/missing
-    if (Objects.nonNull(detail.systemNotificationDesc())) {
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC, detail.systemNotificationDesc());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_CODE, detail.returnCode());
 
-        // Inject static systemId inside processingId
-        updateText(xpath, doc, "//*[local-name()='processingId']/*[local-name()='systemId']", "CoreCustomer-DCA");
-    } else {
-        // Remove <systemNotifications> block if it's not required
-        Node node = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
-        if (Objects.nonNull(node)) {
-            node.getParentNode().removeChild(node);
+
+
+import com.rbs.bdd.application.exception.AccountValidationException;
+import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
+import com.rbs.bdd.domain.enums.CustomerNameMapping;
+import com.rbs.bdd.domain.enums.ErrorConstants;
+import com.rbs.bdd.domain.enums.ServiceConstants;
+import com.rbs.bdd.domain.model.ErrorDetail;
+import com.rbs.bdd.domain.model.ErrorDetail;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.time.ZonedDateTime;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import static com.rbs.bdd.domain.enums.ServiceConstants.XPath.*;
+
+/**
+ * Service to handle logic for retrieving customer details based on account number.
+ * Matches specific identifiers and dynamically updates SOAP XML response.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CustomerRetrievalService implements RetrieveCustomerPort {
+
+    private static final Logger logger = LoggerFactory.getLogger(CustomerRetrievalService.class);
+    private static final String STATIC_RESPONSE_PATH = "static-response/customer-retrieval/success-response.xml";
+
+    @Override
+    public void validateSchema(RetrievePrimaryCustomerForArrRequest request) {
+        logger.info("Schema validated successfully by Spring WS.");
+    }
+
+    @Override
+    public void retrieveCustomer(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message) {
+        try {
+            RequestParams params = extractParams(request);
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            Document responseDoc;
+
+            Optional<ErrorDetail> error = determineError(params);
+            if (error.isPresent()) {
+                responseDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL);
+                applyErrorResponse(responseDoc, xpath, error.get(), params.originalTxnId());
+            } else {
+                CustomerNameMapping matched = CustomerNameMapping.fromIdentifier(params.identifier);
+                if (matched != null) {
+                    responseDoc = loadAndParseXml(STATIC_RESPONSE_PATH);
+                    updateName(responseDoc, xpath, matched.getFirstName(), matched.getLastName(),matched.getPrefixType());
+                    logger.info("Returning matched customer response for IBAN: {}", matched.getIban());
+                } else {
+                    responseDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH);
+                    applyErrorResponse(responseDoc, xpath, ErrorConstants.ERR_MOD97_IBAN.detail(), params.originalTxnId);
+                }
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.transform(new DOMSource(responseDoc), new StreamResult(out));
+
+            ((SaajSoapMessage) message).getSaajMessage().getSOAPPart()
+                    .setContent(new StreamSource(new ByteArrayInputStream(out.toByteArray())));
+
+        } catch (Exception e) {
+            logger.error("Customer retrieval failed", e);
+            throw new RuntimeException("Customer retrieval failed", e);
         }
     }
 
-    log.info("Updated error response for customer retrieval.");
+    private void updateName(Document doc, XPath xpath, String firstName, String lastName,String prefixType) throws XPathExpressionException {
+        updateText(xpath, doc, XPATH_PREFIX_TYPE, prefixType);
+        updateText(xpath, doc, XPATH_FIRST_NAME, firstName);
+        updateText(xpath, doc, XPATH_LAST_NAME, lastName);
+    }
+
+    private Optional<ErrorDetail> determineError(RequestParams p) {
+
+        Optional<ErrorDetail> errorDetail = Optional.empty();
+
+        if (ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT.equals(p.codeValue())) {
+            if (!p.identifier().startsWith("GB")) {
+                errorDetail = Optional.of(ErrorConstants.ERR_UBAN_GB.detail());
+            } else if (p.length() != 22) {
+                errorDetail = Optional.of(ErrorConstants.ERR_UBAN_GB.detail());
+            }
+            else{
+                log.info("No Error was found for IBAN account number :{} with identifier :{}", p.codeValue,p.identifier);
+            }
+        } else if (ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT.equals(p.codeValue())) {
+            if (p.identifier().startsWith("GB")) {
+                errorDetail = Optional.of(ErrorConstants.ERR_UBAN_GB.detail());
+            } else if (p.length() != 14) {
+                errorDetail = Optional.of(ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail());
+            } else if (!isUbanValid(p.identifier())) {
+                errorDetail = Optional.of(ErrorConstants.ERR_MOD97_UBAN.detail());
+            }
+            else{
+                log.info("No Error was found for UBAN account number :{} with identifier :{}", p.codeValue,p.identifier);
+            }
+        }
+
+        return errorDetail;
+    }
+
+    /**
+     * Verifies if the given UBAN matches the suffix of known IBANs.
+     */
+    private boolean isUbanValid(String identifier) {
+        return ServiceConstants.IBANs.ALL_IBANS.stream()
+                .map(this::extractLast14Digits)
+                .anyMatch(ibanSuffix -> ibanSuffix.equals(identifier));
+    }
+
+    /**
+     * Extracts last 14 digits from a given IBAN string.
+     */
+    private String extractLast14Digits(String iban) {
+        return iban.length() >= 14 ? iban.substring(iban.length() - 14) : "";
+    }
+    private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail detail, String txnId) throws XPathExpressionException {
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_REF_REQUEST_TXN_ID, txnId);
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_STATUS, "Failed");
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION, detail.description());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RETURN_CODE, detail.returnCode());
+
+        if (Objects.nonNull(detail.systemNotificationDesc())){
+            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC, detail.systemNotificationDesc());
+            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_CODE, detail.returnCode());
+        } else {
+            Node node = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
+            if (Objects.nonNull(node)) node.getParentNode().removeChild(node);
+        }
+    }
+
+    private void
+    updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
+        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
+        if (node != null && value != null) node.setTextContent(value);
+    }
+
+    private Document loadAndParseXml(String path) throws Exception {
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(path);
+        if (Objects.isNull(stream)) {
+            log.error("XML file not found at path: {}", path);
+            throw new AccountValidationException("XML not found: " + path);
+        }
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        return builder.parse(stream);
+    }
+
+    private RequestParams extractParams(RetrievePrimaryCustomerForArrRequest request) {
+        return new RequestParams(
+                request.getArrangementIdentifier().getIdentifier(),
+                request.getArrangementIdentifier().getContext().getCodeValue(),
+                request.getArrangementIdentifier().getIdentifier().length(),
+                request.getRequestHeader().getRequestIds().get(0).getTransactionId(),
+                request.getRequestHeader().getRequestIds().get(0).getSystemId()
+        );
+    }
+
+    private String generateTxnId() {
+        return "1alN" + UUID.randomUUID().toString().replace("-", "") + "h";
+    }
+
+    private record RequestParams(String identifier, String codeValue, int length, String originalTxnId, String systemId) {}
 }
 
+--------------
+package com.rbs.bdd.domain.enums;
+import com.rbs.bdd.domain.model.ErrorDetail;
+import com.rbs.bdd.domain.model.ErrorDetail;
 
------
+/**
+ * Enum representing predefined error types for validation responses.
+ * Each constant wraps an {@link ErrorDetail} object with metadata used for SOAP fault construction.
+ */
+public enum ErrorConstants {
 
-ERR_MOD97_UBAN(new ErrorDetail(
-    "ERR006",
-    "Unable To Complete Request",
-    "4",
-    "Customer Not Found"
-)),
+    ERR_INVALID_IBAN_LENGTH(new ErrorDetail("ERR006", "Length of IBAN is Invalid", "0013", "Length of IBAN is Invalid")),
+
+    ERR_DB2_SQL(new ErrorDetail("ERR006", "500|Service GRPUB.OA_GET_SORTCODE_DETAILS...(OA2.2105271236)...", null, null)),
+    ERR_UBAN_GB(new ErrorDetail("ERR006", "Service operation retrievePrimaryCustomerForArr failed due to an error in the ESP. Contact systems management to resolve the problem.", null, null)),
+
+    ERR_WRONG_COUNTRY_CODE(new ErrorDetail("0010", "Country code is not found in Db, try  with the correct country code", null, null)),
+
+    ERR_MOD97_IBAN(new ErrorDetail("ERROO6", "MOD97 failure for the IBAN", "0020", "MOD97 failure for the IBAN")),
+
+    ERR_INVALID_UBAN_LENGTH(new ErrorDetail("ERROO6", "UBAN should be 14 digits", "0013", "UBAN should be 14 digits")),
+
+    ERR_CUSTOMER_NOT_FOUND(new ErrorDetail("ERROO6", "Unable To Complete Request", "4", "Customer Not Found")),
+
+    ERR_MOD97_UBAN(new ErrorDetail("ERROO6", "MOD97 failure for the UBAN", "0020", "MOD97 failure for the UBAN"));
+
+    private final ErrorDetail detail;
+
+    ErrorConstants(ErrorDetail detail) {
+        this.detail = detail;
+    }
+
+    /**
+     * Returns the {@link ErrorDetail} wrapped in this constant.
+     */
+    public ErrorDetail detail() {
+        return detail;
+    }
+}
+
+---------------
+<NS1:Envelope xmlns:NS1="http://schemas.xmlsoap.org/soap/envelope/">
+    <NS1:Body>
+        <NS2:retrievePrimaryCustomerForArrResponse xmlns:NS2="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/">
+            <exception>
+                <responseId>
+                    <systemId>ESP</systemId>
+                    <transactionId>5flS3ea4afb79684c151812aa79c320250613131000581h</transactionId>
+                </responseId>
+                <refRequestIds>
+                    <systemId>RequestID</systemId>
+                    <transactionId>NCO-E2EINTL-BTC8</transactionId>
+                </refRequestIds>
+                <refRequestIds>
+                    <systemId>SourceID</systemId>
+                    <transactionId>PIM</transactionId>
+                </refRequestIds>
+                <operatingBrand>NWB</operatingBrand>
+                <serviceName>CustomerRetrievalForPayment</serviceName>
+                <operationName>retrievePrimaryCustomerForArr</operationName>
+                <cmdStatus>Failed</cmdStatus>
+                <cmdNotifications>
+                    <returnCode>ERR006</returnCode>
+                    <category>Error</category>
+                    <description>Service operation retrievePrimaryCustomerForArr failed due to an error in the ESP. Contact systems management to resolve the problem.</description>
+                    <timestamp>2025-06-13T13:10:00.591413+01:00</timestamp>
+                    <systemNotifications>
+                        <returnCode>4</returnCode>
+                        <category>Error</category>
+                        <description>Customer Not Found</description>
+                        <processingId>
+                            <systemId>CoreCustomer-DCA</systemId>
+                        </processingId>
+                    </systemNotifications>
+
+                </cmdNotifications>
+            </exception>
+        </NS2:retrievePrimaryCustomerForArrResponse>
+    </NS1:Body>
+</NS1:Envelope>
