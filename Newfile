@@ -1,424 +1,497 @@
-INFO] Total time:  33.229 s
-[INFO] Finished at: 2025-06-16T10:27:14+01:00
-[INFO] ------------------------------------------------------------------------
-[ERROR] Failed to execute goal org.apache.maven.plugins:maven-javadoc-plugin:3.10.1:javadoc (default-cli) on project bdd-ms-esp-simulation-service: An error has occurred in
- Javadoc report generation:
-[ERROR] Exit code: 1
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Organizatio
-nUnitTO.java:17: error: unknown tag: Organization
-[ERROR]  * Identifies a particular type of Involved Party that is a component or subdivision of an <Organization> established for the purpose of performing discrete functio
-nal responsibilities. This typically represents the Organizational structure of the modeled Organization including sections, departments, district offices, projects, and em
-ployment positions.
-[ERROR]                                                                                            ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\ConditionCo
-ntextTO.java:19: error: unknown tag: Business
-[ERROR]  * Identifies the <Business> to which a <Condition> relates
-[ERROR]                   ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\ConditionCo
-ntextTO.java:19: error: unknown tag: Condition
-[ERROR]  * Identifies the <Business> to which a <Condition> relates
-[ERROR]                                         ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\package-inf
-o.java:9: warning: no comment
-[ERROR] package com.rbs.bdd.generated.accountvalidation;
-[ERROR] ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\package-inf
-o.java:9: warning: no comment
-[ERROR] package com.rbs.bdd.generated.customerretrieval;
-[ERROR] ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\package-info.java:9: w
-arning: no comment
-[ERROR] package com.rbs.bdd.generated.shared;
-[ERROR] ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\arrvalidationfor
-payment\v01\package-info.java:9: warning: no comment
-[ERROR] package com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01;
-[ERROR] ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\package-info.java:9: warning: no comment
-[ERROR] package com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01;
-[ERROR] ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BaseTransfe
-rObject.java:80: warning: no @return
-[ERROR]     public List<Property> getExtendedProperties() {
-[ERROR]                           ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BusinessMod
-elObjectTO.java:90: warning: no @return
-[ERROR]     public List<ObjectReference> getAlternativeIdentifier() {
-[ERROR]                                  ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BusinessMod
-elObjectTO.java:119: warning: no @return
-[ERROR]     public List<AssessmentTO> getIsSubjectOf() {
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BusinessMod
-elObjectTO.java:172: warning: no @return
-[ERROR]     public List<ClassificationValueTO> getIsClassifiedBy() {
-[ERROR]                                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountArra
-ngementIdentifierAssessmentTO.java:46: warning: no comment
-[ERROR]     protected Reference modulusCheckStatus;
-[ERROR]                         ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountArra
-ngementIdentifierAssessmentTO.java:42: warning: use of default constructor, which does not provide a comment
-[ERROR] public class AccountArrangementIdentifierAssessmentTO
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Arrangement
-TO.java:108: warning: no @return
-[ERROR]     public List<AccountingUnitTO> getAccountingUnits() {
-[ERROR]                                   ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\ProductArra
-ngementTO.java:186: warning: no @return
-[ERROR]     public List<ContactPreferenceTO> getContactPreferences() {
-[ERROR]                                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountArra
-ngementTO.java:36: warning: use of default constructor, which does not provide a comment
-[ERROR] public class AccountArrangementTO
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\AccountingTransactionP
-arameter.java:45: warning: no comment
-[ERROR]     protected ObjectReference instructionIdentifer;
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\AccountingTransactionP
-arameter.java:47: warning: no comment
-[ERROR]     protected ObjectReference transactionIdentifer;
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\AccountingTransactionP
-arameter.java:42: warning: use of default constructor, which does not provide a comment
-[ERROR] public class AccountingTransactionParameter {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountingU
-nitTO.java:108: warning: no @return
-[ERROR]     public List<BalanceTO> getHasBalance() {
-[ERROR]                            ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountingU
-nitTO.java:59: warning: no comment
-[ERROR]     protected Reference badDebtStatus;
-[ERROR]                         ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountingU
-nitTO.java:57: warning: no comment
-[ERROR]     protected List<BalanceTO> hasBalance;
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountingU
-nitTO.java:60: warning: no comment
-[ERROR]     protected OrganizationUnitTO isManagedBy;
-[ERROR]                                  ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountingU
-nitTO.java:56: warning: no comment
-[ERROR]     protected String name;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountingU
-nitTO.java:58: warning: no comment
-[ERROR]     protected Reference status;
-[ERROR]                         ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountingU
-nitTO.java:52: warning: use of default constructor, which does not provide a comment
-[ERROR] public class AccountingUnitTO
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\infrastructure\soap\interceptor\AccountSchemaValidation
-Interceptor.java:51: warning: use of default constructor, which does not provide a comment
-[ERROR] public class AccountSchemaValidationInterceptor extends PayloadValidatingInterceptor {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\AccountStatus.java:17: warning: no comment
-[ERROR]     public String getValue() {
-[ERROR]                   ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\AccountStatus.java:8: warning: no comment
-[ERROR]     DOMESTIC_RESTRICTED("Domestic - Restricted"),
-[ERROR]     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\AccountStatus.java:9: warning: no comment
-[ERROR]     DOMESTIC_UNRESTRICTED("Domestic - Unrestricted");
-[ERROR]     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountSwit
-chingArrangementTO.java:129: warning: no @return
-[ERROR]     public List<XMLGregorianCalendar> getSwitchStartDate() {
-[ERROR]                                       ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountSwit
-chingArrangementTO.java:57: warning: no comment
-[ERROR]     protected List<XMLGregorianCalendar> switchStartDate;
-[ERROR]                                          ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountSwit
-chingArrangementTO.java:55: warning: no comment
-[ERROR]     protected XMLGregorianCalendar switchTargetDate;
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountSwit
-chingArrangementTO.java:53: warning: no comment
-[ERROR]     protected AccountArrangementTO targetArrangement;
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AccountSwit
-chingArrangementTO.java:49: warning: use of default constructor, which does not provide a comment
-[ERROR] public class AccountSwitchingArrangementTO
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\application\service\AccountValidationService.java:58: w
-arning: use of default constructor, which does not provide a comment
-[ERROR] public class AccountValidationService implements AccountValidationPort {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\AddressComponent.java:
-74: warning: no @return
-[ERROR]     public List<String> getAddress() {
-[ERROR]                         ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\AddressComponent.java:
-50: warning: no comment
-[ERROR]     protected List<String> address;
-[ERROR]                            ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\AddressComponent.java:
-45: warning: use of default constructor, which does not provide a comment
-[ERROR] public class AddressComponent
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\Amount.java:54: warnin
-g: no comment
-[ERROR]     protected BigDecimal amount;
-[ERROR]                          ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\Amount.java:55: warnin
-g: no comment
-[ERROR]     protected Reference unitOfMeasure;
-[ERROR]                         ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\Amount.java:51: warnin
-g: use of default constructor, which does not provide a comment
-[ERROR] public class Amount {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Arrangement
-TO.java:58: warning: no comment
-[ERROR]     protected List<AccountingUnitTO> accountingUnits;
-[ERROR]                                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Arrangement
-TO.java:60: warning: no comment
-[ERROR]     protected InvolvedPartyTO isServicedBy;
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Arrangement
-TO.java:59: warning: no comment
-[ERROR]     protected OrganizationUnitTO managingOrganizationUnit;
-[ERROR]                                  ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Arrangement
-TO.java:57: warning: no comment
-[ERROR]     protected String name;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Arrangement
-TO.java:53: warning: use of default constructor, which does not provide a comment
-[ERROR] public class ArrangementTO
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AssessmentT
-O.java:49: warning: no comment
-[ERROR]     protected Boolean referred;
-[ERROR]                       ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\AssessmentT
-O.java:45: warning: use of default constructor, which does not provide a comment
-[ERROR] public class AssessmentTO
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BalanceTO.j
-ava:49: warning: no comment
-[ERROR]     protected BalanceType balanceDerivationType;
-[ERROR]                           ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BalanceTO.j
-ava:50: warning: no comment
-[ERROR]     protected CurrencyAmount postedAmount;
-[ERROR]                              ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BalanceTO.j
-ava:45: warning: use of default constructor, which does not provide a comment
-[ERROR] public class BalanceTO
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\BalanceType.java:48: w
-arning: no comment
-[ERROR]     protected Reference accountingEffectType;
-[ERROR]                         ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\BalanceType.java:47: w
-arning: no comment
-[ERROR]     protected Reference pointBalanceType;
-[ERROR]                         ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\BalanceType.java:43: w
-arning: use of default constructor, which does not provide a comment
-[ERROR] public class BalanceType
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BaseTransfe
-rObject.java:55: warning: no comment
-[ERROR]     protected List<Property> extendedProperties;
-[ERROR]                              ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BaseTransfe
-rObject.java:56: warning: no comment
-[ERROR]     protected PropertyVariant lastUpdateToken;
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BaseTransfe
-rObject.java:53: warning: use of default constructor, which does not provide a comment
-[ERROR] public class BaseTransferObject {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BaseTransfe
-rObject.java:82: warning: no @return
-[ERROR]     public List<Property> getExtendedProperties() {
-[ERROR]                           ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BaseTransfe
-rObject.java:57: warning: no comment
-[ERROR]     protected List<Property> extendedProperties;
-[ERROR]                              ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BaseTransfe
-rObject.java:58: warning: no comment
-[ERROR]     protected PropertyVariant lastUpdateToken;
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BaseTransfe
-rObject.java:55: warning: use of default constructor, which does not provide a comment
-[ERROR] public class BaseTransferObject {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\Binary.java:81: warnin
-g: no @return
-[ERROR]     public List<Byte> getBinaryData() {
-[ERROR]                       ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\Binary.java:53: warnin
-g: no comment
-[ERROR]     protected List<Byte> binaryData;
-[ERROR]                          ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\Binary.java:57: warnin
-g: no comment
-[ERROR]     protected Reference binaryType;
-[ERROR]                         ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\Binary.java:55: warnin
-g: no comment
-[ERROR]     protected BigInteger length;
-[ERROR]                          ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\Binary.java:50: warnin
-g: use of default constructor, which does not provide a comment
-[ERROR] public class Binary {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BusinessMod
-elObjectTO.java:63: warning: no comment
-[ERROR]     protected List<ObjectReference> alternativeIdentifier;
-[ERROR]                                     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BusinessMod
-elObjectTO.java:66: warning: no comment
-[ERROR]     protected List<ClassificationValueTO> isClassifiedBy;
-[ERROR]                                           ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BusinessMod
-elObjectTO.java:64: warning: no comment
-[ERROR]     protected List<AssessmentTO> isSubjectOf;
-[ERROR]                                  ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BusinessMod
-elObjectTO.java:65: warning: no comment
-[ERROR]     protected ObjectReference universalUniqueIdentifier;
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\BusinessMod
-elObjectTO.java:59: warning: use of default constructor, which does not provide a comment
-[ERROR] public class BusinessModelObjectTO
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BusinessMod
-elObjectTO.java:119: warning: no @return
-[ERROR]     public List<ObjectReference> getAlternativeIdentifier() {
-[ERROR]                                  ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BusinessMod
-elObjectTO.java:148: warning: no @return
-[ERROR]     public List<ClassificationValueTO> getIsClassifiedBy() {
-[ERROR]                                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BusinessMod
-elObjectTO.java:201: warning: no @return
-[ERROR]     public List<ConditionTO> getHasConditions() {
-[ERROR]                              ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BusinessMod
-elObjectTO.java:67: warning: no comment
-[ERROR]     protected List<ObjectReference> alternativeIdentifier;
-[ERROR]                                     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BusinessMod
-elObjectTO.java:71: warning: no comment
-[ERROR]     protected String description;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BusinessMod
-elObjectTO.java:70: warning: no comment
-[ERROR]     protected List<ConditionTO> hasConditions;
-[ERROR]                                 ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BusinessMod
-elObjectTO.java:68: warning: no comment
-[ERROR]     protected List<ClassificationValueTO> isClassifiedBy;
-[ERROR]                                           ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BusinessMod
-elObjectTO.java:69: warning: no comment
-[ERROR]     protected Reference objectType;
-[ERROR]                         ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BusinessMod
-elObjectTO.java:66: warning: no comment
-[ERROR]     protected ObjectReference universalUniqueIdentifier;
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\BusinessMod
-elObjectTO.java:62: warning: use of default constructor, which does not provide a comment
-[ERROR] public abstract class BusinessModelObjectTO
-[ERROR]                 ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Classificat
-ionValueTO.java:61: warning: no comment
-[ERROR]     protected String codeValue;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Classificat
-ionValueTO.java:65: warning: no comment
-[ERROR]     protected String displayOrder;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Classificat
-ionValueTO.java:64: warning: no comment
-[ERROR]     protected LifecycleStatus lifecycleStatus;
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Classificat
-ionValueTO.java:62: warning: no comment
-[ERROR]     protected String name;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Classificat
-ionValueTO.java:60: warning: no comment
-[ERROR]     protected String schemeName;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Classificat
-ionValueTO.java:63: warning: no comment
-[ERROR]     protected String shortName;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\accountvalidation\Classificat
-ionValueTO.java:56: warning: use of default constructor, which does not provide a comment
-[ERROR] public class ClassificationValueTO
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\Classificat
-ionValueTO.java:56: warning: no comment
-[ERROR]     protected String codeValue;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\Classificat
-ionValueTO.java:57: warning: no comment
-[ERROR]     protected String name;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\Classificat
-ionValueTO.java:55: warning: no comment
-[ERROR]     protected String schemeName;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\Classificat
-ionValueTO.java:58: warning: no comment
-[ERROR]     protected String shortName;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\customerretrieval\Classificat
-ionValueTO.java:51: warning: use of default constructor, which does not provide a comment
-[ERROR] public class ClassificationValueTO
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\CommandExceptioncmdSta
-tus.java:54: warning: no comment
-[ERROR]     public String value() {
-[ERROR]                   ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\CommandExceptioncmdSta
-tus.java:58: warning: no comment
-[ERROR]     public static CommandExceptioncmdStatus fromValue(String v) {
-[ERROR]                                             ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\CommandNotification.ja
-va:181: warning: no @return
-[ERROR]     public List<SystemNotification> getSystemNotifications() {
-[ERROR]                                     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\CommandNotification.ja
-va:57: warning: no comment
-[ERROR]     protected NotificationCategory category;
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\CommandNotification.ja
-va:58: warning: no comment
-[ERROR]     protected String description;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\CommandNotification.ja
-va:55: warning: no comment
-[ERROR]     protected String returnCode;
-[ERROR]                      ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\CommandNotification.ja
-va:61: warning: no comment
-[ERROR]     protected List<SystemNotification> systemNotifications;
-[ERROR]                                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbs\bdd\generated\shared\CommandNotification.ja
-va:60: warning: no comment
-[ERROR]     protected XMLGregorianCalendar timestamp;
-[ERROR]                                    ^
-[ERROR] 3 errors
-[ERROR] 100 warnings
-[ERROR] Command line was: cmd.exe /X /D /C ""C:\Program Files\Java\jdk-21\bin\javadoc.exe" -J-Duser.language= -J-Duser.country= @options @packages"
-[ERROR]
-[ERROR] Refer to the generated Javadoc files in 'F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\reports\apidocs' dir.
-[ERROR]
-[ERROR] -> [Help 1]
+package com.rbs.bdd.application.service;
+
+
+        import com.rbs.bdd.application.exception.SchemaValidationException;
+        import com.rbs.bdd.infrastructure.soap.interceptor.AccountSchemaValidationInterceptor;
+        import com.rbs.bdd.infrastructure.soap.interceptor.CustomerSchemaValidationInterceptor;
+        import jakarta.xml.soap.MessageFactory;
+        import org.junit.jupiter.api.BeforeEach;
+        import org.junit.jupiter.api.DisplayName;
+        import org.junit.jupiter.api.Test;
+        import org.springframework.mock.web.MockHttpServletRequest;
+        import org.springframework.mock.web.MockHttpServletResponse;
+        import org.springframework.web.context.request.RequestContextHolder;
+        import org.springframework.web.context.request.ServletRequestAttributes;
+        import org.springframework.ws.WebServiceMessage;
+        import org.springframework.ws.context.MessageContext;
+        import org.springframework.ws.soap.saaj.SaajSoapMessage;
+        import org.w3c.dom.Document;
+        import org.w3c.dom.NodeList;
+        import org.xml.sax.SAXParseException;
+
+        import javax.xml.parsers.DocumentBuilderFactory;
+        import java.io.ByteArrayInputStream;
+        import java.io.ByteArrayOutputStream;
+        import java.io.InputStream;
+
+        import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.CUSTOMER_RETRIEVAL_REQUEST;
+        import static org.junit.jupiter.api.Assertions.*;
+        import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for {@link CustomerRetrievalSchemaValidationInterceptorTest}, ensuring schema validation errors
+ * are intercepted and custom static error SOAP responses are returned with dynamic field replacements.
+ */
+class CustomerRetrievalSchemaValidationInterceptorTest {
+
+    private CustomerSchemaValidationInterceptor interceptor;
+
+    @BeforeEach
+    void setup() {
+        interceptor = new CustomerSchemaValidationInterceptor();
+    }
+
+    /**
+     * Tests that a custom SOAP fault is returned with HTTP 500 when schema validation fails.
+     */
+    @Test
+    @DisplayName("Should return custom error XML response with replaced transactionId and timestamp")
+    void testHandleRequestValidationErrors_customFaultReturned() throws Exception {
+        // Arrange: Load request XML that includes transactionId and systemId
+        InputStream requestXml = getClass().getClassLoader().getResourceAsStream(CUSTOMER_RETRIEVAL_REQUEST);
+        assertNotNull(requestXml);
+
+        ByteArrayOutputStream requestOut = new ByteArrayOutputStream();
+        requestXml.transferTo(requestOut);
+
+        WebServiceMessage webServiceMessage = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(requestOut.toByteArray()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(webServiceMessage);
+
+        // Mock HTTP response and Spring context
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest,servletResponse));
+
+        // Act
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{});
+
+        // Assert
+        assertFalse(result); // false = custom SOAP sent successfully
+
+        String responseContent = servletResponse.getContentAsString();
+        System.out.println("Actual response"+responseContent);
+        assertTrue(responseContent.contains("<transactionId>"), "transactionId should be injected");
+        assertTrue(responseContent.contains("<systemId>ESP</systemId>")); // use actual expected value from request
+        assertEquals(500, servletResponse.getStatus());
+    }
+
+    /**
+     * Tests that a SchemaValidationException is thrown when static XML is missing.
+     */
+    @Test
+    @DisplayName("Should throw SchemaValidationException when error XML is not found")
+    void testHandleRequestValidationErrors_missingStaticXml() {
+        // Use subclass to override file loading behavior to simulate missing file
+        AccountSchemaValidationInterceptor customInterceptor = new AccountSchemaValidationInterceptor() {
+            @Override
+            protected InputStream getClassLoaderResource(String path) {
+                return null; // simulate missing file
+            }
+        };
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(mock(WebServiceMessage.class));
+
+        assertThrows(SchemaValidationException.class,
+                () -> customInterceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{}));
+    }
+
+    /**
+     * Tests that <refRequestIds> is removed if request doesn't contain requestIds.
+     */
+    @Test
+    @DisplayName("Should remove <refRequestIds> if <requestIds> missing in request")
+    void testRemoveRefRequestIds_whenRequestIdsMissing() throws Exception {
+        // Arrange: request XML without transactionId/systemId
+        String malformedXml = """
+                <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+                    <soapenv:Body>
+                        <testRequest></testRequest>
+                    </soapenv:Body>
+                </soapenv:Envelope>
+                """;
+
+        WebServiceMessage message = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(malformedXml.getBytes()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(message);
+
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest,servletResponse));
+
+        // Act
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{});
+
+        // Assert
+        assertFalse(result);
+        Document responseDoc = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(new ByteArrayInputStream(servletResponse.getContentAsByteArray()));
+
+        NodeList refRequestIds = responseDoc.getElementsByTagNameNS("*", "refRequestIds");
+        assertEquals(0, refRequestIds.getLength(), "refRequestIds should be removed");
+    }
+}
+
+-----------------------
+
+package com.rbs.bdd.application.service;
+import com.rbs.bdd.application.exception.SchemaValidationException;
+import com.rbs.bdd.infrastructure.soap.interceptor.AccountSchemaValidationInterceptor;
+import jakarta.xml.soap.MessageFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXParseException;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for {@link AccountSchemaValidationInterceptorTest}, ensuring schema validation errors
+ * are intercepted and custom static error SOAP responses are returned with dynamic field replacements.
+ */
+class AccountSchemaValidationInterceptorTest {
+
+    private AccountSchemaValidationInterceptor interceptor;
+
+    @BeforeEach
+    void setup() {
+        interceptor = new AccountSchemaValidationInterceptor();
+    }
+
+    /**
+     * Tests that a custom SOAP fault is returned with HTTP 500 when schema validation fails.
+     */
+    @Test
+    @DisplayName("Should return custom error XML response with replaced transactionId and timestamp")
+    void testHandleRequestValidationErrors_customFaultReturned() throws Exception {
+        // Arrange: Load request XML that includes transactionId and systemId
+        InputStream requestXml = getClass().getClassLoader().getResourceAsStream("static-request/account-validation-request.xml");
+        assertNotNull(requestXml);
+
+        ByteArrayOutputStream requestOut = new ByteArrayOutputStream();
+        requestXml.transferTo(requestOut);
+
+        WebServiceMessage webServiceMessage = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(requestOut.toByteArray()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(webServiceMessage);
+
+        // Mock HTTP response and Spring context
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest,servletResponse));
+
+        // Act
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{});
+
+        // Assert
+        assertFalse(result); // false = custom SOAP sent successfully
+
+        String responseContent = servletResponse.getContentAsString();
+        System.out.println("Actual response"+responseContent);
+        assertTrue(responseContent.contains("<transactionId>"), "transactionId should be injected");
+        assertTrue(responseContent.contains("<systemId>ESP</systemId>")); // use actual expected value from request
+        assertEquals(500, servletResponse.getStatus());
+    }
+
+    /**
+     * Tests that a SchemaValidationException is thrown when static XML is missing.
+     */
+    @Test
+    @DisplayName("Should throw SchemaValidationException when error XML is not found")
+    void testHandleRequestValidationErrors_missingStaticXml() {
+        // Use subclass to override file loading behavior to simulate missing file
+        AccountSchemaValidationInterceptor customInterceptor = new AccountSchemaValidationInterceptor() {
+            @Override
+            protected InputStream getClassLoaderResource(String path) {
+                return null; // simulate missing file
+            }
+        };
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(mock(WebServiceMessage.class));
+
+        assertThrows(SchemaValidationException.class,
+                () -> customInterceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{}));
+    }
+
+    /**
+     * Tests that <refRequestIds> is removed if request doesn't contain requestIds.
+     */
+    @Test
+    @DisplayName("Should remove <refRequestIds> if <requestIds> missing in request")
+    void testRemoveRefRequestIds_whenRequestIdsMissing() throws Exception {
+        // Arrange: request XML without transactionId/systemId
+        String malformedXml = """
+                <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+                    <soapenv:Body>
+                        <testRequest></testRequest>
+                    </soapenv:Body>
+                </soapenv:Envelope>
+                """;
+
+        WebServiceMessage message = new SaajSoapMessage(
+               MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(malformedXml.getBytes()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(message);
+
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest,servletResponse));
+
+        // Act
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{});
+
+        // Assert
+        assertFalse(result);
+        Document responseDoc = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(new ByteArrayInputStream(servletResponse.getContentAsByteArray()));
+
+        NodeList refRequestIds = responseDoc.getElementsByTagNameNS("*", "refRequestIds");
+        assertEquals(0, refRequestIds.getLength(), "refRequestIds should be removed");
+    }
+}
+
+
+--------------------
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                  xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <crfpSP:retrievePrimaryCustomerForArr>
+            <requestHeader>
+                <operatingBrand>NWB</operatingBrand>
+                <requestIds>
+                    <systemId>RequestID</systemId>
+                    <transactionId>123454444</transactionId>
+                </requestIds>
+                <requestIds>
+                    <systemId>SourceID</systemId>
+                    <transactionId>ISO</transactionId>
+                </requestIds>
+                <cmdType>Request</cmdType>
+            </requestHeader>
+            <processingParameter>
+                <objectReference>
+                    <identifier>NWB</identifier>
+                    <context>
+                        <schemeName>OrganizationEnterpriseIdType</schemeName>
+                        <codeValue>OperatingBrandIdentifier</codeValue>
+                    </context>
+                </objectReference>
+            </processingParameter>
+            <arrangementIdentifier>
+                <identifier>${IDENTIFIER}</identifier>
+                <context>
+                    <schemeName>ArrangementEnterpriseIdType</schemeName>
+                    <codeValue>${CODEVALUE}</codeValue>
+                    <!--Optional:-->
+                    <description>aslkjdslahbkjdf</description>
+                </context>
+                <!--Optional:-->
+                <description>aslkjdslahbkjdf</description>
+            </arrangementIdentifier>
+        </crfpSP:retrievePrimaryCustomerForArr>
+    </soapenv:Body>
+</soapenv:Envelope>
+
+
+-------------------
+
+
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.server.EndpointInterceptor;
+
+import java.io.ByteArrayOutputStream;
+/**
+ * Interceptor to log incoming and outgoing SOAP messages for debugging and monitoring.
+ * This class logs the full request, response, and fault messages.
+ */
+@Slf4j
+public class SoapLoggingInterceptor implements EndpointInterceptor {
+
+
+    /**
+     * Logs the incoming SOAP request before it reaches the endpoint.
+     *
+     * @param messageContext the message context containing the request
+     * @param endpoint        the targeted endpoint
+     * @return true to continue processing the request
+     */
+    @Override
+    public boolean handleRequest(MessageContext messageContext, Object endpoint) {
+        logMessage("SOAP Request", messageContext.getRequest());
+        return true;
+    }
+
+    /**
+     * Logs the outgoing SOAP response after the endpoint returns a result.
+     *
+     * @param messageContext the message context containing the response
+     * @param endpoint        the targeted endpoint
+     * @return true to continue processing the response
+     */
+    @Override
+    public boolean handleResponse(MessageContext messageContext, Object endpoint) {
+        logMessage("SOAP Response", messageContext.getResponse());
+        return true;
+    }
+
+    /**
+     * Logs the SOAP fault message if an exception occurs during processing.
+     *
+     * @param messageContext the message context containing the fault
+     * @param endpoint        the targeted endpoint
+     * @return true to continue processing the fault
+     */
+    @Override
+    public boolean handleFault(MessageContext messageContext, Object endpoint) {
+        logMessage("SOAP Fault", messageContext.getResponse());
+        return true;
+    }
+
+    /**
+     * Called after the completion of the message exchange.
+     * No action is needed here, but method must be implemented.
+     */
+    @Override
+    public void afterCompletion(MessageContext messageContext, Object endpoint, Exception ex) {
+        // No action needed after completion
+    }
+
+    /**
+     * Helper method to log the SOAP message by writing it to a byte array output stream.
+     *
+     * @param type    the type of SOAP message (Request, Response, Fault)
+     * @param message the WebServiceMessage to be logged
+     */
+    private void logMessage(String type, org.springframework.ws.WebServiceMessage message) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            message.writeTo(out);  // Serialize the message to an output stream
+            log.info("{}:\n{}", type, out.toString());  // Log the message content
+        } catch (Exception e) {
+            log.error("Error logging {} message: {}", type, e.getMessage());
+        }
+    }
+}
+
+
+---------------
+Sessionsbdd-ms-esp-simulation-service > com.rbs.bdd.infrastructure.soap.api > PaymentValidationSoapAdapter.java
+PaymentValidationSoapAdapter.java
+package com.rbs.bdd.infrastructure.soap.api;
+
+import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
+import com.rbs.bdd.application.port.in.PaymentValidationPort;
+
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.server.endpoint.annotation.Endpoint;
+import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
+import org.springframework.ws.server.endpoint.annotation.RequestPayload;
+import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
+
+import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
+import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL;
+
+
+/**
+ * SOAP endpoint adapter class for handling the `validateArrangementForPayment` operation.
+ * It uses Spring WS annotations to route incoming SOAP requests to the appropriate service layer.
+ */
+@Slf4j
+@Endpoint
+public class PaymentValidationSoapAdapter {
+
+    /**Changes for the request*/
+
+
+    private final PaymentValidationPort paymentValidationPort;
+    private final CustomerRetrievalPort customerRetrievalPort;
+
+    /**
+     * Constructor-based injection of the orchestrator that handles business logic.
+     *
+     * @param paymentValidationPort the orchestrator service
+     */
+    public PaymentValidationSoapAdapter(PaymentValidationPort paymentValidationPort,CustomerRetrievalPort customerRetrievalPort) {
+        this.paymentValidationPort = paymentValidationPort;
+        this.customerRetrievalPort = customerRetrievalPort;
+    }
+
+
+
+    /**
+     * Handles the `validateArrangementForPayment` SOAP request.
+     * Delegates request processing to the orchestrator which modifies the response message directly.
+     *
+     * @param request the SOAP request payload
+     * @param context the Spring WS message context
+     */
+    @PayloadRoot(namespace = NAMESPACE_URI_FOR_ACCOUNT_VALIDATION, localPart = "validateArrangementForPayment")
+    @ResponsePayload
+    public void validateArrangementForPayment(@RequestPayload ValidateArrangementForPaymentRequest request,
+                                                MessageContext context) {
+        log.info("validateArrangementForPayment is called");
+        WebServiceMessage response = context.getResponse();
+        paymentValidationPort.validateArrangementForPayment(request, response);
+         }
+
+    /**
+     * Handles the `RetrieveCustomerRequest` SOAP request.
+     * Delegates request processing to the orchestrator which modifies the response message directly.
+     *
+     * @param request the SOAP request payload
+     * @param context the Spring WS message context
+     */
+    @PayloadRoot(namespace = NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL, localPart = "retrievePrimaryCustomerForArr")
+    @ResponsePayload
+    public void validateCustomerRetrieval(@RequestPayload RetrievePrimaryCustomerForArrRequest request,
+                                              MessageContext context) {
+        log.info("validateCustomerRetrieval is called");
+        WebServiceMessage response = context.getResponse();
+
+        customerRetrievalPort.validateCustomerRetrieval(request, response);
+    }
+
+}
+Created with JaCoCo 0.8.13.202504020838
