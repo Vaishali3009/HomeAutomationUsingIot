@@ -1,41 +1,35 @@
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:crfpSP9="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/">
-    <soapenv:Header/>
-    <soapenv:Body>
-        <crfpSP9:retrievePrimaryCustomerForArr>
-            <requestHeader>
-                <operatingBrand>NWB</operatingBrand>
-                <requestIds>
-                    <systemId>RequestID</systemId>
-                    <transactionId>123454444</transactionId>
-                </requestIds>
-                <requestIds>
-               <systemId>SourceID</systemId>
-               <transactionId>ISO</transactionId>
-        </requestIds>
-            <cmdType>Request</cmdType>
-            </requestHeader>
-            <processingParameter>
-            <objectReference>
-               <identifier>NWB</identifier>
-               <context>
-                  <schemeName>OrganizationEnterpriseIdType</schemeName>
-                  <codeValue>OperatingBrandIdentifier</codeValue>
-               </context>
-            </objectReference>
-        </processingParameter>
-            <arrangementIdentifier>
-                <identifier>GB29NWBK60161331926801</identifier>
-                <context>
-                    <schemeName>ArrangementEnterpriseIdType</schemeName>
-                    <codeValue>InternationalBankAccountNumber</codeValue>
-                    <!--Optional:-->
-                    <description>aslkjdslahbkjdf</description>
-                </context>
-                <!--Optional:-->
-                <description>aslkjdslahbkjdf</description>
-            </arrangementIdentifier>
-        </crfpSP9:retrievePrimaryCustomerForArr>
-    </soapenv:Body>
-</soapenv:Envelope>
- 
+private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail detail, String txnId) throws XPathExpressionException {
+    updateText(xpath, doc, ServiceConstants.XPath.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
+    updateText(xpath, doc, ServiceConstants.XPath.XPATH_REF_REQUEST_TXN_ID, txnId);
+    updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_STATUS, "Failed");
+    updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION, detail.description());
+    updateText(xpath, doc, ServiceConstants.XPath.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
+    updateText(xpath, doc, ServiceConstants.XPath.XPATH_RETURN_CODE, detail.returnCode());
+
+    // ✅ Always include systemNotification if the UBAN is invalid/missing
+    if (Objects.nonNull(detail.systemNotificationDesc())) {
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC, detail.systemNotificationDesc());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_CODE, detail.returnCode());
+
+        // Inject static systemId inside processingId
+        updateText(xpath, doc, "//*[local-name()='processingId']/*[local-name()='systemId']", "CoreCustomer-DCA");
+    } else {
+        // Remove <systemNotifications> block if it's not required
+        Node node = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
+        if (Objects.nonNull(node)) {
+            node.getParentNode().removeChild(node);
+        }
+    }
+
+    log.info("Updated error response for customer retrieval.");
+}
+
+
+-----
+
+ERR_MOD97_UBAN(new ErrorDetail(
+    "ERR006",
+    "Unable To Complete Request",
+    "4",
+    "Customer Not Found"
+)),
