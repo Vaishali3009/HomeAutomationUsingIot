@@ -1,41 +1,129 @@
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/">
-    <soapenv:Header/>
-    <soapenv:Body>
-        <crfpSP:retrievePrimaryCustomerForArr>
-            <requestHeader>
-                <operatingBrand>NWB</operatingBrand>
-                <requestIds>
-                    <systemId>RequestID</systemId>
-                    <transactionId>123454444</transactionId>
-                </requestIds>
-                <requestIds>
-               <systemId>SourceID</systemId>
-               <transactionId>ISO</transactionId>
-        </requestIds>
-            <cmdType>Request</cmdType>
-            </requestHeader>
-            <processingParameter>
-            <objectReference>
-               <identifier>NWB</identifier>
-               <context>
-                  <schemeName>OrganizationEnterpriseIdType</schemeName>
-                  <codeValue>OperatingBrandIdentifier</codeValue>
-               </context>
-            </objectReference>
-        </processingParameter>
-            <arrangementIdentifier>
-                <identifier>20201555555567</identifier>
-                <context>
-                    <schemeName>ArrangementEnterpriseIdType</schemeName>
-                    <codeValue>InternationalBankAccountNumber</codeValue>
-                    <!--Optional:-->
-                    <description>aslkjdslahbkjdf</description>
-                </context>
-                <!--Optional:-->
-                <description>aslkjdslahbkjdf</description>
-            </arrangementIdentifier>
-        </crfpSP:retrievePrimaryCustomerForArr>
-    </soapenv:Body>
-</soapenv:Envelope>
- 
+package com.rbs.bdd.application.service;
+
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.Unmarshaller;
+import jakarta.xml.soap.MessageFactory;
+import jakarta.xml.soap.SOAPBody;
+import jakarta.xml.soap.SOAPMessage;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class CustomerRetrievalServiceTest {
+
+    private CustomerRetrievalService service;
+
+    @BeforeEach
+    void setup() {
+        service = new CustomerRetrievalService();
+    }
+
+    private RetrievePrimaryCustomerForArrRequest loadRequest(String identifier, String codeValue) throws Exception {
+        String template = Files.readString(Path.of("src/test/resources/static-request/static-request.xml"));
+        String finalXml = template.replace("${IDENTIFIER}", identifier).replace("${CODEVALUE}", codeValue);
+
+        SOAPMessage soapMessage = MessageFactory.newInstance()
+                .createMessage(null, new ByteArrayInputStream(finalXml.getBytes(StandardCharsets.UTF_8)));
+        SOAPBody body = soapMessage.getSOAPBody();
+
+        JAXBContext context = JAXBContext.newInstance(RetrievePrimaryCustomerForArrRequest.class);
+        Unmarshaller unmarshaller = context.createUnmarshaller();
+        JAXBElement<RetrievePrimaryCustomerForArrRequest> root =
+                unmarshaller.unmarshal(body.getElementsByTagNameNS("*", "retrievePrimaryCustomerForArr").item(0),
+                        RetrievePrimaryCustomerForArrRequest.class);
+
+        return root.getValue();
+    }
+
+    private Document invokeAndGetResponse(RetrievePrimaryCustomerForArrRequest request) throws Exception {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        WebServiceMessage message = new SaajSoapMessage(MessageFactory.newInstance().createMessage());
+
+        service.validateSchema(request);
+        service.retrieveCustomer(request, message);
+        message.writeTo(outputStream);
+
+        return DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                .parse(new ByteArrayInputStream(outputStream.toByteArray()));
+    }
+
+    private String getXpath(Document doc, String expression) throws Exception {
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        return xpath.evaluate(expression, doc);
+    }
+
+    @Test
+    @DisplayName("Success: Valid customer IBAN should populate name fields")
+    void testValidCustomerResponse() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("31926801", "UKBasicBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+
+        assertEquals("John", getXpath(doc, "//*[local-name()='firstName']"));
+        assertEquals("Doe", getXpath(doc, "//*[local-name()='lastName']"));
+        assertEquals("MR", getXpath(doc, "//*[local-name()='prefixTitle']/*[local-name()='codeValue']"));
+    }
+
+    @Test
+    @DisplayName("Error: UBAN with GB prefix returns ERR_UBAN_GB")
+    void testGbPrefixedUban() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("GB12345678901234", "UKBasicBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+        assertTrue(getXpath(doc, "//*[local-name()='description']").contains("UBAN"));
+    }
+
+    @Test
+    @DisplayName("Error: UBAN with invalid length returns ERR_INVALID_UBAN_LENGTH")
+    void testInvalidUbanLength() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("123456", "UKBasicBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+        assertEquals("UBAN should be 14 digits", getXpath(doc, "//*[local-name()='description']"));
+    }
+
+    @Test
+    @DisplayName("Error: Unmatched UBAN triggers MOD97 failure")
+    void testUbanMod97Failure() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("99999999999999", "UKBasicBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+        assertEquals("MOD97 failure for the UBAN", getXpath(doc, "//*[local-name()='description']"));
+    }
+
+    @Test
+    @DisplayName("Error: IBAN with wrong country code returns ERR_WRONG_COUNTRY_CODE")
+    void testWrongCountryCodeIban() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("FR1234567890123456789012", "InternationalBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+        assertTrue(getXpath(doc, "//*[local-name()='description']").contains("Country code is not found"));
+    }
+
+    @Test
+    @DisplayName("Error: IBAN with invalid length returns ERR_INVALID_IBAN_LENGTH")
+    void testInvalidIbanLength() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("GB123", "InternationalBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+        assertEquals("Length of IBAN is Invalid", getXpath(doc, "//*[local-name()='description']"));
+    }
+
+    @Test
+    @DisplayName("Error: IBAN does not match any customer returns MOD97 failure")
+    void testUnmatchedIban() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("GB29NWBK60161300000000", "InternationalBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+        assertEquals("MOD97 failure for the IBAN", getXpath(doc, "//*[local-name()='description']"));
+    }
+}
