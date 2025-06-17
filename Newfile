@@ -1,114 +1,32 @@
 /**
- * Handles removal of {@code <refRequestIds>} node in the error response
- * if {@code <requestIds>} is missing or missing specific fields (systemId, transactionId).
- *
- * @param errorDoc   the static error XML document
- * @param requestDoc the SOAP request XML document
+ * Utility class for SOAP DOM manipulation.
  */
-public static void handleRequestIds(Document errorDoc, Document requestDoc) {
-    NodeList requestIdNodes = requestDoc.getElementsByTagNameNS("*", "requestIds");
-    Node refRequestIds = getNode(errorDoc, "refRequestIds");
+public class SoapInterceptorUtils {
 
-    ValidationFlags flags = extractValidationFlags(requestIdNodes);
-
-    if (refRequestIds != null) {
-        handleRefRequestIds(refRequestIds, flags);
-    }
-}
-
-/**
- * Extracts flags from the request's {@code <requestIds>} element.
- * Checks for the presence of a systemId = "RequestID" and if its sub-elements exist.
- *
- * @param requestIdNodes list of {@code <requestIds>} elements in the request
- * @return a record with flags indicating field presence
- */
-private static ValidationFlags extractValidationFlags(NodeList requestIdNodes) {
-    for (int i = 0; i < requestIdNodes.getLength(); i++) {
-        Node requestIdsNode = requestIdNodes.item(i);
-        NodeList children = requestIdsNode.getChildNodes();
-
-        String systemId = null;
-        boolean txnIdPresent = false;
-        boolean systemIdPresent = false;
-
-        for (int j = 0; j < children.getLength(); j++) {
-            Node child = children.item(j);
-            String tag = child.getLocalName();
-
-            if (SYSTEM_ID.equals(tag)) {
-                systemId = child.getTextContent();
-                systemIdPresent = true;
-            } else if (TAG_TRANSACTION_ID.equals(tag)) {
-                txnIdPresent = true;
+    /**
+     * Removes a child node from the specified parent node.
+     * If {@code tagName} is provided, it removes the child node by matching the local name.
+     * If {@code tagName} is null, it directly removes the provided node.
+     *
+     * @param parentOrNode the parent node (for tag-based removal) or the target node (for direct removal)
+     * @param tagName       the local name of the tag to be removed; pass null to directly remove the node
+     */
+    public static void removeChildNode(Node parentOrNode, String tagName) {
+        if (tagName == null) {
+            // Directly remove the node if valid
+            if (parentOrNode != null && parentOrNode.getParentNode() != null) {
+                parentOrNode.getParentNode().removeChild(parentOrNode);
+            }
+        } else {
+            // Remove child by tag name from the given parent
+            NodeList children = parentOrNode.getChildNodes();
+            for (int i = 0; i < children.getLength(); i++) {
+                Node child = children.item(i);
+                if (tagName.equals(child.getLocalName())) {
+                    parentOrNode.removeChild(child);
+                    break;
+                }
             }
         }
-
-        if ("RequestID".equals(systemId)) {
-            return new ValidationFlags(true, txnIdPresent, systemIdPresent);
-        }
-    }
-    return new ValidationFlags(false, false, false);
-}
-
-/**
- * Handles logic for modifying or removing {@code <refRequestIds>} in the error response
- * based on the extracted validation flags.
- *
- * @param refRequestIds the {@code <refRequestIds>} node in error XML
- * @param flags         extracted field presence indicators
- */
-private static void handleRefRequestIds(Node refRequestIds, ValidationFlags flags) {
-    if (!flags.foundRequestIDSystemId()) {
-        removeNode(refRequestIds);
-        return;
-    }
-
-    if (!flags.hasTxnId()) {
-        removeNode(refRequestIds, TAG_TRANSACTION_ID);
-    }
-    if (!flags.hasSystemId()) {
-        removeNode(refRequestIds, SYSTEM_ID);
-    }
-
-    if (!refRequestIds.hasChildNodes()) {
-        removeNode(refRequestIds);
     }
 }
-
-/**
- * Removes a node by tag name from a parent node.
- *
- * @param parent the parent node
- * @param tagName the local name of the tag to remove
- */
-public static void removeNode(Node parent, String tagName) {
-    NodeList children = parent.getChildNodes();
-    for (int i = 0; i < children.getLength(); i++) {
-        Node child = children.item(i);
-        if (tagName.equals(child.getLocalName())) {
-            parent.removeChild(child);
-            break;
-        }
-    }
-}
-
-/**
- * Removes a node from its parent if present.
- *
- * @param node the node to remove
- */
-public static void removeNode(Node node) {
-    if (node != null && node.getParentNode() != null) {
-        node.getParentNode().removeChild(node);
-    }
-}
-
-/**
- * A container for boolean flags used to control the logic for request ID validation.
- *
- * @param foundRequestIDSystemId whether a {@code <requestIds>} block with systemId=RequestID exists
- * @param hasTxnId               whether the matching block has a {@code <transactionId>}
- * @param hasSystemId            whether the matching block has a {@code <systemId>}
- */
-private record ValidationFlags(boolean foundRequestIDSystemId, boolean hasTxnId, boolean hasSystemId) {}
