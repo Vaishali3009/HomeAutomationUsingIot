@@ -304,3 +304,21 @@
 [ERROR]     public static Node getNode(Document doc, String localName) {
 [ERROR]                        ^
 [ERROR] 1 error
+[ERROR] 100 warnings
+[ERROR] Command line was: /opt/buildtools/java/jdk-21.0.7+6/bin/javadoc -J-Duser.language= -J-Duser.country= @options @packages
+[ERROR] 
+[ERROR] Refer to the generated Javadoc files in '/builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/reports/apidocs' dir.
+[ERROR] 
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :bdd-ms-esp-simulation-service
+Cleaning up project directory and file based variables
+00:01
+ERROR: Job failed: command terminated with exit code 1
