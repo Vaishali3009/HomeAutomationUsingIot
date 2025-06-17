@@ -1,324 +1,128 @@
-[ERROR] Failed to execute goal org.apache.maven.plugins:maven-javadoc-plugin:3.10.1:javadoc (default-cli) on project bdd-ms-esp-simulation-service: An error has occurred in Javadoc report generation: 
-[ERROR] Exit code: 1
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/application/service/AccountValidationService.java:291: warning: no @param for accountStatus
-[ERROR]     public record ResponseConfig(AccountStatus accountStatus, SwitchingStatus switchingStatus,ModulusCheckStatus modulusCheckStatus) {
-[ERROR]            ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/application/service/AccountValidationService.java:291: warning: no @param for switchingStatus
-[ERROR]     public record ResponseConfig(AccountStatus accountStatus, SwitchingStatus switchingStatus,ModulusCheckStatus modulusCheckStatus) {
-[ERROR]            ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/application/service/AccountValidationService.java:291: warning: no @param for modulusCheckStatus
-[ERROR]     public record ResponseConfig(AccountStatus accountStatus, SwitchingStatus switchingStatus,ModulusCheckStatus modulusCheckStatus) {
-[ERROR]            ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/util/ValidationUtils.java:27: error: element not closed: ul
-[ERROR]      *  <ul>
-[ERROR]         ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/util/ValidationUtils.java:36: warning: no @param for identifier
-[ERROR]     public record RequestParams(String identifier, String codeValue, int length, String originalTxnId, String systemId) {
-[ERROR]            ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/util/ValidationUtils.java:36: warning: no @param for codeValue
-[ERROR]     public record RequestParams(String identifier, String codeValue, int length, String originalTxnId, String systemId) {
-[ERROR]            ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/util/ValidationUtils.java:36: warning: no @param for length
-[ERROR]     public record RequestParams(String identifier, String codeValue, int length, String originalTxnId, String systemId) {
-[ERROR]            ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/util/ValidationUtils.java:36: warning: no @param for originalTxnId
-[ERROR]     public record RequestParams(String identifier, String codeValue, int length, String originalTxnId, String systemId) {
-[ERROR]            ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/util/ValidationUtils.java:36: warning: no @param for systemId
-[ERROR]     public record RequestParams(String identifier, String codeValue, int length, String originalTxnId, String systemId) {
-[ERROR]            ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/arrvalidationforpayment/v01/package-info.java:9: warning: no comment
-[ERROR] package com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01;
-[ERROR] ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/package-info.java:9: warning: no comment
-[ERROR] package com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01;
-[ERROR] ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/infrastructure/soap/interceptor/AccountSchemaValidationInterceptor.java:43: warning: use of default constructor, which does not provide a comment
-[ERROR] public class AccountSchemaValidationInterceptor extends PayloadValidatingInterceptor {
-[ERROR]        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/AccountStatus.java:17: warning: no comment
-[ERROR]     public String getValue() {
-[ERROR]                   ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/AccountStatus.java:8: warning: no comment
-[ERROR]     DOMESTIC_RESTRICTED("Domestic - Restricted"),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/AccountStatus.java:9: warning: no comment
-[ERROR]     DOMESTIC_UNRESTRICTED("Domestic - Unrestricted");
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/application/service/AccountValidationService.java:60: warning: use of default constructor, which does not provide a comment
-[ERROR] public class AccountValidationService implements AccountValidationPort {
-[ERROR]        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerName.java:18: warning: no comment
-[ERROR]     public String getValue() {
-[ERROR]                   ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerName.java:9: warning: no comment
-[ERROR]     FIRST_NAME("ModifiedFirst"),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerName.java:10: warning: no comment
-[ERROR]     LAST_NAME("ModifiedLast");
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerNameMapping.java:26: warning: no comment
-[ERROR]     public String getIban() {
-[ERROR]                   ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerNameMapping.java:30: warning: no comment
-[ERROR]     public String getFirstName() {
-[ERROR]                   ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerNameMapping.java:34: warning: no comment
-[ERROR]     public String getLastName() {
-[ERROR]                   ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerNameMapping.java:37: warning: no comment
-[ERROR]     public String getPrefixType() {
-[ERROR]                   ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerNameMapping.java:41: warning: no comment
-[ERROR]     public static CustomerNameMapping fromIdentifier(String identifier) {
-[ERROR]                                       ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerNameMapping.java:8: warning: no comment
-[ERROR]     IBAN_1("GB29NWBK60161331926801", "Alice", "Johnson","MR"),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerNameMapping.java:9: warning: no comment
-[ERROR]     IBAN_2("GB82WEST12345698765437", "Bob", "Williams","MR"),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerNameMapping.java:10: warning: no comment
-[ERROR]     IBAN_3("GB94BARC10201530093422", "Jenifer", "Brown","MRS"),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/CustomerNameMapping.java:11: warning: no comment
-[ERROR]     IBAN_4("GB33BUKB20201555555567", "Jenny", "Smith","MRS");
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/application/service/CustomerRetrievalOrchestrator.java:21: warning: use of default constructor, which does not provide a comment
-[ERROR] public class CustomerRetrievalOrchestrator implements CustomerRetrievalPort {
-[ERROR]        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/application/service/CustomerRetrievalService.java:60: warning: use of default constructor, which does not provide a comment
-[ERROR] public class CustomerRetrievalService implements RetrieveCustomerPort {
-[ERROR]        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/infrastructure/soap/interceptor/CustomerSchemaValidationInterceptor.java:44: warning: use of default constructor, which does not provide a comment
-[ERROR] public class CustomerSchemaValidationInterceptor extends PayloadValidatingInterceptor {
-[ERROR]        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/common/ErrorCodeConstants.java:14: warning: no comment
-[ERROR]     public static final String ERR_006="ERR006";
-[ERROR]                                ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/common/ErrorCodeConstants.java:15: warning: no comment
-[ERROR]     public static final String ERR_10="0010";
-[ERROR]                                ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ErrorConstants.java:40: warning: no @return
-[ERROR]     public ErrorDetail detail() {
-[ERROR]                        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ErrorConstants.java:27: warning: no comment
-[ERROR]     ERR_CUSTOMER_NOT_FOUND(new ErrorDetail(ERR_006, "Unable To Complete Request", "4", "Customer Not Found")),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ErrorConstants.java:18: warning: no comment
-[ERROR]     ERR_DB2_SQL(new ErrorDetail(ERR_006, "Service operation validateArrangementForPayment failed due to an error in the ESP. Contact systems management to resolve the problem.", null, null)),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ErrorConstants.java:15: warning: no comment
-[ERROR]     ERR_INVALID_IBAN_LENGTH(new ErrorDetail("ERR006", "Length of IBAN is Invalid", "0013", "Length of IBAN is Invalid")),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ErrorConstants.java:25: warning: no comment
-[ERROR]     ERR_INVALID_UBAN_LENGTH(new ErrorDetail(ERR_006, "UBAN should be 14 digits", "0013", "UBAN should be 14 digits")),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ErrorConstants.java:23: warning: no comment
-[ERROR]     ERR_MOD97_IBAN(new ErrorDetail(ERR_006, "MOD97 failure for the IBAN", "0020", "MOD97 failure for the IBAN")),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ErrorConstants.java:29: warning: no comment
-[ERROR]     ERR_MOD97_UBAN(new ErrorDetail(ERR_006, "MOD97 failure for the UBAN", "0020", "MOD97 failure for the UBAN"));
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ErrorConstants.java:19: warning: no comment
-[ERROR]     ERR_UBAN_GB(new ErrorDetail(ERR_006, "Service operation retrievePrimaryCustomerForArr failed due to an error in the ESP. Contact systems management to resolve the problem.", null, null)),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ErrorConstants.java:21: warning: no comment
-[ERROR]     ERR_WRONG_COUNTRY_CODE(new ErrorDetail(ERR_10, "Country code is not found in Db, try  with the correct country code", null, null)),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/EspSimulatorEngine.java:18: warning: use of default constructor, which does not provide a comment
-[ERROR] public class EspSimulatorEngine {
-[ERROR]        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/EspSimulatorEngine.java:20: warning: no comment
-[ERROR]     public static void main(String[] args) {
-[ERROR]                        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ModulusCheckStatus.java:16: warning: no comment
-[ERROR]     public String getValue() {
-[ERROR]                   ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ModulusCheckStatus.java:8: warning: no comment
-[ERROR]     FAILED("Failed");
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ModulusCheckStatus.java:7: warning: no comment
-[ERROR]     PASSED("Passed"),
-[ERROR]     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/arrvalidationforpayment/v01/ObjectFactory.java:48: warning: no @return
-[ERROR]     public ValidateArrangementForPaymentRequest createValidateArrangementForPaymentRequest() {
-[ERROR]                                                 ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/arrvalidationforpayment/v01/ObjectFactory.java:56: warning: no @return
-[ERROR]     public ValidateArrangementForPaymentResponse createValidateArrangementForPaymentResponse() {
-[ERROR]                                                  ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/arrvalidationforpayment/v01/ObjectFactory.java:64: warning: no @return
-[ERROR]     public ValidateArrangementForPaymentContent createValidateArrangementForPaymentContent() {
-[ERROR]                                                 ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/ObjectFactory.java:48: warning: no @return
-[ERROR]     public RetrievePrimaryCustomerForArrRequest createRetrievePrimaryCustomerForArrRequest() {
-[ERROR]                                                 ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/ObjectFactory.java:56: warning: no @return
-[ERROR]     public RetrievePrimaryCustomerForArrResponse createRetrievePrimaryCustomerForArrResponse() {
-[ERROR]                                                  ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/ObjectFactory.java:64: warning: no @return
-[ERROR]     public RetrievePrimaryCustomerForArrContent createRetrievePrimaryCustomerForArrContent() {
-[ERROR]                                                 ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/application/service/PaymentOrchestrator.java:17: warning: use of default constructor, which does not provide a comment
-[ERROR] public class PaymentOrchestrator implements PaymentValidationPort {
-[ERROR]        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/infrastructure/soap/api/PaymentValidationSoapAdapter.java:39: warning: no @param for customerRetrievalPort
-[ERROR]     public PaymentValidationSoapAdapter(PaymentValidationPort paymentValidationPort,CustomerRetrievalPort customerRetrievalPort) {
-[ERROR]            ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrContent.java:126: warning: no @return
-[ERROR]     public List<Property> getModifyToken() {
-[ERROR]                           ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrContent.java:53: warning: no comment
-[ERROR]     protected InvolvedPartyTO customer;
-[ERROR]                               ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrContent.java:54: warning: no comment
-[ERROR]     protected List<Property> modifyToken;
-[ERROR]                              ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrContent.java:52: warning: no comment
-[ERROR]     protected ResponseHeader responseHeader;
-[ERROR]                              ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrContent.java:49: warning: use of default constructor, which does not provide a comment
-[ERROR] public class RetrievePrimaryCustomerForArrContent {
-[ERROR]        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrRequest.java:103: warning: no @return
-[ERROR]     public List<Property> getProcessingParameter() {
-[ERROR]                           ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrRequest.java:55: warning: no comment
-[ERROR]     protected ObjectReference arrangementIdentifier;
-[ERROR]                               ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrRequest.java:53: warning: no comment
-[ERROR]     protected List<Property> processingParameter;
-[ERROR]                              ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrRequest.java:52: warning: no comment
-[ERROR]     protected RequestHeader requestHeader;
-[ERROR]                             ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrRequest.java:49: warning: use of default constructor, which does not provide a comment
-[ERROR] public class RetrievePrimaryCustomerForArrRequest {
-[ERROR]        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrResponse.java:47: warning: no comment
-[ERROR]     protected Exception exception;
-[ERROR]                         ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrResponse.java:46: warning: no comment
-[ERROR]     protected RetrievePrimaryCustomerForArrContent response;
-[ERROR]                                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/generated-sources/jaxb/com/rbsg/soa/c040paymentmanagement/customerretrievalforpayment/v01/serviceparameters/v01/RetrievePrimaryCustomerForArrResponse.java:44: warning: use of default constructor, which does not provide a comment
-[ERROR] public class RetrievePrimaryCustomerForArrResponse {
-[ERROR]        ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:56: warning: no comment
-[ERROR]         public static final String INTL_BANK_ACCOUNT = "InternationalBankAccountNumber";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:57: warning: no comment
-[ERROR]         public static final String UK_BASIC_BANK_ACCOUNT = "UKBasicBankAccountNumber";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:46: warning: no comment
-[ERROR]         public static final  List<String> ALL_IBANS = List.of(
-[ERROR]                                           ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:41: warning: no comment
-[ERROR]         public static final  String IBAN_1 = "GB29NWBK60161331926801";
-[ERROR]                                     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:42: warning: no comment
-[ERROR]         public static final String IBAN_2 = "GB82WEST12345698765437";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:43: warning: no comment
-[ERROR]         public static final String IBAN_3 = "GB94BARC10201530093422";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:44: warning: no comment
-[ERROR]         public static final String IBAN_4 = "GB33BUKB20201555555567";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:32: warning: no comment
-[ERROR]         public static final String NAMESPACE_URI_FOR_ACCOUNT_VALIDATION = "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:33: warning: no comment
-[ERROR]         public static final String NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL = "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:18: warning: no comment
-[ERROR]        public static final  String  ACCOUNT_VALIDATION_REQUEST="src/test/resources/static-request/account-validation-request.xml";
-[ERROR]                                     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:19: warning: no comment
-[ERROR]         public static final String  CUSTOMER_RETRIEVAL_REQUEST="src/test/resources/static-request/customer-retrieval-request.xml";
-[ERROR]                                     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:22: warning: no comment
-[ERROR]         public static final String ERROR_XML_PATH = "error-response/error-response-account-validation.xml";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:21: warning: no comment
-[ERROR]         public static final String ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL= "error-response/error-response-customer-retrieval.xml";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:24: warning: no comment
-[ERROR]         public static final String RESPONSE_XML_PATH = "static-response/account-validation/success-response.xml";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:23: warning: no comment
-[ERROR]         public static final String SCHEMA_VALIDATION_ERROR_XML = "error-response/CustomerRetrievalSchemaValidationError.xml";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:136: warning: no comment
-[ERROR]         public static final String SYSTEM_ID="systemId";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:135: warning: no comment
-[ERROR]         public static final String TAG_TRANSACTION_ID = "transactionId";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:74: warning: no comment
-[ERROR]         public static final String XPATH_ACCOUNT_STATUS = "//*[local-name()='accountingUnits']/*[local-name()='status']/*[local-name()='codeValue']";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:67: warning: no comment
-[ERROR]         public static final  String XPATH_ASSOCIATED_PARTY=XPATH_HAS_PARTY_ASSOC+ "/*[local-name()='associatedInvolvedParty']";
-[ERROR]                                     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:80: warning: no comment
-[ERROR]         public static final String XPATH_FAULT_RESPONSE_ID = "//*[local-name()='responseId']";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:81: warning: no comment
-[ERROR]         public static final String XPATH_FAULT_TIMESTAMP = "//*[local-name()='timestamp']";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:79: warning: no comment
-[ERROR]         public static final String XPATH_FAULT_TRANSACTION_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:68: warning: no comment
-[ERROR]         public static final String XPATH_FIRST_NAME =XPATH_ASSOCIATED_PARTY +
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:66: warning: no comment
-[ERROR]         public static final String XPATH_HAS_PARTY_ASSOC="//*[local-name()='hasInvolvedPartyAssociation']";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:72: warning: no comment
-[ERROR]         public static final  String XPATH_LAST_NAME = XPATH_ASSOCIATED_PARTY +
-[ERROR]                                     ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:76: warning: no comment
-[ERROR]         public static final String XPATH_MODULUS_STATUS = "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:70: warning: no comment
-[ERROR]         public static final String XPATH_PREFIX_TYPE = XPATH_ASSOCIATED_PARTY +
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:75: warning: no comment
-[ERROR]         public static final String XPATH_SWITCHING_STATUS = "//*[local-name()='switchingStatus']/*[local-name()='codeValue']";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/domain/enums/ServiceConstants.java:65: warning: no comment
-[ERROR]         public static final String XPATH_TRANSACTION_ID = "//*[local-name()='transactionId']";
-[ERROR]                                    ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/util/SoapInterceptorUtils.java:57: warning: no @param for doc
-[ERROR]     public static String getValueFromRequest(Document doc, String tag) {
-[ERROR]                          ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/util/SoapInterceptorUtils.java:57: warning: no @param for tag
-[ERROR]     public static String getValueFromRequest(Document doc, String tag) {
-[ERROR]                          ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/util/SoapInterceptorUtils.java:57: warning: no @return
-[ERROR]     public static String getValueFromRequest(Document doc, String tag) {
-[ERROR]                          ^
-[ERROR] /builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/src/main/java/com/rbs/bdd/util/SoapInterceptorUtils.java:65: warning: no @param for doc
-[ERROR]     public static Node getNode(Document doc, String localName) {
-[ERROR]                        ^
-[ERROR] 1 error
-[ERROR] 100 warnings
-[ERROR] Command line was: /opt/buildtools/java/jdk-21.0.7+6/bin/javadoc -J-Duser.language= -J-Duser.country= @options @packages
-[ERROR] 
-[ERROR] Refer to the generated Javadoc files in '/builds/natwestgroup/DigitalX/CommercialAndInstitutionalBankingCDIO/Digital/VH/customer-integration-services/bdd-ms-esp-simulation-service/bdd-ms-esp-simulation-service/target/reports/apidocs' dir.
-[ERROR] 
-[ERROR] -> [Help 1]
-[ERROR] 
-[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
-[ERROR] Re-run Maven using the -X switch to enable full debug logging.
-[ERROR] 
-[ERROR] For more information about the errors and possible solutions, please read the following articles:
-[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
-[ERROR] 
-[ERROR] After correcting the problems, you can resume the build with the command
-[ERROR]   mvn <args> -rf :bdd-ms-esp-simulation-service
-Cleaning up project directory and file based variables
-00:01
-ERROR: Job failed: command terminated with exit code 1
+ /**
+     * Validates the provided {@link RequestParams} based on predefined rules for
+     * account type (UK Basic or International) and returns a mapped {@link ErrorDetail}
+     * from the provided {@code errorMap} based on failure conditions.
+     * <p>
+     * This method is reusable across multiple services and logs the validation
+     * outcome per service context.
+     *
+     * @param p              the request parameter object containing account details
+     * @param errorMap       a mapping of {@link ValidationErrorType} to corresponding {@link ErrorDetail}
+     * @param ibanValidator  a predicate used to validate IBAN or UBAN using modulus or custom rule
+     * @param serviceContext a string to log the calling service (e.g., "AccountValidation", "CustomerRetrieval")
+     * @return an {@code Optional<ErrorDetail>} containing the matched error if validation fails; empty otherwise
+     */
+    public static Optional<ErrorDetail> validateAccount(
+            RequestParams p,
+            Map<ValidationErrorType, ErrorDetail> errorMap,
+            Predicate<String> ibanValidator,
+            String serviceContext
+    ) {
+        Optional<ErrorDetail> error = Optional.empty();
+
+        if (ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT.equals(p.codeValue())) {
+            if (p.identifier().startsWith("GB")) {
+                error = Optional.of(errorMap.get(ValidationErrorType.INVALID_PREFIX));
+            } else if (p.length() != 14) {
+                if(serviceContext.equals("CustomerRetrieval")){
+                    error = Optional.of(errorMap.get(ValidationErrorType.INVALID_LENGTH));
+                }else{
+                error = Optional.of(errorMap.get(ValidationErrorType.INVALID_UBAN_LENGTH));}
+            } else if (!ibanValidator.test(p.identifier())) {
+                error = Optional.of(errorMap.get(ValidationErrorType.INVALID_MODULUS));
+            } else {
+                log.info("No error for UBAN [{}] in {} with identifier: {}", p.codeValue(), serviceContext, p.identifier());
+            }
+
+        } else if (ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT.equals(p.codeValue())) {
+            if (!p.identifier().startsWith("GB")) {
+                error = Optional.of(errorMap.get(ValidationErrorType.INVALID_COUNTRY_CODE));
+            } else if (p.length() != 22) {
+                error = Optional.of(errorMap.get(ValidationErrorType.INVALID_IBAN_LENGTH));
+            } else {
+                log.info("No error for IBAN [{}] in {} with identifier: {}", p.codeValue(), serviceContext, p.identifier());
+            }
+        }
+
+        return error;
+    }
+
+
+----------------
+
+  /**
+     * Removes a child node from the specified parent node.
+     * If {@code tagName} is provided, it removes the child node by matching the local name.
+     * If {@code tagName} is null, it directly removes the provided node.
+     *
+     * @param parentOrNode the parent node (for tag-based removal) or the target node (for direct removal)
+     * @param tagName       the local name of the tag to be removed; pass null to directly remove the node
+     */
+    public static void removeChildNode(Node parentOrNode, String tagName) {
+        if (tagName == null) {
+            // Directly remove the node if valid
+            if (parentOrNode != null && parentOrNode.getParentNode() != null) {
+                parentOrNode.getParentNode().removeChild(parentOrNode);}}
+        else {
+            // Remove child by tag name from the given parent
+            NodeList children = parentOrNode.getChildNodes();
+            for (int i = 0; i < children.getLength(); i++) {
+                Node child = children.item(i);
+                if (tagName.equals(child.getLocalName())) {
+                    parentOrNode.removeChild(child);
+                    break;
+                }}
+        }
+    }
+
+---------------
+   /**
+     * Extracts flags from the request's {@code <requestIds>} element.
+     * Checks for the presence of a systemId = "RequestID" and if its sub-elements exist.
+     * @param requestIdNodes list of {@code <requestIds>} elements in the request
+     * @return a record with flags indicating field presence
+     */
+    private static ValidationFlags extractValidationFlags(NodeList requestIdNodes) {
+        for (int i = 0; i < requestIdNodes.getLength(); i++) {
+            Node requestIdsNode = requestIdNodes.item(i);
+            NodeList children = requestIdsNode.getChildNodes();
+            String systemId = null;
+            boolean txnIdPresent = false;
+            boolean systemIdPresent = false;
+            for (int j = 0; j < children.getLength(); j++) {
+                Node child = children.item(j);
+                String tag = child.getLocalName();
+                if (SYSTEM_ID.equals(tag)) {
+                    systemId = child.getTextContent();
+                    systemIdPresent = true;
+                } else if (TAG_TRANSACTION_ID.equals(tag)) {
+                    txnIdPresent = true;
+                }}
+            if ("RequestID".equals(systemId)) {
+                return new ValidationFlags(true, txnIdPresent, systemIdPresent);
+            }
+        }
+        return new ValidationFlags(false, false, false);
+    }
+
+
+---------------
+/**
+     * Handles removal of <refRequestIds> node if <requestIds> is missing or empty.
+     */
+    private static void handleRefRequestIds(Document errorDoc, Document requestDoc, String txnId, String systemId) {
+        Node requestIds = SoapInterceptorUtils.getNode(requestDoc, "requestIds");
+        boolean isEmpty = isNodeEmpty(requestIds);
+        Node refRequestIds = SoapInterceptorUtils.getNode(errorDoc, "refRequestIds");
+        if (isEmpty  && refRequestIds != null) {
+            refRequestIds.getParentNode().removeChild(refRequestIds);
+            return;
+        }
+        if (refRequestIds != null) {
+            if (txnId == null) removeNodes(refRequestIds, TAG_TRANSACTION_ID);
+            if (systemId == null) removeNodes(refRequestIds, SYSTEM_ID);
+            if (!refRequestIds.hasChildNodes()) {
+                refRequestIds.getParentNode().removeChild(refRequestIds);
+            }
+        }
+    }
