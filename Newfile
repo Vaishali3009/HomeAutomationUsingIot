@@ -1,32 +1,27 @@
-/**
- * Utility class for SOAP DOM manipulation.
- */
-public class SoapInterceptorUtils {
-
-    /**
-     * Removes a child node from the specified parent node.
-     * If {@code tagName} is provided, it removes the child node by matching the local name.
-     * If {@code tagName} is null, it directly removes the provided node.
-     *
-     * @param parentOrNode the parent node (for tag-based removal) or the target node (for direct removal)
-     * @param tagName       the local name of the tag to be removed; pass null to directly remove the node
-     */
-    public static void removeChildNode(Node parentOrNode, String tagName) {
-        if (tagName == null) {
-            // Directly remove the node if valid
-            if (parentOrNode != null && parentOrNode.getParentNode() != null) {
-                parentOrNode.getParentNode().removeChild(parentOrNode);
+ private Optional<ErrorDetail> determineCustomerRetrievalError(RequestParams param) {
+        Optional<ErrorDetail> errorDetail = Optional.empty();
+        if (ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT.equals(param.codeValue())) {
+            if (param.identifier().startsWith("GB")) {
+                log.info("Customer Account number Not Starting with GB");
+                errorDetail = Optional.of(ErrorConstants.ERR_UBAN_GB.detail());
+            } else if (param.length() != 14) {
+                log.info("Customer not Found");
+                errorDetail = Optional.of(ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail());
+            } else if (!isUbanValid(param.identifier())) {
+                errorDetail = Optional.of(ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail());
             }
-        } else {
-            // Remove child by tag name from the given parent
-            NodeList children = parentOrNode.getChildNodes();
-            for (int i = 0; i < children.getLength(); i++) {
-                Node child = children.item(i);
-                if (tagName.equals(child.getLocalName())) {
-                    parentOrNode.removeChild(child);
-                    break;
-                }
+            else{log.info("No Error was found for UBAN account number :{} with identifier :{}", param.codeValue,param.identifier);
             }
         }
+        else if (ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT.equals(param.codeValue())) {
+            if (!param.identifier().startsWith("GB")) {
+                errorDetail = Optional.of(ErrorConstants.ERR_UBAN_GB.detail());
+            } else if (param.length() != 22) {
+                errorDetail = Optional.of(ErrorConstants.ERR_UBAN_GB.detail());
+            }
+            else{
+                log.info("No Error was found for IBAN account number :{} with identifier :{}", param.codeValue,param.identifier);
+            }
+        }
+        return errorDetail;
     }
-}
