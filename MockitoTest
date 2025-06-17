@@ -12,7 +12,59 @@ import org.springframework.ws.WebServiceMessage;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathConstants;/**
+     * Handles removal of {@code <refRequestIds>} node if {@code  <requestIds> }is missing or empty.
+     */
+    public static void handleRequestIds(Document errorDoc, Document requestDoc) {
+        NodeList requestIdNodes = requestDoc.getElementsByTagNameNS("*", "requestIds");
+        Node refRequestIds = SoapInterceptorUtils.getNode(errorDoc, "refRequestIds");
+
+        boolean foundRequestIDSystemId = false;
+        boolean hasTxnId = false;
+        boolean hasSystemId = false;
+
+        for (int i = 0; i < requestIdNodes.getLength(); i++) {
+            Node requestIdsNode = requestIdNodes.item(i);
+            NodeList children = requestIdsNode.getChildNodes();
+
+            String currentSystemId = null;
+            boolean txnIdPresent = false;
+            boolean systemIdPresent = false;
+
+            for (int j = 0; j < children.getLength(); j++) {
+                Node child = children.item(j);
+                if (SYSTEM_ID.equals(child.getLocalName())) {
+                    currentSystemId = child.getTextContent();
+                    systemIdPresent = true;
+                } else if (TAG_TRANSACTION_ID.equals(child.getLocalName())) {
+                    txnIdPresent = true;
+                }
+            }
+
+            if ("RequestID".equals(currentSystemId)) {
+                foundRequestIDSystemId = true;
+                hasTxnId = txnIdPresent;
+                hasSystemId = systemIdPresent;
+                break;
+            }
+        }
+
+        if (refRequestIds != null) {
+            if (!foundRequestIDSystemId) {
+                // No matching <requestIds> with systemId=RequestID → remove entire block
+                refRequestIds.getParentNode().removeChild(refRequestIds);
+            } else {
+                // Remove missing child nodes
+                if (!hasTxnId) SoapInterceptorUtils.removeNode(refRequestIds, TAG_TRANSACTION_ID);
+                if (!hasSystemId) SoapInterceptorUtils.removeNode(refRequestIds, SYSTEM_ID);
+
+                // If nothing left inside, remove the entire block
+                if (!refRequestIds.hasChildNodes()) {
+                    refRequestIds.getParentNode().removeChild(refRequestIds);
+                }
+            }
+        }
+    }
 import javax.xml.xpath.XPathFactory;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
