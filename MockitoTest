@@ -1,53 +1,240 @@
 /**
-     * Handles removal of {@code <refRequestIds>} node if {@code  <requestIds> }is missing or empty.
+ * Utility class for validating request parameters for IBAN/UBAN accounts.
+ */
+public class ValidationUtils {
+
+    /**
+     * Validates the provided {@link RequestParams} based on predefined rules for
+     * account type (UK Basic or International) and returns a mapped {@link ErrorDetail}
+     * from the provided {@code errorMap} based on failure conditions.
+     * <p>
+     * This method is reusable across multiple services and logs the validation
+     * outcome per service context.
+     *
+     * @param p              the request parameter object containing account details
+     * @param errorMap       a mapping of {@link ValidationErrorType} to corresponding {@link ErrorDetail}
+     * @param ibanValidator  a predicate used to validate IBAN or UBAN using modulus or custom rule
+     * @param serviceContext a string to log the calling service (e.g., "AccountValidation", "CustomerRetrieval")
+     * @return an {@code Optional<ErrorDetail>} containing the matched error if validation fails; empty otherwise
      */
-    public static void handleRequestIds(Document errorDoc, Document requestDoc) {
-        NodeList requestIdNodes = requestDoc.getElementsByTagNameNS("*", "requestIds");
-        Node refRequestIds = SoapInterceptorUtils.getNode(errorDoc, "refRequestIds");
-
-        boolean foundRequestIDSystemId = false;
-        boolean hasTxnId = false;
-        boolean hasSystemId = false;
-
-        for (int i = 0; i < requestIdNodes.getLength(); i++) {
-            Node requestIdsNode = requestIdNodes.item(i);
-            NodeList children = requestIdsNode.getChildNodes();
-
-            String currentSystemId = null;
-            boolean txnIdPresent = false;
-            boolean systemIdPresent = false;
-
-            for (int j = 0; j < children.getLength(); j++) {
-                Node child = children.item(j);
-                if (SYSTEM_ID.equals(child.getLocalName())) {
-                    currentSystemId = child.getTextContent();
-                    systemIdPresent = true;
-                } else if (TAG_TRANSACTION_ID.equals(child.getLocalName())) {
-                    txnIdPresent = true;
-                }
-            }
-
-            if ("RequestID".equals(currentSystemId)) {
-                foundRequestIDSystemId = true;
-                hasTxnId = txnIdPresent;
-                hasSystemId = systemIdPresent;
-                break;
-            }
+    public static Optional<ErrorDetail> validateAccount(
+            RequestParams p,
+            Map<ValidationErrorType, ErrorDetail> errorMap,
+            Predicate<String> ibanValidator,
+            String serviceContext
+    ) {
+        if (ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT.equals(p.codeValue())) {
+            return validateUbanAccount(p, errorMap, ibanValidator, serviceContext);
         }
 
-        if (refRequestIds != null) {
-            if (!foundRequestIDSystemId) {
-                // No matching <requestIds> with systemId=RequestID → remove entire block
-                refRequestIds.getParentNode().removeChild(refRequestIds);
-            } else {
-                // Remove missing child nodes
-                if (!hasTxnId) SoapInterceptorUtils.removeNode(refRequestIds, TAG_TRANSACTION_ID);
-                if (!hasSystemId) SoapInterceptorUtils.removeNode(refRequestIds, SYSTEM_ID);
+        if (ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT.equals(p.codeValue())) {
+            return validateIbanAccount(p, errorMap, serviceContext);
+        }
 
-                // If nothing left inside, remove the entire block
-                if (!refRequestIds.hasChildNodes()) {
-                    refRequestIds.getParentNode().removeChild(refRequestIds);
-                }
-            }
+        return Optional.empty();
+    }
+
+    /**
+     * Validates a UK Basic Bank Account (UBAN).
+     */
+    private static Optional<ErrorDetail> validateUbanAccount(
+            RequestParams p,
+            Map<ValidationErrorType, ErrorDetail> errorMap,
+            Predicate<String> ibanValidator,
+            String context
+    ) {
+        if (p.identifier().startsWith("GB")) {
+            return Optional.of(errorMap.get(ValidationErrorType.INVALID_PREFIX));
+        }
+
+        if (p.length() != 14) {
+            return Optional.of(context.equals("CustomerRetrieval")
+                    ? errorMap.get(ValidationErrorType.INVALID_LENGTH)
+                    : errorMap.get(ValidationErrorType.INVALID_UBAN_LENGTH));
+        }
+
+        if (!ibanValidator.test(p.identifier())) {
+            return Optional.of(errorMap.get(ValidationErrorType.INVALID_MODULUS));
+        }
+
+        log.info("No error for UBAN [{}] in {} with identifier: {}", p.codeValue(), context, p.identifier());
+        return Optional.empty();
+    }
+
+    /**
+     * Validates an International Bank Account Number (IBAN).
+     */
+    private static Optional<ErrorDetail> validateIbanAccount(
+            RequestParams p,
+            Map<ValidationErrorType, ErrorDetail> errorMap,
+            String context
+    ) {
+        if (!p.identifier().startsWith("GB")) {
+            return Optional.of(errorMap.get(ValidationErrorType.INVALID_COUNTRY_CODE));
+        }
+
+        if (p.length() != 22) {
+            return Optional.of(errorMap.get(ValidationErrorType.INVALID_IBAN_LENGTH));
+        }
+
+        log.info("No error for IBAN [{}] in {} with identifier: {}", p.codeValue(), context, p.identifier());
+        return Optional.empty();
+    }
+}
+
+
+
+——-
+
+/**
+ * Removes a child node from the specified parent node.
+ * <ul>
+ *     <li>If {@code tagName} is {@code null}, it removes the node directly from its parent.</li>
+ *     <li>If {@code tagName} is provided, it searches the children of the parent node and removes the first match based on local name.</li>
+ * </ul>
+ *
+ * @param parentOrNode the node to be removed directly (if {@code tagName} is null), or parent node (if tagName is provided)
+ * @param tagName       the local name of the child node to remove; {@code null} for direct removal
+ */
+public static void removeChildNode(Node parentOrNode, String tagName) {
+    if (tagName == null) {
+        removeDirectNode(parentOrNode);
+    } else {
+        removeChildByTag(parentOrNode, tagName);
+    }
+}
+
+/**
+ * Removes the given node from its parent if both are non-null.
+ */
+private static void removeDirectNode(Node node) {
+    if (node != null && node.getParentNode() != null) {
+        node.getParentNode().removeChild(node);
+    }
+}
+
+/**
+ * Removes the first child of the parent that matches the given local tag name.
+ */
+private static void removeChildByTag(Node parent, String tagName) {
+    if (parent == null || tagName == null) return;
+
+    NodeList children = parent.getChildNodes();
+    for (int i = 0; i < children.getLength(); i++) {
+        Node child = children.item(i);
+        if (tagName.equals(child.getLocalName())) {
+            parent.removeChild(child);
+            break;
         }
     }
+}
+
+
+
+———
+
+/**
+ * Extracts flags from the request's {@code <requestIds>} elements.
+ * Determines if a node with {@code systemId = "RequestID"} exists, 
+ * and whether it contains {@code <transactionId>} and {@code <systemId>} sub-elements.
+ *
+ * @param requestIdNodes list of {@code <requestIds>} elements in the request
+ * @return a record with flags indicating presence of required fields
+ */
+private static ValidationFlags extractValidationFlags(NodeList requestIdNodes) {
+    for (int i = 0; i < requestIdNodes.getLength(); i++) {
+        Node requestIdsNode = requestIdNodes.item(i);
+        NodeList children = requestIdsNode.getChildNodes();
+        ValidationFlags flags = analyzeRequestIdChildren(children);
+        if (flags.foundRequestIDSystemId()) {
+            return flags;
+        }
+    }
+    return new ValidationFlags(false, false, false);
+}
+
+/**
+ * Analyzes the children of a {@code <requestIds>} node to determine
+ * whether it contains a valid "RequestID" systemId and presence of specific sub-elements.
+ *
+ * @param children NodeList of child elements inside a {@code <requestIds>} node
+ * @return ValidationFlags record indicating which tags are present
+ */
+private static ValidationFlags analyzeRequestIdChildren(NodeList children) {
+    boolean txnIdPresent = false;
+    boolean systemIdPresent = false;
+    String systemId = null;
+
+    for (int j = 0; j < children.getLength(); j++) {
+        Node child = children.item(j);
+        String tag = child.getLocalName();
+
+        if (SYSTEM_ID.equals(tag)) {
+            systemId = child.getTextContent();
+            systemIdPresent = true;
+        } else if (TAG_TRANSACTION_ID.equals(tag)) {
+            txnIdPresent = true;
+        }
+    }
+
+    boolean isRequestID = "RequestID".equals(systemId);
+    return new ValidationFlags(isRequestID, txnIdPresent, systemIdPresent);
+}
+
+——-
+
+/**
+ * Handles removal of {@code <refRequestIds>} node if {@code <requestIds>} is missing or empty.
+ * Also removes specific child nodes like {@code <transactionId>} or {@code <systemId>} if values are null.
+ *
+ * @param errorDoc the response/error document
+ * @param requestDoc the request document
+ * @param txnId transactionId to check presence
+ * @param systemId systemId to check presence
+ */
+private static void handleRefRequestIds(Document errorDoc, Document requestDoc, String txnId, String systemId) {
+    Node refRequestIds = SoapInterceptorUtils.getNode(errorDoc, "refRequestIds");
+    if (shouldRemoveEntireBlock(requestDoc, refRequestIds)) {
+        removeNode(refRequestIds);
+        return;
+    }
+
+    if (refRequestIds != null) {
+        removeEmptyFields(refRequestIds, txnId, systemId);
+        removeIfEmpty(refRequestIds);
+    }
+}
+
+/**
+ * Checks if {@code <requestIds>} is missing/empty and {@code <refRequestIds>} is present.
+ */
+private static boolean shouldRemoveEntireBlock(Document requestDoc, Node refRequestIds) {
+    Node requestIds = SoapInterceptorUtils.getNode(requestDoc, "requestIds");
+    return isNodeEmpty(requestIds) && refRequestIds != null;
+}
+
+/**
+ * Removes specified child nodes if corresponding values are null.
+ */
+private static void removeEmptyFields(Node refRequestIds, String txnId, String systemId) {
+    if (txnId == null) removeNodes(refRequestIds, TAG_TRANSACTION_ID);
+    if (systemId == null) removeNodes(refRequestIds, SYSTEM_ID);
+}
+
+/**
+ * Removes the {@code <refRequestIds>} node if it's empty after child removal.
+ */
+private static void removeIfEmpty(Node refRequestIds) {
+    if (refRequestIds != null && !refRequestIds.hasChildNodes()) {
+        removeNode(refRequestIds);
+    }
+}
+
+/**
+ * Removes the given node from its parent.
+ */
+private static void removeNode(Node node) {
+    if (node != null && node.getParentNode() != null) {
+        node.getParentNode().removeChild(node);
+    }
+}
