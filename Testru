@@ -1,54 +1,91 @@
+public enum ValidationErrorType {
+    INVALID_PREFIX,
+    INVALID_LENGTH,
+    INVALID_MODULUS
+}
+
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * Handles removal of <refRequestIds> node from errorDoc if <requestIds> block
- * with systemId="RequestID" is missing or incomplete in the requestDoc.
- *
- * @param errorDoc   The SOAP error response document.
- * @param requestDoc The original request document.
+ * Utility class for validating account identifiers like IBAN or UBAN
+ * across different service contexts such as Account Validation or Customer Retrieval.
+ * <p>
+ * This class centralizes error evaluation logic based on account type, identifier format,
+ * length, and modulus check results.
  */
-public static void handleRefRequestIds(Document errorDoc, Document requestDoc) {
-    NodeList requestIdNodes = requestDoc.getElementsByTagNameNS("*", "requestIds");
-    Node refRequestIds = SoapInterceptorUtils.getNode(errorDoc, "refRequestIds");
+@Slf4j
+public class ValidationUtils {
 
-    boolean isValid = containsValidRequestIdBlock(requestIdNodes);
-    if (!isValid && refRequestIds != null && refRequestIds.getParentNode() != null) {
-        refRequestIds.getParentNode().removeChild(refRequestIds);
-    }
-}
+    /**
+     * Validates the provided {@link RequestParams} based on predefined rules for
+     * account type (UK Basic or International) and returns a mapped {@link ErrorDetail}
+     * from the provided {@code errorMap} based on failure conditions.
+     * <p>
+     * This method is reusable across multiple services and logs the validation
+     * outcome per service context.
+     *
+     * @param p              the request parameter object containing account details
+     * @param errorMap       a mapping of {@link ValidationErrorType} to corresponding {@link ErrorDetail}
+     * @param ibanValidator  a predicate used to validate IBAN or UBAN using modulus or custom rule
+     * @param serviceContext a string to log the calling service (e.g., "AccountValidation", "CustomerRetrieval")
+     * @return an {@code Optional<ErrorDetail>} containing the matched error if validation fails; empty otherwise
+     */
+    public static Optional<ErrorDetail> validateAccount(
+        RequestParams p,
+        Map<ValidationErrorType, ErrorDetail> errorMap,
+        Predicate<String> ibanValidator,
+        String serviceContext
+    ) {
+        Optional<ErrorDetail> error = Optional.empty();
 
+        if (ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT.equals(p.codeValue())) {
+            if (p.identifier().startsWith("GB")) {
+                error = Optional.of(errorMap.get(ValidationErrorType.INVALID_PREFIX));
+            } else if (p.length() != 14) {
+                error = Optional.of(errorMap.get(ValidationErrorType.INVALID_LENGTH));
+            } else if (!ibanValidator.test(p.identifier())) {
+                error = Optional.of(errorMap.get(ValidationErrorType.INVALID_MODULUS));
+            } else {
+                log.info("No error for UBAN [{}] in {} with identifier: {}", p.codeValue(), serviceContext, p.identifier());
+            }
 
-------
-private static boolean containsValidRequestIdBlock(NodeList requestIdNodes) {
-    for (int i = 0; i < requestIdNodes.getLength(); i++) {
-        Node requestIdsNode = requestIdNodes.item(i);
-        if (isRequestIdBlockValid(requestIdsNode)) {
-            return true;
+        } else if (ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT.equals(p.codeValue())) {
+            if (!p.identifier().startsWith("GB")) {
+                error = Optional.of(errorMap.get(ValidationErrorType.INVALID_PREFIX));
+            } else if (p.length() != 22) {
+                error = Optional.of(errorMap.get(ValidationErrorType.INVALID_LENGTH));
+            } else {
+                log.info("No error for IBAN [{}] in {} with identifier: {}", p.codeValue(), serviceContext, p.identifier());
+            }
         }
+
+        return error;
     }
-    return false;
 }
 
 
------
-private static boolean isRequestIdBlockValid(Node requestIdsNode) {
-    NodeList children = requestIdsNode.getChildNodes();
-    String systemIdValue = null;
-    boolean hasTxnId = false;
-    boolean hasSystemId = false;
 
-    for (int i = 0; i < children.getLength(); i++) {
-        Node child = children.item(i);
-        String tag = child.getLocalName();
+private Optional<ErrorDetail> determineError(RequestParams p) {
+    Map<ValidationErrorType, ErrorDetail> errorMap = Map.of(
+        ValidationErrorType.INVALID_PREFIX, ErrorConstants.ERR_WRONG_COUNTRY_CODE.detail(),
+        ValidationErrorType.INVALID_LENGTH, ErrorConstants.ERR_INVALID_IBAN_LENGTH.detail(),
+        ValidationErrorType.INVALID_MODULUS, ErrorConstants.ERR_MOD97_UBAN.detail()
+    );
 
-        if (SYSTEM_ID.equals(tag)) {
-            systemIdValue = child.getTextContent();
-            hasSystemId = true;
-        } else if (TAG_TRANSACTION_ID.equals(tag)) {
-            hasTxnId = true;
-        }
-    }
-
-    return "RequestID".equals(systemIdValue) && hasTxnId && hasSystemId;
+    return ValidationUtils.validateAccount(p, errorMap, this::isUbanValid, "AccountValidation");
 }
 
 
------
+private Optional<ErrorDetail> determineCustomerRetrievalError(RequestParams p) {
+    Map<ValidationErrorType, ErrorDetail> errorMap = Map.of(
+        ValidationErrorType.INVALID_PREFIX, ErrorConstants.ERR_UBAN_GB.detail(),
+        ValidationErrorType.INVALID_LENGTH, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail(),
+        ValidationErrorType.INVALID_MODULUS, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail()
+    );
+
+    return ValidationUtils.validateAccount(p, errorMap, this::isUbanValid, "CustomerRetrieval");
+}
