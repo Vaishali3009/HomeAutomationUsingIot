@@ -25,3 +25,33 @@
         }
         return errorDetail;
     }
+
+
+-----------------
+ private Optional<ErrorDetail> determineError(RequestParams p) {
+        Optional<ErrorDetail> errorDetail = Optional.empty();
+
+    if (ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT.equals(p.codeValue())) {
+        if (!p.identifier().startsWith("GB")) {
+            errorDetail = Optional.of(ErrorConstants.ERR_WRONG_COUNTRY_CODE.detail());
+        } else if (p.length() != 22) {
+            errorDetail = Optional.of(ErrorConstants.ERR_INVALID_IBAN_LENGTH.detail());
+        }
+        else{
+            log.info("No Error was found for IBAN account number :{} with identifier :{}", p.codeValue,p.identifier);
+        }
+    } else if (ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT.equals(p.codeValue())) {
+        if (p.identifier().startsWith("GB")) {
+            errorDetail = Optional.of(ErrorConstants.ERR_DB2_SQL.detail());
+        } else if (p.length() != 14) {
+            errorDetail = Optional.of(ErrorConstants.ERR_INVALID_UBAN_LENGTH.detail());
+        } else if (!isUbanValid(p.identifier())) {
+            errorDetail = Optional.of(ErrorConstants.ERR_MOD97_UBAN.detail());
+        }
+        else{
+            log.info("No Error was found for UBAN account number :{} with identifier :{}", p.codeValue,p.identifier);
+        }
+    }
+
+    return errorDetail;
+    }
