@@ -1,27 +1,55 @@
-public class SoapInterceptorUtils {
+/**
+ * Validates and conditionally removes or updates the <refRequestIds> node in the error response XML
+ * based on the presence of <requestIds> entries in the incoming request XML.
+ * 
+ * - If a <requestIds> block with systemId "RequestID" is not found, the entire <refRequestIds> node is removed.
+ * - If found, it checks whether <transactionId> or <systemId> are present inside that block.
+ *   - If missing, the corresponding child elements are removed from <refRequestIds>.
+ *   - If <refRequestIds> becomes empty after removals, it is removed entirely.
+ *
+ * @param errorDoc   the DOM document representing the static error response XML
+ * @param requestDoc the DOM document representing the incoming SOAP request XML
+ */
+public static void handleRequestIds(Document errorDoc, Document requestDoc) {
 
-    public static boolean skipInterceptorIfNamespaceNotMatched(MessageContext messageContext, String expectedNamespace, Logger logger) {
-        try {
-            WebServiceMessage request = messageContext.getRequest();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            request.writeTo(out);
-            String xml =in out.toString();
 
-            if (!xml.contains(expectedNamespace)) {
-                return true;
-            }
-        } catch (Exception e) {
-            logger.error("Error in namespace filtering", e);
-        }
-        return false;
-    }
-}
+/**
+ * Scans the <requestIds> elements in the request XML to detect whether any block contains
+ * systemId = "RequestID", and checks for the presence of <transactionId> and <systemId> fields.
+ *
+ * @param requestIdNodes NodeList of <requestIds> from the request document
+ * @return ValidationFlags containing booleans:
+ *         - foundRequestIDSystemId: true if systemId = "RequestID" was found
+ *         - hasTxnId: true if <transactionId> is present inside that block
+ *         - hasSystemId: true if <systemId> is present inside that block
+ */
+private static ValidationFlags findRequestIdFlags(NodeList requestIdNodes) {
 
--------
-@Override
-public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
-    if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_ACCOUNT_VALIDATION, log)) {
-        return true;
-    }
-    return super.handleRequest(messageContext, endpoint);
-}
+
+/**
+ * Removes specific child nodes (transactionId and/or systemId) from <refRequestIds> in the error response
+ * if those were missing in the request <requestIds> section. If all children are removed, the
+ * <refRequestIds> block is removed entirely.
+ *
+ * @param refRequestIds the <refRequestIds> node in the error response XML
+ * @param flags         ValidationFlags indicating which fields were present in the request
+ */
+private static void removeMissingChildNodes(Node refRequestIds, ValidationFlags flags) {
+
+
+/**
+ * Removes a given XML node from its parent in the DOM tree, if present.
+ *
+ * @param node the DOM node to be removed
+ */
+private static void removeNode(Node node) {
+
+
+/**
+ * A container record for capturing validation flags related to <requestIds> processing.
+ *
+ * @param foundRequestIDSystemId true if a <requestIds> block with systemId = "RequestID" was found
+ * @param hasTxnId               true if <transactionId> exists inside that block
+ * @param hasSystemId            true if <systemId> exists inside that block
+ */
+private record ValidationFlags(boolean foundRequestIDSystemId, boolean hasTxnId, boolean hasSystemId) {}
