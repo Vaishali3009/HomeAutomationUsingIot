@@ -1,308 +1,50 @@
-ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ErrorConstants.java:17: warning: no commen
-t
-[ERROR]     ERR_DB2_SQL(new ErrorDetail(ERR_006, "500|Service GRPUB.OA_GET_SORTCODE_DETAILS...(OA2.2105271236)...", null, null)),
-[ERROR]     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ErrorConstants.java:15: warning: no commen
-t
-[ERROR]     ERR_INVALID_IBAN_LENGTH(new ErrorDetail("ERR006", "Length of IBAN is Invalid", "0013", "Length of IBAN is Invalid")),
-[ERROR]     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ErrorConstants.java:24: warning: no commen
-t
-[ERROR]     ERR_INVALID_UBAN_LENGTH(new ErrorDetail(ERR_006, "UBAN should be 14 digits", "0013", "UBAN should be 14 digits")),
-[ERROR]     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ErrorConstants.java:22: warning: no commen
-t
-[ERROR]     ERR_MOD97_IBAN(new ErrorDetail(ERR_006, "MOD97 failure for the IBAN", "0020", "MOD97 failure for the IBAN")),
-[ERROR]     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ErrorConstants.java:28: warning: no commen
-t
-[ERROR]     ERR_MOD97_UBAN(new ErrorDetail(ERR_006, "MOD97 failure for the UBAN", "0020", "MOD97 failure for the UBAN"));
-[ERROR]     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ErrorConstants.java:18: warning: no commen
-t
-[ERROR]     ERR_UBAN_GB(new ErrorDetail(ERR_006, "Service operation retrievePrimaryCustomerForArr failed due to an error in the ESP. Contact systems management to resolve t
-he problem.", null, null)),
-[ERROR]     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ErrorConstants.java:20: warning: no commen
-t
-[ERROR]     ERR_WRONG_COUNTRY_CODE(new ErrorDetail(ERR_10, "Country code is not found in Db, try  with the correct country code", null, null)),
-[ERROR]     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\EspSimulatorEngine.java:18: warning: use of default con
-structor, which does not provide a comment
-[ERROR] public class EspSimulatorEngine {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\EspSimulatorEngine.java:20: warning: no comment
-[ERROR]     public static void main(String[] args) {
-[ERROR]                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ModulusCheckStatus.java:16: warning: no co
-mment
-[ERROR]     public String getValue() {
-[ERROR]                   ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ModulusCheckStatus.java:8: warning: no com
-ment
-[ERROR]     FAILED("Failed");
-[ERROR]     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ModulusCheckStatus.java:7: warning: no com
-ment
-[ERROR]     PASSED("Passed"),
-[ERROR]     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\arrvalidationfor
-payment\v01\ObjectFactory.java:48: warning: no @return
-[ERROR]     public ValidateArrangementForPaymentRequest createValidateArrangementForPaymentRequest() {
-[ERROR]                                                 ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\arrvalidationfor
-payment\v01\ObjectFactory.java:56: warning: no @return
-[ERROR]     public ValidateArrangementForPaymentResponse createValidateArrangementForPaymentResponse() {
-[ERROR]                                                  ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\arrvalidationfor
-payment\v01\ObjectFactory.java:64: warning: no @return
-[ERROR]     public ValidateArrangementForPaymentContent createValidateArrangementForPaymentContent() {
-[ERROR]                                                 ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\ObjectFactory.java:48: warning: no @return
-[ERROR]     public RetrievePrimaryCustomerForArrRequest createRetrievePrimaryCustomerForArrRequest() {
-[ERROR]                                                 ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\ObjectFactory.java:56: warning: no @return
-[ERROR]     public RetrievePrimaryCustomerForArrResponse createRetrievePrimaryCustomerForArrResponse() {
-[ERROR]                                                  ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\ObjectFactory.java:64: warning: no @return
-[ERROR]     public RetrievePrimaryCustomerForArrContent createRetrievePrimaryCustomerForArrContent() {
-[ERROR]                                                 ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\application\service\PaymentOrchestrator.java:17: warnin
-g: use of default constructor, which does not provide a comment
-[ERROR] public class PaymentOrchestrator implements PaymentValidationPort {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\infrastructure\soap\api\PaymentValidationSoapAdapter.ja
-va:39: warning: no @param for customerRetrievalPort
-[ERROR]     public PaymentValidationSoapAdapter(PaymentValidationPort paymentValidationPort,CustomerRetrievalPort customerRetrievalPort) {
-[ERROR]            ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrContent.java:126: warning: no @return
-[ERROR]     public List<Property> getModifyToken() {
-[ERROR]                           ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrContent.java:53: warning: no comment
-[ERROR]     protected InvolvedPartyTO customer;
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrContent.java:54: warning: no comment
-[ERROR]     protected List<Property> modifyToken;
-[ERROR]                              ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrContent.java:52: warning: no comment
-[ERROR]     protected ResponseHeader responseHeader;
-[ERROR]                              ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrContent.java:49: warning: use of default constructor, which does not provide a comment
-[ERROR] public class RetrievePrimaryCustomerForArrContent {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrRequest.java:103: warning: no @return
-[ERROR]     public List<Property> getProcessingParameter() {
-[ERROR]                           ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrRequest.java:55: warning: no comment
-[ERROR]     protected ObjectReference arrangementIdentifier;
-[ERROR]                               ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrRequest.java:53: warning: no comment
-[ERROR]     protected List<Property> processingParameter;
-[ERROR]                              ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrRequest.java:52: warning: no comment
-[ERROR]     protected RequestHeader requestHeader;
-[ERROR]                             ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrRequest.java:49: warning: use of default constructor, which does not provide a comment
-[ERROR] public class RetrievePrimaryCustomerForArrRequest {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrResponse.java:47: warning: no comment
-[ERROR]     protected Exception exception;
-[ERROR]                         ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrResponse.java:46: warning: no comment
-[ERROR]     protected RetrievePrimaryCustomerForArrContent response;
-[ERROR]                                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\generated-sources\jaxb\com\rbsg\soa\c040paymentmanagement\customerretrieva
-lforpayment\v01\serviceparameters\v01\RetrievePrimaryCustomerForArrResponse.java:44: warning: use of default constructor, which does not provide a comment
-[ERROR] public class RetrievePrimaryCustomerForArrResponse {
-[ERROR]        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:56: warning: no comm
-ent
-[ERROR]         public static final String INTL_BANK_ACCOUNT = "InternationalBankAccountNumber";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:57: warning: no comm
-ent
-[ERROR]         public static final String UK_BASIC_BANK_ACCOUNT = "UKBasicBankAccountNumber";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:46: warning: no comm
-ent
-[ERROR]         public static final  List<String> ALL_IBANS = List.of(
-[ERROR]                                           ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:41: warning: no comm
-ent
-[ERROR]         public static final  String IBAN_1 = "GB29NWBK60161331926801";
-[ERROR]                                     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:42: warning: no comm
-ent
-[ERROR]         public static final String IBAN_2 = "GB82WEST12345698765437";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:43: warning: no comm
-ent
-[ERROR]         public static final String IBAN_3 = "GB94BARC10201530093422";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:44: warning: no comm
-ent
-[ERROR]         public static final String IBAN_4 = "GB33BUKB20201555555567";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:32: warning: no comm
-ent
-[ERROR]         public static final String NAMESPACE_URI_FOR_ACCOUNT_VALIDATION = "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:33: warning: no comm
-ent
-[ERROR]         public static final String NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL = "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParamete
-rs/V01/";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:18: warning: no comm
-ent
-[ERROR]        public static final  String  ACCOUNT_VALIDATION_REQUEST="src/test/resources/static-request/account-validation-request.xml";
-[ERROR]                                     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:19: warning: no comm
-ent
-[ERROR]         public static final String  CUSTOMER_RETRIEVAL_REQUEST="src/test/resources/static-request/customer-retrieval-request.xml";
-[ERROR]                                     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:22: warning: no comm
-ent
-[ERROR]         public static final String ERROR_XML_PATH = "error-response/error-response-account-validation.xml";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:21: warning: no comm
-ent
-[ERROR]         public static final String ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL= "error-response/error-response-customer-retrieval.xml";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:24: warning: no comm
-ent
-[ERROR]         public static final String RESPONSE_XML_PATH = "static-response/account-validation/success-response.xml";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:23: warning: no comm
-ent
-[ERROR]         public static final String SCHEMA_VALIDATION_ERROR_XML = "error-response/CustomerRetrievalSchemaValidationError.xml";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:135: warning: no com
-ment
-[ERROR]         public static final String TAG_TRANSACTION_ID = "transactionId";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:74: warning: no comm
-ent
-[ERROR]         public static final String XPATH_ACCOUNT_STATUS = "//*[local-name()='accountingUnits']/*[local-name()='status']/*[local-name()='codeValue']";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:67: warning: no comm
-ent
-[ERROR]         public static final  String XPATH_ASSOCIATED_PARTY=XPATH_HAS_PARTY_ASSOC+ "/*[local-name()='associatedInvolvedParty']";
-[ERROR]                                     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:80: warning: no comm
-ent
-[ERROR]         public static final String XPATH_FAULT_RESPONSE_ID = "//*[local-name()='responseId']";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:81: warning: no comm
-ent
-[ERROR]         public static final String XPATH_FAULT_TIMESTAMP = "//*[local-name()='timestamp']";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:79: warning: no comm
-ent
-[ERROR]         public static final String XPATH_FAULT_TRANSACTION_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:68: warning: no comm
-ent
-[ERROR]         public static final String XPATH_FIRST_NAME =XPATH_ASSOCIATED_PARTY +
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:66: warning: no comm
-ent
-[ERROR]         public static final String XPATH_HAS_PARTY_ASSOC="//*[local-name()='hasInvolvedPartyAssociation']";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:72: warning: no comm
-ent
-[ERROR]         public static final  String XPATH_LAST_NAME = XPATH_ASSOCIATED_PARTY +
-[ERROR]                                     ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:76: warning: no comm
-ent
-[ERROR]         public static final String XPATH_MODULUS_STATUS = "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:70: warning: no comm
-ent
-[ERROR]         public static final String XPATH_PREFIX_TYPE = XPATH_ASSOCIATED_PARTY +
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:75: warning: no comm
-ent
-[ERROR]         public static final String XPATH_SWITCHING_STATUS = "//*[local-name()='switchingStatus']/*[local-name()='codeValue']";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\domain\enums\ServiceConstants.java:65: warning: no comm
-ent
-[ERROR]         public static final String XPATH_TRANSACTION_ID = "//*[local-name()='transactionId']";
-[ERROR]                                    ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:58: warning: no @param f
-or doc
-[ERROR]     public static String getValueFromRequest(Document doc, String tag) {
-[ERROR]                          ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:58: warning: no @param f
-or tag
-[ERROR]     public static String getValueFromRequest(Document doc, String tag) {
-[ERROR]                          ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:58: warning: no @return
-[ERROR]     public static String getValueFromRequest(Document doc, String tag) {
-[ERROR]                          ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:66: warning: no @param f
-or doc
-[ERROR]     public static Node getNode(Document doc, String localName) {
-[ERROR]                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:66: warning: no @param f
-or localName
-[ERROR]     public static Node getNode(Document doc, String localName) {
-[ERROR]                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:66: warning: no @return
-[ERROR]     public static Node getNode(Document doc, String localName) {
-[ERROR]                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:74: warning: no @param f
-or doc
-[ERROR]     public static void replaceTextNode(Document doc, String placeholder, String newValue) {
-[ERROR]                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:74: warning: no @param f
-or placeholder
-[ERROR]     public static void replaceTextNode(Document doc, String placeholder, String newValue) {
-[ERROR]                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:74: warning: no @param f
-or newValue
-[ERROR]     public static void replaceTextNode(Document doc, String placeholder, String newValue) {
-[ERROR]                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:87: warning: no @param f
-or errorDoc
-[ERROR]     public static void sendCustomSoapFault(Document errorDoc) throws TransformerException, IOException {
-[ERROR]                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:87: warning: no @throws
-for javax.xml.transform.TransformerException
-[ERROR]     public static void sendCustomSoapFault(Document errorDoc) throws TransformerException, IOException {
-[ERROR]                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:87: warning: no @throws
-for java.io.IOException
-[ERROR]     public static void sendCustomSoapFault(Document errorDoc) throws TransformerException, IOException {
-[ERROR]                        ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:150: warning: no @param
-for node
-[ERROR]     public static boolean isNodeEmpty(Node node) {
-[ERROR]                           ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:306: error: unknown tag:
- refRequestIds
-[ERROR]      * Handles removal of <refRequestIds> node if <requestIds> is missing or empty.
-[ERROR]                           ^
-[ERROR] F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\src\main\java\com\rbs\bdd\util\SoapInterceptorUtils.java:306: error: unknown tag:
- requestIds
-[ERROR]      * Handles removal of <refRequestIds> node if <requestIds> is missing or empty.
-[ERROR]                                                   ^
-[ERROR] 2 errors
-[ERROR] 100 warnings
-[ERROR] Command line was: cmd.exe /X /D /C ""C:\Program Files\Java\jdk-21\bin\javadoc.exe" -J-Duser.language= -J-Duser.country= @options @packages"
-[ERROR]
-[ERROR] Refer to the generated Javadoc files in 'F:\NatWest_Code\ESPPOC\bdd-ms-esp-simulation-service\bdd-ms-esp-simulation-service\target\reports\apidocs' dir.
+public static void handleRequestIds(Document errorDoc, Document requestDoc) {
+        NodeList requestIdNodes = requestDoc.getElementsByTagNameNS("*", "requestIds");
+        Node refRequestIds = SoapInterceptorUtils.getNode(errorDoc, "refRequestIds");
+
+        boolean foundRequestIDSystemId = false;
+        boolean hasTxnId = false;
+        boolean hasSystemId = false;
+
+        for (int i = 0; i < requestIdNodes.getLength(); i++) {
+            Node requestIdsNode = requestIdNodes.item(i);
+            NodeList children = requestIdsNode.getChildNodes();
+
+            String currentSystemId = null;
+            boolean txnIdPresent = false;
+            boolean systemIdPresent = false;
+
+            for (int j = 0; j < children.getLength(); j++) {
+                Node child = children.item(j);
+                if (SYSTEM_ID.equals(child.getLocalName())) {
+                    currentSystemId = child.getTextContent();
+                    systemIdPresent = true;
+                } else if (TAG_TRANSACTION_ID.equals(child.getLocalName())) {
+                    txnIdPresent = true;
+                }
+            }
+
+            if ("RequestID".equals(currentSystemId)) {
+                foundRequestIDSystemId = true;
+                hasTxnId = txnIdPresent;
+                hasSystemId = systemIdPresent;
+                break;
+            }
+        }
+
+        if (refRequestIds != null) {
+            if (!foundRequestIDSystemId) {
+                // No matching <requestIds> with systemId=RequestID → remove entire block
+                refRequestIds.getParentNode().removeChild(refRequestIds);
+            } else {
+                // Remove missing child nodes
+                if (!hasTxnId) SoapInterceptorUtils.removeNode(refRequestIds, TAG_TRANSACTION_ID);
+                if (!hasSystemId) SoapInterceptorUtils.removeNode(refRequestIds, SYSTEM_ID);
+
+                // If nothing left inside, remove the entire block
+                if (!refRequestIds.hasChildNodes()) {
+                    refRequestIds.getParentNode().removeChild(refRequestIds);
+                }
+            }
+        }
+    }
