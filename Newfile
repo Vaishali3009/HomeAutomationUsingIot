@@ -1,1 +1,29 @@
-.
+databaseChangeLog:
+  - changeSet:
+      id: create-esp-simulation-record-table
+      author: esp-simulation-service
+      changes:
+        - createTable:
+            tableName: esp_simulation_record
+            columns:
+              - column:
+                  name: unique_identifier
+                  type: varchar(100)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account_no
+                  type: varchar(50)
+              - column:
+                  name: account_type
+                  type: varchar(50)
+              - column:
+                  name: customer_prefix
+                  type: varchar(20)
+              - column:
+                  name: customer_first_name
+                  type: varchar(20)
+              - column:
+                  name: customer_last_name
+                  type: varchar(20)
