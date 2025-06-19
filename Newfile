@@ -1,29 +1,26 @@
 databaseChangeLog:
   - changeSet:
-      id: create-esp-simulation-record-table
+      id: insert-esp-simulation-record-1
       author: esp-simulation-service
       changes:
-        - createTable:
+        - insert:
             tableName: esp_simulation_record
             columns:
               - column:
                   name: unique_identifier
-                  type: varchar(100)
-                  constraints:
-                    primaryKey: true
-                    nullable: false
+                  value: IBAN_1
               - column:
                   name: account_no
-                  type: varchar(50)
+                  value: GB29NWBK60161331926801
               - column:
                   name: account_type
-                  type: varchar(50)
+                  value: International
               - column:
                   name: customer_prefix
-                  type: varchar(20)
+                  value: MR
               - column:
                   name: customer_first_name
-                  type: varchar(20)
+                  value: Alice
               - column:
                   name: customer_last_name
-                  type: varchar(20)
+                  value: Johnson
