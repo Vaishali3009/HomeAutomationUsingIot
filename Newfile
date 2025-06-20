@@ -1,26 +1,696 @@
-databaseChangeLog:
-  - changeSet:
-      id: insert-esp-simulation-record-1
-      author: esp-simulation-service
-      changes:
-        - insert:
-            tableName: esp_simulation_record
-            columns:
-              - column:
-                  name: unique_identifier
-                  value: IBAN_1
-              - column:
-                  name: account_no
-                  value: GB29NWBK60161331926801
-              - column:
-                  name: account_type
-                  value: International
-              - column:
-                  name: customer_prefix
-                  value: MR
-              - column:
-                  name: customer_first_name
-                  value: Alice
-              - column:
-                  name: customer_last_name
-                  value: Johnson
+
+
+Error:-
+
+2025-06-20T11:14:26.498+01:00  WARN 4024 --- [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.bea
+ns.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to i
+nitialize dependency 'liquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/Liq
+uibaseAutoConfiguration$LiquibaseConfiguration.class]: Failed to instantiate [liquibase.integration.spring.SpringLiquibase]: Factory method 'liquibase' threw exception with message: Error creating bean with name
+ 'dataSource' defined in class path resource [org/springframework/boot/autoconfigure/jdbc/DataSourceConfiguration$Hikari.class]: Failed to instantiate [com.zaxxer.hikari.HikariDataSource]: Factory method 'dataSo
+urce' threw exception with message: Failed to determine a suitable driver class
+2025-06-20T11:14:26.508+01:00  INFO 4024 --- [           main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2025-06-20T11:14:26.557+01:00  INFO 4024 --- [           main] .s.b.a.l.ConditionEvaluationReportLogger :
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-06-20T11:14:26.822+01:00 ERROR 4024 --- [           main] o.s.b.d.LoggingFailureAnalysisReporter   :
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Failed to configure a DataSource: 'url' attribute is not specified and no embedded datasource could be configured.
+
+Reason: Failed to determine a suitable driver class
+
+
+Action:
+
+Consider the following:
+        If you want an embedded database (H2, HSQL or Derby), please put it on the classpath.
+        If you have database settings to be loaded from a particular profile you may need to activate it (no profiles are currently active).
+
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 20.747 s <<< FAILURE! - in com.rbs.bdd.application.service.EspSimulatorEngineTest
+[ERROR] testMainMethodCoverage  Time elapsed: 20.746 s  <<< ERROR!
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfigurat
+ion.class]: Failed to initialize dependency 'liquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/auto
+configure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]: Failed to instantiate [liquibase.integration.spring.SpringLiquibase]: Factory method 'liquibase' threw exception with message: Error
+creating bean with name 'dataSource' defined in class path resource [org/springframework/boot/autoconfigure/jdbc/DataSourceConfiguration$Hikari.class]: Failed to instantiate [com.zaxxer.hikari.HikariDataSource]:
+ Factory method 'dataSource' threw exception with message: Failed to determine a suitable driver class
+        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfigu
+ration$LiquibaseConfiguration.class]: Failed to instantiate [liquibase.integration.spring.SpringLiquibase]: Factory method 'liquibase' threw exception with message: Error creating bean with name 'dataSource' def
+ined in class path resource [org/springframework/boot/autoconfigure/jdbc/DataSourceConfiguration$Hikari.class]: Failed to instantiate [com.zaxxer.hikari.HikariDataSource]: Factory method 'dataSource' threw excep
+tion with message: Failed to determine a suitable driver class
+        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [liq
+
+
+
+---------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.rbs.bdd</groupId>
+    <artifactId>bdd-ms-esp-simulation-service-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <groupId>com.rbs.bdd</groupId>
+  <artifactId>bdd-ms-esp-simulation-service</artifactId>
+  <name>bdd-ms-esp-simulation-service</name>
+  <description>BDD ESP Simulator microservice - This is an example of a BDD ESP Simulator Service.</description>
+
+  <properties>
+    <validation-api.version>1.1.0.Final</validation-api.version>
+    <liquibase.maven.plugin.version>4.25.1</liquibase.maven.plugin.version>
+    <software.amazon.awssdk.secretsmanager>2.25.3</software.amazon.awssdk.secretsmanager>
+
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.ws.commons.schema</groupId>
+        <artifactId>XmlSchema</artifactId>
+        <version>1.4.3</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <!-- enabling actuator to expose management endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <!-- Used to add hyperlinks to the actuator's endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-hateoas</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ws.xmlschema</groupId>
+      <artifactId>xmlschema-core</artifactId>
+      <version>2.2.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>secretsmanager</artifactId>
+      <version>${software.amazon.awssdk.secretsmanager}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>auth</artifactId>
+      <version>${software.amazon.awssdk.secretsmanager}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sts</artifactId>
+      <version>${software.amazon.awssdk.secretsmanager}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.ws.commons.schema</groupId>
+      <artifactId>XmlSchema</artifactId>
+      <version>1.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-xml</artifactId>
+      <version>4.0.12</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.ws.commons.schema</groupId>
+          <artifactId>XmlSchema</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Dependency added to do bean validation in spring boot app as it's packaged with jakarta.validation-api.jar -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>software.amazon.awssdk</groupId>-->
+<!--      <artifactId>apache-client</artifactId>-->
+<!--    </dependency>-->
+    <!-- Required for UserIdentityFilter -->
+<!--    <dependency>-->
+<!--      <groupId>org.json</groupId>-->
+<!--      <artifactId>json</artifactId>-->
+<!--      <version>20240303</version>-->
+<!--    </dependency>-->
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>${httpcore.version}</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+
+    <!--    JAXB API-->
+
+    <!-- SOAP Dependencies Start-->
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-core</artifactId>
+      <version>4.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.messaging.saaj</groupId>
+      <artifactId>saaj-impl</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-test</artifactId>
+      <version>4.0.10</version>
+      <scope>test</scope>
+    </dependency
+
+
+
+
+
+    >
+    <dependency>
+      <groupId>jakarta.xml.ws</groupId>
+      <artifactId>jakarta.xml.ws-api</artifactId>
+      <version>4.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.ws</groupId>
+      <artifactId>jaxws-ri</artifactId>
+      <version>4.0.1</version>
+      <type>pom</type>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.woodstox</groupId>
+          <artifactId>woodstox-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Dependency to convert xml to json -->
+    <dependency>
+      <groupId>com.github.javadev</groupId>
+      <artifactId>underscore</artifactId>
+      <version>1.89</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>xml-resolver</groupId>
+      <artifactId>xml-resolver</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <!-- Dependency for caching -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>wsdl4j</groupId>
+      <artifactId>wsdl4j</artifactId>
+      <version>1.6.3</version>
+    </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.vaadin.external.google</groupId>
+          <artifactId>android-json</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.7.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>**/*.xsd</include>
+          <include>**/*.xml</include>
+          <include>**/*.xjb</include>
+        </includes>
+      </resource>
+    </resources>
+    <plugins>
+<!--     Adding JAXB2 Maven Plugin     -->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.10.1</version>
+        <configuration>
+          <excludePackageNames>com.rbs.bdd.generated.*</excludePackageNames>
+        </configuration>
+      </plugin>
+      <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.13</version>
+          <configuration>
+            <excludes>
+              <exclude>com/rbs/bdd/generated/**</exclude>
+              <exclude>com/rbsg/soa/c040paymentmanagement/**</exclude>
+            </excludes>
+          </configuration>
+
+      </plugin>
+      <!-- JAXB Code Generation -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>jaxb2-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>xjc</id>
+            <goals>
+              <goal>xjc</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <arguments>
+                <argument>-b</argument>
+                <argument>${project.basedir}/src/main/resources/jaxb-bindings/bindings.xjb</argument>
+              </arguments>
+              <sources>
+                <source>${project.basedir}/src/main/resources/xsd/account-validation</source>
+                <source>${project.basedir}/src/main/resources/xsd/customer-retrieval</source>
+                <source>${project.basedir}/src/main/resources/xsd/shared</source>
+              </sources>
+              <outputDirectory>${project.build.directory}/generated-sources/jaxb</outputDirectory>
+              <clearOutputDir>false</clearOutputDir>
+              <verbose>true</verbose>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Add generated source to compilation -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/jaxb</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <!--to be imported on other projects-->
+              <classifier>original</classifier>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+      </plugin>
+    </plugins>
+  </build>
+
+
+
+</project>
+
+
+-------------------
+
+# These properties can be passed via system property or env variable.
+
+# In spring cloud you can add your app properties in the bootstrap.properties file.
+# Any config var specified in bootstrap.properties will be inherited by the application
+
+# App configs in bootstrap.properties can be overridden in application.properties
+spring.main.banner-mode=console
+server.port=8080
+
+# downstream endpoint
+user.data.service=http://localhost:8085
+
+spring.web.resources.static-locations=classpath:/wsdl/
+
+logging.level.org.apache.http=DEBUG
+logging.level.org.springframework.ws=DEBUG
+logging.level.org.springframework.xml=DEBUG
+spring.main.allow-bean-definition-overriding=true
+
+
+user-service-list.restclient.max-connections=6
+user-service-list.restclient.max-total-connections=6
+user-service-list.restclient.connection-request-timeout.seconds=6
+user-service-list.restclient.connect-timeout.seconds=6
+user-service-list.restclient.socket-timeout.seconds=6
+
+logging.level.org.springframework.ws.server.MessageTracing.sent= DEBUG
+# -----------------
+# actuator settings
+# -----------------
+management.endpoints.web.exposure.include=health,info
+management.endpoints.enabled-by-default=true
+management.endpoint.info.enabled=true
+management.endpoint.health.enabled=true
+
+info.app.version=@project.version@
+management.info.defaults.enabled=true
+management.info.git.mode=full
+
+# Toggle whether the fail fast on missing inbound jwt, inbound jwt might be required for service if it
+# is going to make a request east/west within EKS
+failFastInboundJwt=false
+
+
+
+#Aurora and Liquibase Properties
+#spring.datasource.driver-class-name=org.postgresql.Driver
+#spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.yaml
+#spring.jpa.hibernate.ddl-auto=none
+
+
+
+#spring.datasource.url=jdbc:postgresql://localhost:5432db.changelog-master/drools_rules
+#spring.datasource.username=postgres
+#spring.datasource.password=******
+secret.manager.enabled=false
+spring.liquibase.enabled=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+-------------------
+#Aurora and Liquibase Properties
+spring.datasource.base.url=jdbc:postgresql://recp-bankline-app-1-ad3f-test-aurora-db-eks-read-write-endpoint.endpoint.proxy-czuueai6m5xz.eu-west-1.rds.amazonaws.com:5432/
+spring.datasource.username=*****
+spring.datasource.password=*****
+secret.datasource.name=runtime-dev_bdd_sandbox_dep
+
+spring.liquibase.default-schema=*****
+secret.manager.enabled=true
+aws.region=eu-west-1
+spring.liquibase.enabled=true
+spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
+
+
+# JPA/Hibernate Configuration
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=false
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true
+
+
+
+----------------------
+package com.rbs.bdd.application.awsconfig;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+
+@Slf4j
+@Configuration
+public class AwsSecretManagerConfig {
+
+    @Bean
+    @ConditionalOnProperty(name = "secret.manager.enabled", havingValue = "true")
+    public SecretsManagerClient secretsManagerClient(@Value("${aws.region}") String region,
+                                                     @Value("${secret.datasource.name}") String secretDatasourceName) {
+        log.info("AWS-AWS_REGION {}", region);
+        SecretsManagerClient client = SecretsManagerClient.builder()
+                .region(Region.of(region))
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
+        log.info("Verify access");
+        GetSecretValueRequest request = GetSecretValueRequest.builder()
+                .secretId(secretDatasourceName)
+                .build();
+
+        try {
+            GetSecretValueResponse response = client.getSecretValue(request);
+            if (response.sdkHttpResponse().isSuccessful()) {
+                log.info("aws secret retrieved [{}] successfully [{}]", secretDatasourceName,
+                        response.secretString());
+            }
+        } catch (Exception u) {
+            log.error("Unable to get the secret", u);
+        }
+        return client;
+    }
+}
+
+
+
+--------------
+package com.rbs.bdd.application.awsconfig;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rbs.bdd.application.exception.SecretsNotFoundException;
+import com.zaxxer.hikari.HikariDataSource;
+import liquibase.integration.spring.SpringLiquibase;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
+
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
+@Configuration
+@ConditionalOnProperty(name = "secret.manager.enabled", havingValue = "true")
+
+public class DatabaseConfig {
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    @Value("${spring.datasource.base.url}")
+    private String springDatasourceBaseUrl;
+
+    @Value("${spring.datasource.username}")
+    private String springDatasourceUsername;
+
+    @Value("${spring.datasource.password}")
+    private String springDatasourcePassword;
+
+    @Value("${spring.liquibase.default-schema}")
+    private String springLiquibaseDefaultSchema;
+
+    @Value("${secret.datasource.name}")
+    private String secretDatasourceName;
+
+    @Autowired(required = false)
+    private SecretsManagerClient secretsManagerClient;
+
+
+    private static final String USERNAME = "username";
+    private static final String PASSWORD = "password";
+    private static final String DBNAME = "dbname";
+
+    //Fetch kubernetes secrets from the aws server
+    private Map<String, String> fetchSecrets(final SecretsManagerClient secretsManagerClient,
+                                             final String secretName){
+
+        log.debug("Request received to retrieve secrets for  : {}",secretName);
+        Map<String, String> secretMap = new HashMap<>();
+        GetSecretValueRequest request = GetSecretValueRequest.builder()
+                .secretId(secretName)
+                .build();
+
+        GetSecretValueResponse response = secretsManagerClient.getSecretValue(request);
+        if(response.sdkHttpResponse().isSuccessful()){
+            log.info("Secret retrieved for [{}] ",secretName);
+            try{
+                secretMap = mapper.readValue(response.secretString(), Map.class);
+                log.info("SecretMap: Username: {}", secretMap.get(USERNAME));
+            } catch (Exception e) {
+                log.error("unable to retrieve data from secret");
+                throw new SecretsNotFoundException("Unable to retrieve data from secrets!");
+            }
+        }
+        return secretMap;
+    }
+
+    @ConfigurationProperties(prefix = "spring.datasource")
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+
+    @Bean
+    public DataSourceProperties dataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Primary
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+    @Bean
+    public DataSource dataSource() {
+        Map<String, String> secrets = fetchSecrets(secretsManagerClient,secretDatasourceName);
+        HikariDataSource hikariDataSource = new HikariDataSource();
+        log.debug("Using aws secretDatasource : {} and  secretsManagerClient: {}",secretDatasourceName, secretsManagerClient);
+
+        hikariDataSource.setJdbcUrl(springDatasourceBaseUrl+ secrets.get(DBNAME));
+        log.debug("Connecting to Datasource : {} ",hikariDataSource.getJdbcUrl());
+        log.debug("Secrets are available for user : {} ", secrets.get(USERNAME));
+
+        hikariDataSource.setUsername(secrets.get(USERNAME));
+        hikariDataSource.setPassword(secrets.get(PASSWORD));
+        return hikariDataSource;
+    }
+
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+    @Bean
+    public SpringLiquibase SpringLiquibase() {
+        Map<String, String> secrets = fetchSecrets(secretsManagerClient,secretDatasourceName);
+        SpringLiquibase springLiquibase = new SpringLiquibase();
+        springLiquibase.setDataSource(dataSource());
+        springLiquibase.setDefaultSchema(secrets.get(DBNAME));
+
+        springLiquibase.setChangeLog("classpath:/db/changelog/db.changelog-master.yaml");
+        springLiquibase.setContexts("");
+        return springLiquibase;
+    }
+
+}
