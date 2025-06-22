@@ -1,534 +1,3 @@
-
-
-Error:-
-
-2025-06-20T11:14:26.498+01:00  WARN 4024 --- [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.bea
-ns.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to i
-nitialize dependency 'liquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/Liq
-uibaseAutoConfiguration$LiquibaseConfiguration.class]: Failed to instantiate [liquibase.integration.spring.SpringLiquibase]: Factory method 'liquibase' threw exception with message: Error creating bean with name
- 'dataSource' defined in class path resource [org/springframework/boot/autoconfigure/jdbc/DataSourceConfiguration$Hikari.class]: Failed to instantiate [com.zaxxer.hikari.HikariDataSource]: Factory method 'dataSo
-urce' threw exception with message: Failed to determine a suitable driver class
-2025-06-20T11:14:26.508+01:00  INFO 4024 --- [           main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
-2025-06-20T11:14:26.557+01:00  INFO 4024 --- [           main] .s.b.a.l.ConditionEvaluationReportLogger :
-
-Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
-2025-06-20T11:14:26.822+01:00 ERROR 4024 --- [           main] o.s.b.d.LoggingFailureAnalysisReporter   :
-
-***************************
-APPLICATION FAILED TO START
-***************************
-
-Description:
-
-Failed to configure a DataSource: 'url' attribute is not specified and no embedded datasource could be configured.
-
-Reason: Failed to determine a suitable driver class
-
-
-Action:
-
-Consider the following:
-        If you want an embedded database (H2, HSQL or Derby), please put it on the classpath.
-        If you have database settings to be loaded from a particular profile you may need to activate it (no profiles are currently active).
-
-[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 20.747 s <<< FAILURE! - in com.rbs.bdd.application.service.EspSimulatorEngineTest
-[ERROR] testMainMethodCoverage  Time elapsed: 20.746 s  <<< ERROR!
-org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfigurat
-ion.class]: Failed to initialize dependency 'liquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/auto
-configure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]: Failed to instantiate [liquibase.integration.spring.SpringLiquibase]: Factory method 'liquibase' threw exception with message: Error
-creating bean with name 'dataSource' defined in class path resource [org/springframework/boot/autoconfigure/jdbc/DataSourceConfiguration$Hikari.class]: Failed to instantiate [com.zaxxer.hikari.HikariDataSource]:
- Factory method 'dataSource' threw exception with message: Failed to determine a suitable driver class
-        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
-Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfigu
-ration$LiquibaseConfiguration.class]: Failed to instantiate [liquibase.integration.spring.SpringLiquibase]: Factory method 'liquibase' threw exception with message: Error creating bean with name 'dataSource' def
-ined in class path resource [org/springframework/boot/autoconfigure/jdbc/DataSourceConfiguration$Hikari.class]: Failed to instantiate [com.zaxxer.hikari.HikariDataSource]: Factory method 'dataSource' threw excep
-tion with message: Failed to determine a suitable driver class
-        at com.rbs.bdd.application.service.EspSimulatorEngineTest.testMainMethodCoverage(EspSimulatorEngineTest.java:15)
-Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [liq
-
-
-
----------------------
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
-  <parent>
-    <groupId>com.rbs.bdd</groupId>
-    <artifactId>bdd-ms-esp-simulation-service-parent</artifactId>
-    <version>${revision}</version>
-    <relativePath>../pom.xml</relativePath>
-  </parent>
-
-  <groupId>com.rbs.bdd</groupId>
-  <artifactId>bdd-ms-esp-simulation-service</artifactId>
-  <name>bdd-ms-esp-simulation-service</name>
-  <description>BDD ESP Simulator microservice - This is an example of a BDD ESP Simulator Service.</description>
-
-  <properties>
-    <validation-api.version>1.1.0.Final</validation-api.version>
-    <liquibase.maven.plugin.version>4.25.1</liquibase.maven.plugin.version>
-    <software.amazon.awssdk.secretsmanager>2.25.3</software.amazon.awssdk.secretsmanager>
-
-  </properties>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.apache.ws.commons.schema</groupId>
-        <artifactId>XmlSchema</artifactId>
-        <version>1.4.3</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-  <dependencies>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    <!-- enabling actuator to expose management endpoints -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>
-    <!-- Used to add hyperlinks to the actuator's endpoints -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-hateoas</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-devtools</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>4.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.liquibase</groupId>
-      <artifactId>liquibase-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.glassfish.jaxb</groupId>
-      <artifactId>jaxb-runtime</artifactId>
-      <version>4.0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.ws.xmlschema</groupId>
-      <artifactId>xmlschema-core</artifactId>
-      <version>2.2.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>secretsmanager</artifactId>
-      <version>${software.amazon.awssdk.secretsmanager}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>auth</artifactId>
-      <version>${software.amazon.awssdk.secretsmanager}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>sts</artifactId>
-      <version>${software.amazon.awssdk.secretsmanager}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.ws.commons.schema</groupId>
-      <artifactId>XmlSchema</artifactId>
-      <version>1.4.3</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.ws</groupId>
-      <artifactId>spring-xml</artifactId>
-      <version>4.0.12</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.ws.commons.schema</groupId>
-          <artifactId>XmlSchema</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <!-- Dependency added to do bean validation in spring boot app as it's packaged with jakarta.validation-api.jar -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-validation</artifactId>
-    </dependency>
-<!--    <dependency>-->
-<!--      <groupId>software.amazon.awssdk</groupId>-->
-<!--      <artifactId>apache-client</artifactId>-->
-<!--    </dependency>-->
-    <!-- Required for UserIdentityFilter -->
-<!--    <dependency>-->
-<!--      <groupId>org.json</groupId>-->
-<!--      <artifactId>json</artifactId>-->
-<!--      <version>20240303</version>-->
-<!--    </dependency>-->
-
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>${httpclient.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-      <version>${httpcore.version}</version>
-    </dependency>
-
-
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-to-slf4j</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>4.0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
-      <version>4.0.2</version>
-    </dependency>
-
-    <!--    JAXB API-->
-
-    <!-- SOAP Dependencies Start-->
-    <dependency>
-      <groupId>org.springframework.ws</groupId>
-      <artifactId>spring-ws-core</artifactId>
-      <version>4.0.10</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.ws</groupId>
-      <artifactId>spring-ws-support</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.xml.messaging.saaj</groupId>
-      <artifactId>saaj-impl</artifactId>
-      <version>3.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.ws</groupId>
-      <artifactId>spring-ws-test</artifactId>
-      <version>4.0.10</version>
-      <scope>test</scope>
-    </dependency
-
-
-
-
-
-    >
-    <dependency>
-      <groupId>jakarta.xml.ws</groupId>
-      <artifactId>jakarta.xml.ws-api</artifactId>
-      <version>4.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.xml.ws</groupId>
-      <artifactId>jaxws-ri</artifactId>
-      <version>4.0.1</version>
-      <type>pom</type>
-      <exclusions>
-        <exclusion>
-          <groupId>com.fasterxml.woodstox</groupId>
-          <artifactId>woodstox-core</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <!-- Dependency to convert xml to json -->
-    <dependency>
-      <groupId>com.github.javadev</groupId>
-      <artifactId>underscore</artifactId>
-      <version>1.89</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <version>${lombok.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>xml-resolver</groupId>
-      <artifactId>xml-resolver</artifactId>
-      <version>1.2</version>
-    </dependency>
-    <!-- Dependency for caching -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-cache</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>wsdl4j</groupId>
-      <artifactId>wsdl4j</artifactId>
-      <version>1.6.3</version>
-    </dependency>
-
-    <!-- Test dependencies -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>com.vaadin.external.google</groupId>
-          <artifactId>android-json</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jacoco</groupId>
-      <artifactId>jacoco-maven-plugin</artifactId>
-      <version>0.8.13</version>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>5.7.0</version>
-      <scope>test</scope>
-    </dependency>
-    <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
-  <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <includes>
-          <include>**/*.xsd</include>
-          <include>**/*.xml</include>
-          <include>**/*.xjb</include>
-        </includes>
-      </resource>
-    </resources>
-    <plugins>
-<!--     Adding JAXB2 Maven Plugin     -->
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.10.1</version>
-        <configuration>
-          <excludePackageNames>com.rbs.bdd.generated.*</excludePackageNames>
-        </configuration>
-      </plugin>
-      <plugin>
-          <groupId>org.jacoco</groupId>
-          <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.13</version>
-          <configuration>
-            <excludes>
-              <exclude>com/rbs/bdd/generated/**</exclude>
-              <exclude>com/rbsg/soa/c040paymentmanagement/**</exclude>
-            </excludes>
-          </configuration>
-
-      </plugin>
-      <!-- JAXB Code Generation -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>jaxb2-maven-plugin</artifactId>
-        <version>3.1.0</version>
-        <executions>
-          <execution>
-            <id>xjc</id>
-            <goals>
-              <goal>xjc</goal>
-            </goals>
-            <phase>generate-sources</phase>
-            <configuration>
-              <arguments>
-                <argument>-b</argument>
-                <argument>${project.basedir}/src/main/resources/jaxb-bindings/bindings.xjb</argument>
-              </arguments>
-              <sources>
-                <source>${project.basedir}/src/main/resources/xsd/account-validation</source>
-                <source>${project.basedir}/src/main/resources/xsd/customer-retrieval</source>
-                <source>${project.basedir}/src/main/resources/xsd/shared</source>
-              </sources>
-              <outputDirectory>${project.build.directory}/generated-sources/jaxb</outputDirectory>
-              <clearOutputDir>false</clearOutputDir>
-              <verbose>true</verbose>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!-- Add generated source to compilation -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.2.0</version>
-        <executions>
-          <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>${project.build.directory}/generated-sources/jaxb</source>
-              </sources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>${maven-jar-plugin.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-            <phase>package</phase>
-            <configuration>
-              <!--to be imported on other projects-->
-              <classifier>original</classifier>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.22.2</version>
-      </plugin>
-    </plugins>
-  </build>
-
-
-
-</project>
-
-
--------------------
-
-# These properties can be passed via system property or env variable.
-
-# In spring cloud you can add your app properties in the bootstrap.properties file.
-# Any config var specified in bootstrap.properties will be inherited by the application
-
-# App configs in bootstrap.properties can be overridden in application.properties
-spring.main.banner-mode=console
-server.port=8080
-
-# downstream endpoint
-user.data.service=http://localhost:8085
-
-spring.web.resources.static-locations=classpath:/wsdl/
-
-logging.level.org.apache.http=DEBUG
-logging.level.org.springframework.ws=DEBUG
-logging.level.org.springframework.xml=DEBUG
-spring.main.allow-bean-definition-overriding=true
-
-
-user-service-list.restclient.max-connections=6
-user-service-list.restclient.max-total-connections=6
-user-service-list.restclient.connection-request-timeout.seconds=6
-user-service-list.restclient.connect-timeout.seconds=6
-user-service-list.restclient.socket-timeout.seconds=6
-
-logging.level.org.springframework.ws.server.MessageTracing.sent= DEBUG
-# -----------------
-# actuator settings
-# -----------------
-management.endpoints.web.exposure.include=health,info
-management.endpoints.enabled-by-default=true
-management.endpoint.info.enabled=true
-management.endpoint.health.enabled=true
-
-info.app.version=@project.version@
-management.info.defaults.enabled=true
-management.info.git.mode=full
-
-# Toggle whether the fail fast on missing inbound jwt, inbound jwt might be required for service if it
-# is going to make a request east/west within EKS
-failFastInboundJwt=false
-
-
-
-#Aurora and Liquibase Properties
-#spring.datasource.driver-class-name=org.postgresql.Driver
-#spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.yaml
-#spring.jpa.hibernate.ddl-auto=none
-
-
-
-#spring.datasource.url=jdbc:postgresql://localhost:5432db.changelog-master/drools_rules
-#spring.datasource.username=postgres
-#spring.datasource.password=******
-secret.manager.enabled=false
-spring.liquibase.enabled=false
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-
--------------------
-#Aurora and Liquibase Properties
-spring.datasource.base.url=jdbc:postgresql://recp-bankline-app-1-ad3f-test-aurora-db-eks-read-write-endpoint.endpoint.proxy-czuueai6m5xz.eu-west-1.rds.amazonaws.com:5432/
-spring.datasource.username=*****
-spring.datasource.password=*****
-secret.datasource.name=runtime-dev_bdd_sandbox_dep
-
-spring.liquibase.default-schema=*****
-secret.manager.enabled=true
-aws.region=eu-west-1
-spring.liquibase.enabled=true
-spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
-
-
-# JPA/Hibernate Configuration
-spring.jpa.hibernate.ddl-auto=validate
-spring.jpa.show-sql=false
-spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
-spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true
-
-
-
-----------------------
 package com.rbs.bdd.application.awsconfig;
 
 import lombok.extern.slf4j.Slf4j;
@@ -573,9 +42,7 @@ public class AwsSecretManagerConfig {
     }
 }
 
-
-
---------------
+-----------------------
 package com.rbs.bdd.application.awsconfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -694,3 +161,508 @@ public class DatabaseConfig {
     }
 
 }
+
+
+
+--------------------
+package com.rbs.bdd.application.port.in;
+
+import org.springframework.ws.WebServiceMessage;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
+
+/**
+ * Entry port for handling SOAP requests related to payment validation.
+ * Follows hexagonal architecture's `port in` pattern.
+ */
+public interface CustomerRetrievalPort {
+        /**
+         * Validates a customer retrieval request by delegating to the underlying orchestrator/service.
+         *
+         * @param request The SOAP request payload.
+         * @param message The outgoing WebServiceMessage to be modified and returned.
+         */
+        void validateCustomerRetrieval(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message);
+
+
+    }
+
+-------------------
+package com.rbs.bdd.application.port.in;
+
+
+import org.springframework.ws.WebServiceMessage;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+/**
+ * Entry port for handling SOAP requests related to payment validation.
+ * Follows hexagonal architecture's `port in` pattern.
+ */
+public interface PaymentValidationPort {
+
+
+    /**
+     * Validates a payment arrangement request by delegating to the underlying orchestrator/service.
+     *
+     * @param request The SOAP request payload.
+     * @param message The outgoing WebServiceMessage to be modified and returned.
+     */
+    void validateArrangementForPayment(ValidateArrangementForPaymentRequest request,WebServiceMessage message);
+
+
+
+}
+
+
+
+
+---------------------
+package com.rbs.bdd.application.port.out;
+
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+
+import org.springframework.ws.WebServiceMessage;
+
+/**
+ * Defines the business contract for validating payment accounts.
+ * Used by the orchestrator to call schema and business rule validators.
+ */
+public interface AccountValidationPort {
+    /**
+     * Performs XSD schema validation of the request. (Currently delegated to Spring WS config.)
+     *
+     * @param request The SOAP request payload.
+     */
+    void validateSchema(ValidateArrangementForPaymentRequest request);
+
+
+    /**
+     * Applies business rules on the static response XML based on request content,
+     * and writes the final SOAP response directly to the output message.
+     *
+     * @param request The incoming SOAP request.
+     * @param message The WebServiceMessage to write the modified response to.
+     */
+    void validateBusinessRules(ValidateArrangementForPaymentRequest request,WebServiceMessage message);
+
+     }
+
+
+--------------------
+package com.rbs.bdd.application.port.out;
+
+
+
+import org.springframework.ws.WebServiceMessage;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
+
+
+/**
+ * Defines the business contract for validating payment accounts.
+ * Used by the orchestrator to call schema and business rule validators.
+ */
+public interface RetrieveCustomerPort {
+    /**
+     * Performs XSD schema validation of the request. (Currently delegated to Spring WS config.)
+     *
+     * @param request The SOAP request payload.
+     */
+    void validateSchema(RetrievePrimaryCustomerForArrRequest request);
+
+
+    /**
+     * Applies business rules on the static response XML based on request content,
+     * and writes the final SOAP response directly to the output message.
+     *
+     * @param request The incoming SOAP request.
+     * @param message The WebServiceMessage to write the modified response to.
+     */
+    void retrieveCustomer(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message);
+
+}
+
+
+
+-----------------
+package com.rbs.bdd.application.service;
+
+
+
+
+import com.rbs.bdd.application.exception.AccountValidationException;
+import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
+import com.rbs.bdd.domain.enums.CustomerNameMapping;
+import com.rbs.bdd.domain.enums.ErrorConstants;
+import com.rbs.bdd.domain.enums.ServiceConstants;
+import com.rbs.bdd.domain.enums.ValidationErrorType;
+import com.rbs.bdd.domain.model.ErrorDetail;
+import com.rbs.bdd.util.ValidationUtils.RequestParams;
+import com.rbs.bdd.domain.model.ErrorDetail;
+import com.rbs.bdd.util.ValidationUtils;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
+import jakarta.xml.soap.SOAPException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.ZonedDateTime;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import static com.rbs.bdd.domain.enums.ServiceConstants.XPath.*;
+import static com.rbs.bdd.util.ValidationUtils.generateTxnId;
+import static com.rbs.bdd.util.ValidationUtils.writeResponseToSoapMessage;
+
+/**
+ * Service to handle logic for retrieving customer details based on account number.
+ * Matches specific identifiers and dynamically updates SOAP XML response.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CustomerRetrievalService implements RetrieveCustomerPort {
+
+    private static final Logger logger = LoggerFactory.getLogger(CustomerRetrievalService.class);
+    private static final String STATIC_RESPONSE_PATH = "static-response/customer-retrieval/success-response.xml";
+
+    @Override
+    public void validateSchema(RetrievePrimaryCustomerForArrRequest request) {
+        logger.info("Schema validated successfully by Spring WS.");
+    }
+
+    @Override
+    public void retrieveCustomer(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message) {
+        try {
+            RequestParams params = extractParams(request);
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            Document responseDoc = handleCustomerRetrieval(params, xpath);
+
+            writeResponseToSoapMessage(message, responseDoc);
+        } catch (Exception e) {
+            logger.error("Customer retrieval failed", e);
+            throw new AccountValidationException("Customer retrieval failed", e);
+        }
+    }
+
+
+    private Document handleCustomerRetrieval(RequestParams params, XPath xpath) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+        Optional<ErrorDetail> error = determineCustomerRetrievalError(params);
+        if (error.isPresent()) {
+            Document errorDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL);
+            applyErrorResponse(errorDoc, xpath, error.get(), params.originalTxnId());
+            return errorDoc;
+        }
+
+        CustomerNameMapping matched = CustomerNameMapping.fromIdentifier(params.identifier());
+        if (matched != null) {
+            Document responseDoc = loadAndParseXml(STATIC_RESPONSE_PATH);
+            updateName(responseDoc, xpath, matched);
+            logger.info("Returning matched customer response for IBAN: {}", matched.getIban());
+            return responseDoc;
+        }
+
+        Document notFoundDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH);
+        applyErrorResponse(notFoundDoc, xpath, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail(), params.originalTxnId());
+        return notFoundDoc;
+    }
+
+
+
+
+
+
+    private void updateName(Document doc, XPath xpath, CustomerNameMapping matched) throws XPathExpressionException {
+        updateText(xpath, doc, XPATH_PREFIX_TYPE, matched.getPrefixType());
+        updateText(xpath, doc, XPATH_FIRST_NAME, matched.getFirstName());
+        updateText(xpath, doc, XPATH_LAST_NAME, matched.getLastName());
+    }
+
+    private Optional<ErrorDetail> determineCustomerRetrievalError(RequestParams param) {
+
+        Map<ValidationErrorType, ErrorDetail> errorMap = Map.of(
+                ValidationErrorType.INVALID_PREFIX, ErrorConstants.ERR_UBAN_GB.detail(),
+                ValidationErrorType.INVALID_LENGTH, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail(),
+                ValidationErrorType.INVALID_MODULUS, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail()
+        );
+
+        return ValidationUtils.validateAccount(param, errorMap, this::isUbanValid, "CustomerRetrieval");
+    }
+
+    /**
+     * Verifies if the given UBAN matches the suffix of known IBANs.
+     */
+    private boolean isUbanValid(String identifier) {
+        return ServiceConstants.IBANs.ALL_IBANS.stream()
+                .map(this::extractLast14Digits)
+                .anyMatch(ibanSuffix -> ibanSuffix.equals(identifier));
+    }
+
+    /**
+     * Extracts last 14 digits from a given IBAN string.
+     */
+    private String extractLast14Digits(String iban) {
+        return iban.length() >= 14 ? iban.substring(iban.length() - 14) : "";
+    }
+    private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail detail, String txnId) throws XPathExpressionException {
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_REF_REQUEST_TXN_ID, txnId);
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_STATUS, "Failed");
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION, detail.description());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RETURN_CODE, detail.returnCode());
+
+        if ("Unable To Complete Request".equals(detail.description())){
+            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC, detail.systemNotificationDesc());
+            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_CODE, detail.returnCode());
+        } else {
+            Node node = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
+            if (Objects.nonNull(node) && Objects.nonNull(node.getParentNode())) {
+                node.getParentNode().removeChild(node);
+            }
+        }
+    }
+
+    private void
+    updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
+        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
+        if (node != null && value != null) node.setTextContent(value);
+    }
+
+    private Document loadAndParseXml(String path) throws ParserConfigurationException, IOException, SAXException {
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(path);
+        if (Objects.isNull(stream)) {
+            log.error("XML file not found at path: {}", path);
+            throw new AccountValidationException("XML not found: " + path);
+        }
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        return builder.parse(stream);
+    }
+
+    private RequestParams extractParams(RetrievePrimaryCustomerForArrRequest request) {
+        return new RequestParams(
+                request.getArrangementIdentifier().getIdentifier(),
+                request.getArrangementIdentifier().getContext().getCodeValue(),
+                request.getRequestHeader().getRequestIds().get(0).getTransactionId(),
+                request.getRequestHeader().getRequestIds().get(0).getSystemId()
+        );
+    }
+   }
+
+-------------------
+Path :- resources->db.changelog-master.yaml
+
+databaseChangeLog:
+  - changeSet:
+      id: initial-commit
+      author: esp-simulation-service
+
+  - include:
+      file: db/changelog/rbs/customer_retrieval_request/create-customer-info-audit-tables.yaml
+
+
+----------------------
+Path:- resources->rbs-> customer_retrieval_request
+
+create-customer-info-audit-tables.yaml 
+
+databaseChangeLog:
+  - changeSet:
+      id: create-esp-simulation-record-table
+      author: esp-simulation-service
+      changes:
+        - createTable:
+            tableName: esp_simulation_record
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                  defaultValueComputed: gen_random_uuid()
+              - column:
+                  name: account_no
+                  type: varchar(50)
+              - column:
+                  name: account_type
+                  type: varchar(50)
+              - column:
+                  name: customer_prefix
+                  type: varchar(20)
+              - column:
+                  name: customer_first_name
+                  type: varchar(20)
+              - column:
+                  name: customer_last_name
+                  type: varchar(20)
+
+
+---------------
+insert-new-rules.yaml 
+
+databaseChangeLog:
+  - changeSet:
+      id: insert-esp-simulation-record-1
+      author: esp-simulation-service
+      changes:
+        - insert:
+            tableName: esp_simulation_record
+            columns:
+              - column:
+                  name: unique_identifier
+                  value: IBAN_1
+              - column:
+                  name: account_no
+                  value: GB29NWBK60161331926801
+              - column:
+                  name: account_type
+                  value: InternationalBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MR
+              - column:
+                  name: customer_first_name
+                  value: Alice
+              - column:
+                  name: customer_last_name
+                  value: Johnson
+
+
+  - changeSet:
+      id: insert-esp-simulation-record-2
+      author: esp-simulation-service
+      changes:
+        - insert:
+            tableName: esp_simulation_record
+            columns:
+              - column:
+                  name: account_no
+                  value: GB29NWBK60161331926801
+              - column:
+                  name: account_type
+                  value: InternationalBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MRS
+              - column:
+                  name: customer_first_name
+                  value: Alisa
+              - column:
+                  name: customer_last_name
+                  value: Johnson
+
+
+--------------------
+application.properties
+
+
+# These properties can be passed via system property or env variable.
+
+# In spring cloud you can add your app properties in the bootstrap.properties file.
+# Any config var specified in bootstrap.properties will be inherited by the application
+
+# App configs in bootstrap.properties can be overridden in application.properties
+spring.main.banner-mode=console
+server.port=8080
+
+# downstream endpoint
+user.data.service=http://localhost:8085
+
+spring.web.resources.static-locations=classpath:/wsdl/
+
+logging.level.org.apache.http=DEBUG
+logging.level.org.springframework.ws=DEBUG
+logging.level.org.springframework.xml=DEBUG
+spring.main.allow-bean-definition-overriding=true
+
+
+user-service-list.restclient.max-connections=6
+user-service-list.restclient.max-total-connections=6
+user-service-list.restclient.connection-request-timeout.seconds=6
+user-service-list.restclient.connect-timeout.seconds=6
+user-service-list.restclient.socket-timeout.seconds=6
+
+logging.level.org.springframework.ws.server.MessageTracing.sent= DEBUG
+# -----------------
+# actuator settings
+# -----------------
+management.endpoints.web.exposure.include=health,info
+management.endpoints.enabled-by-default=true
+management.endpoint.info.enabled=true
+management.endpoint.health.enabled=true
+
+info.app.version=@project.version@
+management.info.defaults.enabled=true
+management.info.git.mode=full
+
+# Toggle whether the fail fast on missing inbound jwt, inbound jwt might be required for service if it
+# is going to make a request east/west within EKS
+failFastInboundJwt=false
+
+
+
+#Aurora and Liquibase Properties
+#spring.datasource.driver-class-name=org.postgresql.Driver
+#spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
+#spring.jpa.hibernate.ddl-auto=none
+
+
+
+#spring.datasource.url=jdbc:postgresql://localhost:5432db.changelog-master/drools_rules
+#spring.datasource.username=postgres
+#spring.datasource.password=******
+secret.manager.enabled=false
+spring.liquibase.enabled=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+-----------------------
+application-eks_dev.properties
+
+#Aurora and Liquibase Properties
+spring.datasource.base.url=jdbc:postgresql://recp-bankline-app-1-ad3f-test-aurora-db-eks-read-write-endpoint.endpoint.proxy-czuueai6m5xz.eu-west-1.rds.amazonaws.com:5432/
+spring.datasource.username=*****
+spring.datasource.password=*****
+secret.datasource.name=runtime-dev_bdd_sandbox_dep
+
+spring.liquibase.default-schema=*****
+secret.manager.enabled=true
+aws.region=eu-west-1
+spring.liquibase.enabled=true
+spring.liquibase.change-log='classpath:/db/changelog/db.changelog-master.yaml'
+
+
+# JPA/Hibernate Configuration
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=false
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true
