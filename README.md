@@ -1,36 +1,73 @@
-package com.rbs.bdd.application.service;
+CustomerData customerData;
 
-import com.rbs.bdd.EspSimulatorEngine;
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-
-/**
- * Unit test to invoke the main method in {@link EspSimulatorEngine}
- * and increase code coverage.
- */
-@ActiveProfiles("test")
-@SpringBootTest
-class EspSimulatorEngineTest {
-
-    @Test
-    void testMainMethodCoverage() {
-        // Simulate running the application
-        EspSimulatorEngine.main(new String[] {});
+Optional<CustomerInfoAudit> dbResult = repository.findByAccountNo(accountNumber);
+if (dbResult.isPresent()) {
+    customerData = dbResult.get().toCustomerData();
+} else {
+    CustomerNameMapping matched = CustomerNameMapping.fromIdentifier(accountNumber);
+    if (matched != null) {
+        customerData = matched.toCustomerData();
+    } else {
+        throw new RuntimeException("Customer not found");
     }
 }
 
-
-------------------
-application-test.properties
+updateName(doc, xpath, customerData);
 
 
-secret.manager.enabled=false
-spring.liquibase.enabled=false
 
-# H2 Database
-spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-spring.datasource.driver-class-name=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=
+------
+package com.rbs.bdd.domain.entity;
 
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "customer_info_audit")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CustomerInfoAudit {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "account_no", nullable = false, unique = true)
+    private String accountNo;
+
+    @Column(name = "prefix_type")
+    private String prefixType;
+
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    @Column(name = "account_type")
+    private String accountType;
+
+    // Add timestamps if needed
+    // @Column(name = "created_at")
+    // private LocalDateTime createdAt;
+}
+
+
+
+------
+package com.rbs.bdd.application.port.out;
+
+import com.rbs.bdd.domain.entity.CustomerInfoAudit;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface CustomerInfoAuditRepository extends JpaRepository<CustomerInfoAudit, Long> {
+    
+    Optional<CustomerInfoAudit> findByAccountNo(String accountNo);
+}
