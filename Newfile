@@ -1,3 +1,125 @@
+package com.rbs.bdd.application.awsconfig;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rbs.bdd.application.exception.SecretsNotFoundException;
+import com.zaxxer.hikari.HikariDataSource;
+import liquibase.integration.spring.SpringLiquibase;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
+
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
+@Configuration
+@ConditionalOnProperty(name = "secret.manager.enabled", havingValue = "true")
+
+public class DatabaseConfig {
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    @Value("${spring.datasource.base.url}")
+    private String springDatasourceBaseUrl;
+
+    @Value("${spring.datasource.username}")
+    private String springDatasourceUsername;
+
+    @Value("${spring.datasource.password}")
+    private String springDatasourcePassword;
+
+    @Value("${spring.liquibase.default-schema}")
+    private String springLiquibaseDefaultSchema;
+
+    @Value("${secret.datasource.name}")
+    private String secretDatasourceName;
+
+    @Autowired(required = false)
+    private SecretsManagerClient secretsManagerClient;
+
+
+    private static final String USERNAME = "username";
+    private static final String PASSWORD = "password";
+    private static final String DBNAME = "dbname";
+
+    //Fetch kubernetes secrets from the aws server
+    private Map<String, String> fetchSecrets(final SecretsManagerClient secretsManagerClient, final String secretName) {
+
+        log.debug("Request received to retrieve secrets for  : {}", secretName);
+        Map<String, String> secretMap = new HashMap<>();
+        GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(secretName).build();
+
+        GetSecretValueResponse response = secretsManagerClient.getSecretValue(request);
+        if (response.sdkHttpResponse().isSuccessful()) {
+            log.info("Secret retrieved for [{}] ", secretName);
+            try {
+                secretMap = mapper.readValue(response.secretString(), Map.class);
+                log.info("SecretMap: Username: {}", secretMap.get(USERNAME));
+            } catch (Exception e) {
+                log.error("unable to retrieve data from secret");
+                throw new SecretsNotFoundException("Unable to retrieve data from secrets!");
+            }
+        }
+        return secretMap;
+    }
+
+    @ConfigurationProperties(prefix = "spring.datasource")
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+
+    @Bean
+    public DataSourceProperties dataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Primary
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+    @Bean
+    public DataSource dataSource() {
+        Map<String, String> secrets = fetchSecrets(secretsManagerClient, secretDatasourceName);
+        HikariDataSource hikariDataSource = new HikariDataSource();
+        log.debug("Using aws secretDatasource : {} and  secretsManagerClient: {}", secretDatasourceName, secretsManagerClient);
+
+        hikariDataSource.setJdbcUrl(springDatasourceBaseUrl + secrets.get(DBNAME));
+        log.debug("Connecting to Datasource : {} ", hikariDataSource.getJdbcUrl());
+        log.debug("Secrets are available for user : {} ", secrets.get(USERNAME));
+
+        hikariDataSource.setUsername(secrets.get(USERNAME));
+        hikariDataSource.setPassword(secrets.get(PASSWORD));
+        return hikariDataSource;
+    }
+
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+    @Bean
+
+    public SpringLiquibase SpringLiquibase() {
+        Map<String, String> secrets = fetchSecrets(secretsManagerClient, secretDatasourceName);
+        SpringLiquibase springLiquibase = new SpringLiquibase();
+        springLiquibase.setDataSource(dataSource());
+        springLiquibase.setDefaultSchema(secrets.get(DBNAME));
+
+        springLiquibase.setChangeLog("classpath:/db/changelog/db.changelog-master.yaml");
+        springLiquibase.setContexts("");
+        return springLiquibase;
+    }
+
+}
+
+
+
+--------------------
+
+
 2025-06-23T17:17:50.588Z ERROR 1 --- [           main] c.r.b.a.a.AwsSecretManagerConfig         : Unable to get the secret
 software.amazon.awssdk.core.exception.SdkClientException: Unable to load credentials from any of the providers in the chain AwsCredentialsProviderChain(credentialsProviders=[SystemPropertyCredentialsProvider(), EnvironmentVariableCredentialsProvider(), WebIdentityTokenCredentialsProvider(), ProfileCredentialsProvider(profileName=default, profileFile=ProfileFile(sections=[])), ContainerCredentialsProvider(), InstanceProfileCredentialsProvider()]) : [SystemPropertyCredentialsProvider(): Unable to load credentials from system settings. Access key must be specified either via environment variable (AWS_ACCESS_KEY_ID) or system property (aws.accessKeyId)., EnvironmentVariableCredentialsProvider(): Unable to load credentials from system settings. Access key must be specified either via environment variable (AWS_ACCESS_KEY_ID) or system property (aws.accessKeyId)., WebIdentityTokenCredentialsProvider(): Either the environment variable AWS_WEB_IDENTITY_TOKEN_FILE or the javaproperty aws.webIdentityTokenFile must be set., ProfileCredentialsProvider(profileName=default, profileFile=ProfileFile(sections=[])): Profile file contained no credentials for profile 'default': ProfileFile(sections=[]), ContainerCredentialsProvider(): Cannot fetch credentials from container - neither AWS_CONTAINER_CREDENTIALS_FULL_URI or AWS_CONTAINER_CREDENTIALS_RELATIVE_URI environment variables are set., InstanceProfileCredentialsProvider(): Failed to load credentials from IMDS.]
 	at software.amazon.awssdk.core.exception.SdkClientException$BuilderImpl.build(SdkClientException.java:111) ~[sdk-core-2.21.46.jar!/:na]
