@@ -1,668 +1,434 @@
-package com.rbs.bdd.application.awsconfig;
+Correct Request :- 
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
-
-@Slf4j
-@Configuration
-public class AwsSecretManagerConfig {
-
-    @Bean
-    @ConditionalOnProperty(name = "secret.manager.enabled", havingValue = "true")
-    public SecretsManagerClient secretsManagerClient(@Value("${aws.region}") String region,
-                                                     @Value("${secret.datasource.name}") String secretDatasourceName) {
-        log.info("AWS-AWS_REGION {}", region);
-        SecretsManagerClient client = SecretsManagerClient.builder()
-                .region(Region.of(region))
-                .credentialsProvider(DefaultCredentialsProvider.create())
-                .build();
-        log.info("Verify access");
-        GetSecretValueRequest request = GetSecretValueRequest.builder()
-                .secretId(secretDatasourceName)
-                .build();
-
-        try {
-            GetSecretValueResponse response = client.getSecretValue(request);
-            if (response.sdkHttpResponse().isSuccessful()) {
-                log.info("aws secret retrieved [{}] successfully [{}]", secretDatasourceName,
-                        response.secretString());
-            }
-        } catch (Exception u) {
-            log.error("Unable to get the secret", u);
-        }
-        return client;
-    }
-}
-
------------------------
-package com.rbs.bdd.application.awsconfig;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rbs.bdd.application.exception.SecretsNotFoundException;
-import com.zaxxer.hikari.HikariDataSource;
-import liquibase.integration.spring.SpringLiquibase;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
-import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
-
-import javax.sql.DataSource;
-import java.util.HashMap;
-import java.util.Map;
-
-@Slf4j
-@Configuration
-@ConditionalOnProperty(name = "secret.manager.enabled", havingValue = "true")
-
-public class DatabaseConfig {
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    @Value("${spring.datasource.base.url}")
-    private String springDatasourceBaseUrl;
-
-    @Value("${spring.datasource.username}")
-    private String springDatasourceUsername;
-
-    @Value("${spring.datasource.password}")
-    private String springDatasourcePassword;
-
-    @Value("${spring.liquibase.default-schema}")
-    private String springLiquibaseDefaultSchema;
-
-    @Value("${secret.datasource.name}")
-    private String secretDatasourceName;
-
-    @Autowired(required = false)
-    private SecretsManagerClient secretsManagerClient;
-
-
-    private static final String USERNAME = "username";
-    private static final String PASSWORD = "password";
-    private static final String DBNAME = "dbname";
-
-    //Fetch kubernetes secrets from the aws server
-    private Map<String, String> fetchSecrets(final SecretsManagerClient secretsManagerClient,
-                                             final String secretName){
-
-        log.debug("Request received to retrieve secrets for  : {}",secretName);
-        Map<String, String> secretMap = new HashMap<>();
-        GetSecretValueRequest request = GetSecretValueRequest.builder()
-                .secretId(secretName)
-                .build();
-
-        GetSecretValueResponse response = secretsManagerClient.getSecretValue(request);
-        if(response.sdkHttpResponse().isSuccessful()){
-            log.info("Secret retrieved for [{}] ",secretName);
-            try{
-                secretMap = mapper.readValue(response.secretString(), Map.class);
-                log.info("SecretMap: Username: {}", secretMap.get(USERNAME));
-            } catch (Exception e) {
-                log.error("unable to retrieve data from secret");
-                throw new SecretsNotFoundException("Unable to retrieve data from secrets!");
-            }
-        }
-        return secretMap;
-    }
-
-    @ConfigurationProperties(prefix = "spring.datasource")
-    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
-
-    @Bean
-    public DataSourceProperties dataSourceProperties() {
-        return new DataSourceProperties();
-    }
-
-    @Primary
-    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
-    @Bean
-    public DataSource dataSource() {
-        Map<String, String> secrets = fetchSecrets(secretsManagerClient,secretDatasourceName);
-        HikariDataSource hikariDataSource = new HikariDataSource();
-        log.debug("Using aws secretDatasource : {} and  secretsManagerClient: {}",secretDatasourceName, secretsManagerClient);
-
-        hikariDataSource.setJdbcUrl(springDatasourceBaseUrl+ secrets.get(DBNAME));
-        log.debug("Connecting to Datasource : {} ",hikariDataSource.getJdbcUrl());
-        log.debug("Secrets are available for user : {} ", secrets.get(USERNAME));
-
-        hikariDataSource.setUsername(secrets.get(USERNAME));
-        hikariDataSource.setPassword(secrets.get(PASSWORD));
-        return hikariDataSource;
-    }
-
-    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
-    @Bean
-    public SpringLiquibase SpringLiquibase() {
-        Map<String, String> secrets = fetchSecrets(secretsManagerClient,secretDatasourceName);
-        SpringLiquibase springLiquibase = new SpringLiquibase();
-        springLiquibase.setDataSource(dataSource());
-        springLiquibase.setDefaultSchema(secrets.get(DBNAME));
-
-        springLiquibase.setChangeLog("classpath:/db/changelog/db.changelog-master.yaml");
-        springLiquibase.setContexts("");
-        return springLiquibase;
-    }
-
-}
-
-
-
---------------------
-package com.rbs.bdd.application.port.in;
-
-import org.springframework.ws.WebServiceMessage;
-import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
-
-/**
- * Entry port for handling SOAP requests related to payment validation.
- * Follows hexagonal architecture's `port in` pattern.
- */
-public interface CustomerRetrievalPort {
-        /**
-         * Validates a customer retrieval request by delegating to the underlying orchestrator/service.
-         *
-         * @param request The SOAP request payload.
-         * @param message The outgoing WebServiceMessage to be modified and returned.
-         */
-        void validateCustomerRetrieval(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message);
-
-
-    }
-
--------------------
-package com.rbs.bdd.application.port.in;
-
-
-import org.springframework.ws.WebServiceMessage;
-import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
-/**
- * Entry port for handling SOAP requests related to payment validation.
- * Follows hexagonal architecture's `port in` pattern.
- */
-public interface PaymentValidationPort {
-
-
-    /**
-     * Validates a payment arrangement request by delegating to the underlying orchestrator/service.
-     *
-     * @param request The SOAP request payload.
-     * @param message The outgoing WebServiceMessage to be modified and returned.
-     */
-    void validateArrangementForPayment(ValidateArrangementForPaymentRequest request,WebServiceMessage message);
-
-
-
-}
-
-
-
-
----------------------
-package com.rbs.bdd.application.port.out;
-
-import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
-
-import org.springframework.ws.WebServiceMessage;
-
-/**
- * Defines the business contract for validating payment accounts.
- * Used by the orchestrator to call schema and business rule validators.
- */
-public interface AccountValidationPort {
-    /**
-     * Performs XSD schema validation of the request. (Currently delegated to Spring WS config.)
-     *
-     * @param request The SOAP request payload.
-     */
-    void validateSchema(ValidateArrangementForPaymentRequest request);
-
-
-    /**
-     * Applies business rules on the static response XML based on request content,
-     * and writes the final SOAP response directly to the output message.
-     *
-     * @param request The incoming SOAP request.
-     * @param message The WebServiceMessage to write the modified response to.
-     */
-    void validateBusinessRules(ValidateArrangementForPaymentRequest request,WebServiceMessage message);
-
-     }
-
-
---------------------
-package com.rbs.bdd.application.port.out;
-
-
-
-import org.springframework.ws.WebServiceMessage;
-import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
-
-
-/**
- * Defines the business contract for validating payment accounts.
- * Used by the orchestrator to call schema and business rule validators.
- */
-public interface RetrieveCustomerPort {
-    /**
-     * Performs XSD schema validation of the request. (Currently delegated to Spring WS config.)
-     *
-     * @param request The SOAP request payload.
-     */
-    void validateSchema(RetrievePrimaryCustomerForArrRequest request);
-
-
-    /**
-     * Applies business rules on the static response XML based on request content,
-     * and writes the final SOAP response directly to the output message.
-     *
-     * @param request The incoming SOAP request.
-     * @param message The WebServiceMessage to write the modified response to.
-     */
-    void retrieveCustomer(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message);
-
-}
+<SOAP-ENV:Envelope 	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"> 	<SOAP-ENV:Header/> 	<SOAP-ENV:Body> 		<ns3:retrievePrimaryCustomerForArr 			xmlns:ns3="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/"> 			<requestHeader> 				<operatingBrand>NWB</operatingBrand> 				<requestIds> 					<systemId>RequestID</systemId> 					<transactionId>NCO-E2EINTL-BTC8</transactionId> 				</requestIds> 				<requestIds> 					<systemId>SourceID</systemId> 					<transactionId>PIM</transactionId> 				</requestIds> 				<cmdType>Request</cmdType> 			</requestHeader> 			<processingParameter> 				<objectReference> 					<identifier>NWB</identifier> 					<context> 						<schemeName>OrganizationEnterpriseIdType</schemeName> 						<codeValue>OperatingBrandIdentifier</codeValue> 					</context> 				</objectReference> 			</processingParameter> 			<arrangementIdentifier> 				<identifier>60000145762074</identifier> 				<context> 					<schemeName>ArrangementEnterpriseIdType</schemeName> 					<codeValue>UKBasicBankAccountNumber</codeValue> 					<description>test description</description> 				</context> 				<description>test description</description> 			</arrangementIdentifier> 		</ns3:retrievePrimaryCustomerForArr> 	</SOAP-ENV:Body> </SOAP-ENV:Envelope>
 
 
 
 -----------------
-package com.rbs.bdd.application.service;
+
+REquest for which code is working 
+
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"                   xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/">     <soapenv:Header/>     <soapenv:Body>         <crfpSP:retrievePrimaryCustomerForArr>             <requestHeader>                 <operatingBrand>NWB</operatingBrand>                 <requestIds>                     <systemId>RequestID</systemId>                     <transactionId>123454444</transactionId>                 </requestIds>                 <requestIds>                <systemId>SourceID</systemId>                <transactionId>ISO</transactionId>         </requestIds>             <cmdType>Request</cmdType>             </requestHeader>             <processingParameter>             <objectReference>                <identifier>NWB</identifier>                <context>                   <schemeName>OrganizationEnterpriseIdType</schemeName>                   <codeValue>OperatingBrandIdentifier</codeValue>                </context>             </objectReference>         </processingParameter>             <arrangementIdentifier>                 <identifier>GB29NWBK60161331926801</identifier>                 <context>                     <schemeName>ArrangementEnterpriseIdType</schemeName>                     <codeValue>InternationalBankAccountNumber</codeValue>                     <!--Optional:-->                     <description>aslkjdslahbkjdf</description>                 </context>                 <!--Optional:-->                 <description>aslkjdslahbkjdf</description>             </arrangementIdentifier>         </crfpSP:retrievePrimaryCustomerForArr>     </soapenv:Body> </soapenv:Envelope>
 
 
 
+---------------------
 
-import com.rbs.bdd.application.exception.AccountValidationException;
-import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
-import com.rbs.bdd.domain.enums.CustomerNameMapping;
-import com.rbs.bdd.domain.enums.ErrorConstants;
-import com.rbs.bdd.domain.enums.ServiceConstants;
-import com.rbs.bdd.domain.enums.ValidationErrorType;
-import com.rbs.bdd.domain.model.ErrorDetail;
-import com.rbs.bdd.util.ValidationUtils.RequestParams;
-import com.rbs.bdd.domain.model.ErrorDetail;
-import com.rbs.bdd.util.ValidationUtils;
-import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
-import jakarta.xml.soap.SOAPException;
-import lombok.RequiredArgsConstructor;
+package com.rbs.bdd.infrastructure.config;
+
+import com.rbs.bdd.application.exception.SchemaValidationException;
+import com.rbs.bdd.application.exception.XsdSchemaLoadingException;
+import com.rbs.bdd.infrastructure.soap.interceptor.AccountSchemaValidationInterceptor;
+import com.rbs.bdd.infrastructure.soap.interceptor.CustomerSchemaValidationInterceptor;
+import com.rbs.bdd.util.SoapInterceptorUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.soap.saaj.SaajSoapMessage;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
-
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.ZonedDateTime;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import static com.rbs.bdd.domain.enums.ServiceConstants.XPath.*;
-import static com.rbs.bdd.util.ValidationUtils.generateTxnId;
-import static com.rbs.bdd.util.ValidationUtils.writeResponseToSoapMessage;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.ws.config.annotation.EnableWs;
+import org.springframework.ws.config.annotation.WsConfigurerAdapter;
+import org.springframework.ws.server.EndpointInterceptor;
+import org.springframework.ws.transport.http.MessageDispatcherServlet;
+import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
+import org.springframework.xml.xsd.XsdSchemaCollection;
+import org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection;
+import java.util.List;
 
 /**
- * Service to handle logic for retrieving customer details based on account number.
- * Matches specific identifiers and dynamically updates SOAP XML response.
+ * Configures Spring Web Services (Spring WS) for the application.
+ * <p>
+ * This configuration includes:
+ * <ul>
+ *     <li>Publishing WSDL endpoints for SOAP web services</li>
+ *     <li>Enabling automatic XML Schema (XSD) validation of incoming SOAP requests</li>
+ *     <li>Registering interceptors for request validation</li>
+ * </ul>
+ */
+@Configuration
+@EnableWs
+@Slf4j
+public class SoapWebServiceConfig extends WsConfigurerAdapter {
+
+    /**
+     * Registers the {@link MessageDispatcherServlet} which is the main dispatcher for Spring WS.
+     * It handles SOAP messages and dispatches them to appropriate endpoints.
+     *
+     * @param context the Spring application context
+     * @return servlet registration bean mapped to the /ws/* URI
+     */
+    @Bean
+    public ServletRegistrationBean<MessageDispatcherServlet> messageDispatcherServlet(ApplicationContext context) {
+        MessageDispatcherServlet servlet = new MessageDispatcherServlet();
+        servlet.setApplicationContext(context);
+        servlet.setTransformWsdlLocations(true);
+        return new ServletRegistrationBean<>(servlet, "/ws/*");
+    }
+
+    /**
+     * Adds a custom interceptor for schema validation. This interceptor validates incoming SOAP
+     * messages against the configured XSD schema.
+     *
+     * @param interceptors list of interceptors to which this validation interceptor is added
+     */
+    @Override
+    public void addInterceptors(List<EndpointInterceptor> interceptors) {
+
+
+        CustomerSchemaValidationInterceptor customerRetrievalInterceptor = new CustomerSchemaValidationInterceptor();
+        customerRetrievalInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
+        customerRetrievalInterceptor.setValidateResponse(false); // Do not validate outgoing responses
+        try {
+            customerRetrievalInterceptor.setXsdSchemaCollection(updateCustomerRetrievalXsd());
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
+        }
+        interceptors.add(customerRetrievalInterceptor);
+
+        AccountSchemaValidationInterceptor validatingInterceptor = new AccountSchemaValidationInterceptor();
+        validatingInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
+        validatingInterceptor.setValidateResponse(false); // Do not validate outgoing responses
+        try {
+            validatingInterceptor.setXsdSchemaCollection(updateContactXsd());
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
+        }
+        interceptors.add(validatingInterceptor);
+
+
+    }
+
+    /**
+     * Publishes a WSDL endpoint based on the `ArrValidationForPaymentParameters.xsd` file.
+     * This exposes the WSDL dynamically under /ws/ArrValidationForPaymentParameters.wsdl
+     *
+     * @return a configured WSDL definition bean
+     * @throws SchemaValidationException if XSD loading fails
+     */
+    @Bean(name = "ArrValidationForPaymentParameters")
+    public DefaultWsdl11Definition accountValidationWSDL() throws SchemaValidationException {
+        log.info("Account Validation Endpoint is invoked");
+         return  SoapInterceptorUtils.buildWsdlDefinition(
+                "IArrValidationForPayment",
+                "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/",
+                updateContactXsd()
+        );
+    }
+
+    /**
+     * Loads the primary XSD schema (`ArrValidationForPaymentParameters.xsd`) from the classpath
+     * and enables inlining for WSDL generation and schema validation.
+     *
+     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
+     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     */
+    @Bean
+    public XsdSchemaCollection updateContactXsd() {
+        return SoapInterceptorUtils.loadSchema("xsd/account-validation/ArrValidationForPaymentParameters.xsd");
+
+    }
+
+
+    /**
+     * Publishes a WSDL endpoint based on the `CustomerRetrievalForPaymentParameters.xsd` file.
+     * This exposes the WSDL dynamically under /ws/CustomerRetrievalForPaymentParameters.wsdl
+     *
+     * @return a configured WSDL definition bean
+     * @throws SchemaValidationException if XSD loading fails
+     */
+    @Bean(name = "CustomerRetrievalForPayment")
+    public DefaultWsdl11Definition customerRetrievalWSDL() throws SchemaValidationException {
+        log.info("Customer Retrieval Endpoint is invoked");
+        return  SoapInterceptorUtils.buildWsdlDefinition(
+                "ICustomerRetrievalForPayment",
+                "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/",
+                updateCustomerRetrievalXsd()
+        );
+    }
+
+
+    /**
+     * Loads the primary XSD schema (`CustomerRetrievalForPaymentParameters.xsd`) from the classpath
+     * and enables inlining for WSDL generation and schema validation.
+     *
+     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
+     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     */
+    @Bean
+    public XsdSchemaCollection updateCustomerRetrievalXsd() {
+        return SoapInterceptorUtils.loadSchema("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd");
+    }
+
+
+}
+
+
+--------------
+package com.rbs.bdd.infrastructure.soap.api;
+
+import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
+import com.rbs.bdd.application.port.in.PaymentValidationPort;
+
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.serviceparameters.v01.RetrievePrimaryCustomerForArrRequest;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.server.endpoint.annotation.Endpoint;
+import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
+import org.springframework.ws.server.endpoint.annotation.RequestPayload;
+import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
+
+import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
+import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL;
+
+
+/**
+ * SOAP endpoint adapter class for handling the `validateArrangementForPayment` operation.
+ * It uses Spring WS annotations to route incoming SOAP requests to the appropriate service layer.
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class CustomerRetrievalService implements RetrieveCustomerPort {
+@Endpoint
+public class PaymentValidationSoapAdapter {
 
-    private static final Logger logger = LoggerFactory.getLogger(CustomerRetrievalService.class);
-    private static final String STATIC_RESPONSE_PATH = "static-response/customer-retrieval/success-response.xml";
-
-    @Override
-    public void validateSchema(RetrievePrimaryCustomerForArrRequest request) {
-        logger.info("Schema validated successfully by Spring WS.");
-    }
-
-    @Override
-    public void retrieveCustomer(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message) {
-        try {
-            RequestParams params = extractParams(request);
-            XPath xpath = XPathFactory.newInstance().newXPath();
-            Document responseDoc = handleCustomerRetrieval(params, xpath);
-
-            writeResponseToSoapMessage(message, responseDoc);
-        } catch (Exception e) {
-            logger.error("Customer retrieval failed", e);
-            throw new AccountValidationException("Customer retrieval failed", e);
-        }
-    }
+    /**Changes for the request*/
 
 
-    private Document handleCustomerRetrieval(RequestParams params, XPath xpath) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
-        Optional<ErrorDetail> error = determineCustomerRetrievalError(params);
-        if (error.isPresent()) {
-            Document errorDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL);
-            applyErrorResponse(errorDoc, xpath, error.get(), params.originalTxnId());
-            return errorDoc;
-        }
-
-        CustomerNameMapping matched = CustomerNameMapping.fromIdentifier(params.identifier());
-        if (matched != null) {
-            Document responseDoc = loadAndParseXml(STATIC_RESPONSE_PATH);
-            updateName(responseDoc, xpath, matched);
-            logger.info("Returning matched customer response for IBAN: {}", matched.getIban());
-            return responseDoc;
-        }
-
-        Document notFoundDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH);
-        applyErrorResponse(notFoundDoc, xpath, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail(), params.originalTxnId());
-        return notFoundDoc;
-    }
-
-
-
-
-
-
-    private void updateName(Document doc, XPath xpath, CustomerNameMapping matched) throws XPathExpressionException {
-        updateText(xpath, doc, XPATH_PREFIX_TYPE, matched.getPrefixType());
-        updateText(xpath, doc, XPATH_FIRST_NAME, matched.getFirstName());
-        updateText(xpath, doc, XPATH_LAST_NAME, matched.getLastName());
-    }
-
-    private Optional<ErrorDetail> determineCustomerRetrievalError(RequestParams param) {
-
-        Map<ValidationErrorType, ErrorDetail> errorMap = Map.of(
-                ValidationErrorType.INVALID_PREFIX, ErrorConstants.ERR_UBAN_GB.detail(),
-                ValidationErrorType.INVALID_LENGTH, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail(),
-                ValidationErrorType.INVALID_MODULUS, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail()
-        );
-
-        return ValidationUtils.validateAccount(param, errorMap, this::isUbanValid, "CustomerRetrieval");
-    }
+    private final PaymentValidationPort paymentValidationPort;
+    private final CustomerRetrievalPort customerRetrievalPort;
 
     /**
-     * Verifies if the given UBAN matches the suffix of known IBANs.
+     * Constructor-based injection of the orchestrator that handles business logic.
+     *
+     * @param paymentValidationPort the orchestrator service
      */
-    private boolean isUbanValid(String identifier) {
-        return ServiceConstants.IBANs.ALL_IBANS.stream()
-                .map(this::extractLast14Digits)
-                .anyMatch(ibanSuffix -> ibanSuffix.equals(identifier));
+    public PaymentValidationSoapAdapter(PaymentValidationPort paymentValidationPort,CustomerRetrievalPort customerRetrievalPort) {
+        this.paymentValidationPort = paymentValidationPort;
+        this.customerRetrievalPort = customerRetrievalPort;
     }
+
+
 
     /**
-     * Extracts last 14 digits from a given IBAN string.
+     * Handles the `validateArrangementForPayment` SOAP request.
+     * Delegates request processing to the orchestrator which modifies the response message directly.
+     *
+     * @param request the SOAP request payload
+     * @param context the Spring WS message context
      */
-    private String extractLast14Digits(String iban) {
-        return iban.length() >= 14 ? iban.substring(iban.length() - 14) : "";
-    }
-    private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail detail, String txnId) throws XPathExpressionException {
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_REF_REQUEST_TXN_ID, txnId);
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_STATUS, "Failed");
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION, detail.description());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RETURN_CODE, detail.returnCode());
+    @PayloadRoot(namespace = NAMESPACE_URI_FOR_ACCOUNT_VALIDATION, localPart = "validateArrangementForPayment")
+    @ResponsePayload
+    public void validateArrangementForPayment(@RequestPayload ValidateArrangementForPaymentRequest request,
+                                                MessageContext context) {
+        log.info("validateArrangementForPayment is called");
+        WebServiceMessage response = context.getResponse();
+        paymentValidationPort.validateArrangementForPayment(request, response);
+         }
 
-        if ("Unable To Complete Request".equals(detail.description())){
-            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC, detail.systemNotificationDesc());
-            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_CODE, detail.returnCode());
-        } else {
-            Node node = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
-            if (Objects.nonNull(node) && Objects.nonNull(node.getParentNode())) {
-                node.getParentNode().removeChild(node);
-            }
-        }
-    }
+    /**
+     * Handles the `RetrieveCustomerRequest` SOAP request.
+     * Delegates request processing to the orchestrator which modifies the response message directly.
+     *
+     * @param request the SOAP request payload
+     * @param context the Spring WS message context
+     */
+    @PayloadRoot(namespace = NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL, localPart = "retrievePrimaryCustomerForArr")
+    @ResponsePayload
+    public void validateCustomerRetrieval(@RequestPayload RetrievePrimaryCustomerForArrRequest request,
+                                              MessageContext context) {
+        log.info("validateCustomerRetrieval is called");
+        WebServiceMessage response = context.getResponse();
 
-    private void
-    updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
-        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
-        if (node != null && value != null) node.setTextContent(value);
+        customerRetrievalPort.validateCustomerRetrieval(request, response);
     }
 
-    private Document loadAndParseXml(String path) throws ParserConfigurationException, IOException, SAXException {
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(path);
-        if (Objects.isNull(stream)) {
-            log.error("XML file not found at path: {}", path);
-            throw new AccountValidationException("XML not found: " + path);
-        }
+}
 
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        return builder.parse(stream);
-    }
-
-    private RequestParams extractParams(RetrievePrimaryCustomerForArrRequest request) {
-        return new RequestParams(
-                request.getArrangementIdentifier().getIdentifier(),
-                request.getArrangementIdentifier().getContext().getCodeValue(),
-                request.getRequestHeader().getRequestIds().get(0).getTransactionId(),
-                request.getRequestHeader().getRequestIds().get(0).getSystemId()
-        );
-    }
-   }
-
--------------------
-Path :- resources->db.changelog-master.yaml
-
-databaseChangeLog:
-  - changeSet:
-      id: initial-commit
-      author: esp-simulation-service
-
-  - include:
-      file: db/changelog/rbs/customer_retrieval_request/create-customer-info-audit-tables.yaml
-
-
-----------------------
-Path:- resources->rbs-> customer_retrieval_request
-
-create-customer-info-audit-tables.yaml 
-
-databaseChangeLog:
-  - changeSet:
-      id: create-esp-simulation-record-table
-      author: esp-simulation-service
-      changes:
-        - createTable:
-            tableName: esp_simulation_record
-            columns:
-              - column:
-                  name: id
-                  type: UUID
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-                  defaultValueComputed: gen_random_uuid()
-              - column:
-                  name: account_no
-                  type: varchar(50)
-              - column:
-                  name: account_type
-                  type: varchar(50)
-              - column:
-                  name: customer_prefix
-                  type: varchar(20)
-              - column:
-                  name: customer_first_name
-                  type: varchar(20)
-              - column:
-                  name: customer_last_name
-                  type: varchar(20)
-
-
----------------
-insert-new-rules.yaml 
-
-databaseChangeLog:
-  - changeSet:
-      id: insert-esp-simulation-record-1
-      author: esp-simulation-service
-      changes:
-        - insert:
-            tableName: esp_simulation_record
-            columns:
-              - column:
-                  name: unique_identifier
-                  value: IBAN_1
-              - column:
-                  name: account_no
-                  value: GB29NWBK60161331926801
-              - column:
-                  name: account_type
-                  value: InternationalBankAccountNumber
-              - column:
-                  name: customer_prefix
-                  value: MR
-              - column:
-                  name: customer_first_name
-                  value: Alice
-              - column:
-                  name: customer_last_name
-                  value: Johnson
-
-
-  - changeSet:
-      id: insert-esp-simulation-record-2
-      author: esp-simulation-service
-      changes:
-        - insert:
-            tableName: esp_simulation_record
-            columns:
-              - column:
-                  name: account_no
-                  value: GB29NWBK60161331926801
-              - column:
-                  name: account_type
-                  value: InternationalBankAccountNumber
-              - column:
-                  name: customer_prefix
-                  value: MRS
-              - column:
-                  name: customer_first_name
-                  value: Alisa
-              - column:
-                  name: customer_last_name
-                  value: Johnson
 
 
 --------------------
-application.properties
+
+package com.rbs.bdd.domain.enums;
+
+import java.util.List;
+
+/**
+ * Enum container for grouping constants related to service configuration, IBAN validation, file paths, and XPath expressions.
+ * Constants are organized as nested interfaces for better readability and modular access.
+ */
+public enum ServiceConstants {
+    // Empty enum just to hold grouped constants via nested interfaces
+    ;
+
+    /**
+     * File paths for static response and error XMLs.
+     */
+    public final class  Paths {
+        private Paths() {}
+       public static final  String  ACCOUNT_VALIDATION_REQUEST="src/test/resources/static-request/account-validation-request.xml";
+        public static final String  CUSTOMER_RETRIEVAL_REQUEST="src/test/resources/static-request/customer-retrieval-request.xml";
+
+        public static final String ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL= "error-response/error-response-customer-retrieval.xml";
+        public static final String ERROR_XML_PATH = "error-response/error-response-account-validation.xml";
+        public static final String SCHEMA_VALIDATION_ERROR_XML = "error-response/CustomerRetrievalSchemaValidationError.xml";
+        public static final String RESPONSE_XML_PATH = "static-response/account-validation/success-response.xml";
+    }
+
+    /**
+     * Namespace URIs used in Spring WS handler for request mapping.
+     */
+    public final class  Namespaces {
+        private Namespaces() {}
+        public static final String NAMESPACE_URI_FOR_ACCOUNT_VALIDATION = "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/";
+        public static final String NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL = "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/";
+    }
+
+    /**
+     * Static IBANs used for known test scenarios.
+     */
+    public final class IBANs {
+        private IBANs(){}
+        public static final  String IBAN_1 = "GB29NWBK60161331926801";
+        public static final String IBAN_2 = "GB82WEST12345698765437";
+        public static final String IBAN_3 = "GB94BARC10201530093422";
+        public static final String IBAN_4 = "GB33BUKB20201555555567";
+
+        public static final  List<String> ALL_IBANS = List.of(
+                IBAN_1, IBAN_2, IBAN_3, IBAN_4
+        );
+    }
+
+    /**
+     * Code values used to distinguish between IBAN and UBAN.
+     */
+    public final class  AccountTypes {
+        private AccountTypes(){}
+        public static final String INTL_BANK_ACCOUNT = "InternationalBankAccountNumber";
+        public static final String UK_BASIC_BANK_ACCOUNT = "UKBasicBankAccountNumber";
+    }
+
+    /**
+     * XPath expressions for extracting and updating SOAP request/response values.
+     */
+    public final class  XPath {
+        private XPath(){}
+        public static final String XPATH_TRANSACTION_ID = "//*[local-name()='transactionId']";
+        public static final String XPATH_HAS_PARTY_ASSOC="//*[local-name()='hasInvolvedPartyAssociation']";
+        public static final  String XPATH_ASSOCIATED_PARTY=XPATH_HAS_PARTY_ASSOC+ "/*[local-name()='associatedInvolvedParty']";
+        public static final String XPATH_FIRST_NAME =XPATH_ASSOCIATED_PARTY +
+                "/*[local-name()='hasForName']/*[local-name()='firstName']";
+        public static final String XPATH_PREFIX_TYPE = XPATH_ASSOCIATED_PARTY +
+                "/*[local-name()='hasForName']/*[local-name()='prefixTitle']/*[local-name()='codeValue']";
+        public static final  String XPATH_LAST_NAME = XPATH_ASSOCIATED_PARTY +
+                "/*[local-name()='hasForName']/*[local-name()='lastName']";
+        public static final String XPATH_ACCOUNT_STATUS = "//*[local-name()='accountingUnits']/*[local-name()='status']/*[local-name()='codeValue']";
+        public static final String XPATH_SWITCHING_STATUS = "//*[local-name()='switchingStatus']/*[local-name()='codeValue']";
+        public static final String XPATH_MODULUS_STATUS = "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']";
+
+        // Fault-specific
+        public static final String XPATH_FAULT_TRANSACTION_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
+        public static final String XPATH_FAULT_RESPONSE_ID = "//*[local-name()='responseId']";
+        public static final String XPATH_FAULT_TIMESTAMP = "//*[local-name()='timestamp']";
+
+        /**
+         * XPath to locate transactionId under responseId node.
+         */
+        public static final String XPATH_RESPONSE_ID_TXN_ID = "//*[local-name()='responseId']/*[local-name()='transactionId']";
+
+        /**
+         * XPath to locate transactionId under refRequestIds node.
+         */
+        public static final String XPATH_REF_REQUEST_TXN_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
+
+        /**
+         * XPath to locate cmdStatus node for command result status.
+         */
+        public static final String XPATH_CMD_STATUS = "//*[local-name()='cmdStatus']";
+
+        /**
+         * XPath to locate description node inside cmdNotifications block.
+         */
+        public static final String XPATH_CMD_DESCRIPTION = "//*[local-name()='cmdNotifications']/*[local-name()='description']";
+
+        /**
+         * XPath to locate timestamp node inside cmdNotifications block.
+         */
+        public static final String XPATH_TIMESTAMP = "//*[local-name()='cmdNotifications']/*[local-name()='timestamp']";
+
+        /**
+         * XPath to locate returnCode node inside cmdNotifications block.
+         */
+        public static final String XPATH_RETURN_CODE = "//*[local-name()='cmdNotifications']/*[local-name()='returnCode']";
+
+        /**
+         * XPath to locate description inside systemNotifications block.
+         */
+        public static final  String XPATH_SYS_NOTIFICATION_DESC = "//*[local-name()='systemNotifications']/*[local-name()='description']";
+
+        /**
+         * XPath to locate returnCode inside systemNotifications block.
+         */
+        public static final String XPATH_SYS_NOTIFICATION_CODE = "//*[local-name()='systemNotifications']/*[local-name()='returnCode']";
+
+        /**
+         * XPath to locate the entire systemNotifications block node.
+         */
+        public static final String XPATH_SYS_NOTIFICATION_BLOCK = "//*[local-name()='systemNotifications']";
+
+    }
+
+    /**
+     * Common tag names.
+     */
+    public final class  Tags {
+        private Tags(){}
+        public static final String TAG_TRANSACTION_ID = "transactionId";
+        public static final String SYSTEM_ID="systemId";
+    }
+}
 
 
-# These properties can be passed via system property or env variable.
 
-# In spring cloud you can add your app properties in the bootstrap.properties file.
-# Any config var specified in bootstrap.properties will be inherited by the application
+-----------------------------
+XSD:-
+CustomerRetrievalForPaymentParameters.xsd
 
-# App configs in bootstrap.properties can be overridden in application.properties
-spring.main.banner-mode=console
-server.port=8080
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" version="RBS_20210325_Baseline" xmlns:crfpSP="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/" xmlns:crfpTO="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/"
+            xmlns:sdef="http://com/rbsg/soa/Services/Definitions/V03/"  elementFormDefault="unqualified">
+  <xsd:import namespace="http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/TransferObjects/V01/" schemaLocation="CustomerRetrievalForPaymentTransferObjects.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/Services/Definitions/V03/" schemaLocation="../shared/ServiceDefinitions.xsd"/>
+  <xsd:import namespace="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/" schemaLocation="../shared/PrimitiveDatatypes.xsd"/>
+  <xsd:complexType name="retrievePrimaryCustomerForArrRequest">
+    <xsd:sequence>
+      <xsd:element name="requestHeader" type="sdef:RequestHeader"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="processingParameter" type="pdt:Property"/>
+      <xsd:element name="arrangementIdentifier" type="pdt:ObjectReference">
+        <xsd:annotation>
+          <xsd:documentation>Identifier of the account for which the Customer is identified as the Primary Customer (Account Owner).</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="RetrievePrimaryCustomerForArrContent">
+    <xsd:sequence>
+      <xsd:element name="responseHeader" type="sdef:ResponseHeader"/>
+      <xsd:element minOccurs="0" name="customer" type="crfpTO:InvolvedParty_TO"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="modifyToken" type="pdt:Property"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="retrievePrimaryCustomerForArrResponse">
+    <xsd:sequence>
+      <xsd:choice>
+        <xsd:element name="response" type="crfpSP:RetrievePrimaryCustomerForArrContent"/>
+        <xsd:element name="exception" type="sdef:Exception"/>
+      </xsd:choice>
+    </xsd:sequence>
+  </xsd:complexType>
+  <!-- Global elements required for WSDL operation binding -->
+  <xsd:element name="retrievePrimaryCustomerForArr" type="crfpSP:retrievePrimaryCustomerForArrRequest"/>
+  <xsd:element name="retrievePrimaryCustomerForArrResponse" type="crfpSP:retrievePrimaryCustomerForArrResponse"/>
 
-# downstream endpoint
-user.data.service=http://localhost:8085
-
-spring.web.resources.static-locations=classpath:/wsdl/
-
-logging.level.org.apache.http=DEBUG
-logging.level.org.springframework.ws=DEBUG
-logging.level.org.springframework.xml=DEBUG
-spring.main.allow-bean-definition-overriding=true
-
-
-user-service-list.restclient.max-connections=6
-user-service-list.restclient.max-total-connections=6
-user-service-list.restclient.connection-request-timeout.seconds=6
-user-service-list.restclient.connect-timeout.seconds=6
-user-service-list.restclient.socket-timeout.seconds=6
-
-logging.level.org.springframework.ws.server.MessageTracing.sent= DEBUG
-# -----------------
-# actuator settings
-# -----------------
-management.endpoints.web.exposure.include=health,info
-management.endpoints.enabled-by-default=true
-management.endpoint.info.enabled=true
-management.endpoint.health.enabled=true
-
-info.app.version=@project.version@
-management.info.defaults.enabled=true
-management.info.git.mode=full
-
-# Toggle whether the fail fast on missing inbound jwt, inbound jwt might be required for service if it
-# is going to make a request east/west within EKS
-failFastInboundJwt=false
-
-
-
-#Aurora and Liquibase Properties
-#spring.datasource.driver-class-name=org.postgresql.Driver
-#spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
-#spring.jpa.hibernate.ddl-auto=none
-
-
-
-#spring.datasource.url=jdbc:postgresql://localhost:5432db.changelog-master/drools_rules
-#spring.datasource.username=postgres
-#spring.datasource.password=******
-secret.manager.enabled=false
-spring.liquibase.enabled=false
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-
------------------------
-application-eks_dev.properties
-
-#Aurora and Liquibase Properties
-spring.datasource.base.url=jdbc:postgresql://recp-bankline-app-1-ad3f-test-aurora-db-eks-read-write-endpoint.endpoint.proxy-czuueai6m5xz.eu-west-1.rds.amazonaws.com:5432/
-spring.datasource.username=*****
-spring.datasource.password=*****
-secret.datasource.name=runtime-dev_bdd_sandbox_dep
-
-spring.liquibase.default-schema=*****
-secret.manager.enabled=true
-aws.region=eu-west-1
-spring.liquibase.enabled=true
-spring.liquibase.change-log='classpath:/db/changelog/db.changelog-master.yaml'
-
-
-# JPA/Hibernate Configuration
-spring.jpa.hibernate.ddl-auto=validate
-spring.jpa.show-sql=false
-spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
-spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true
+</xsd:schema>
