@@ -1,1 +1,33 @@
-.
+private void setBankIdentifier(Document responseDoc, XPath xpath, String iban) {
+    try {
+        String bankIdentifier = null;
+
+        if (iban != null && !iban.isEmpty()) {
+            if (iban.contains("NWB")) {
+                bankIdentifier = "278";
+            } else if (iban.contains("RBS")) {
+                bankIdentifier = "-365";
+            } else if (iban.contains("UBN")) {
+                bankIdentifier = "391";
+            }
+        }
+
+        if (bankIdentifier != null) {
+            // XPath to locate the identifier node inside alternativeIdentifier with BankIdentifier
+            Node bankIdentifierNode = (Node) xpath.evaluate(
+                "//*[local-name()='alternativeIdentifier']/*[local-name()='context']/*[local-name()='codeValue'][text()='BankIdentifier']/../../*[local-name()='identifier']",
+                responseDoc,
+                XPathConstants.NODE
+            );
+
+            if (bankIdentifierNode != null) {
+                bankIdentifierNode.setTextContent(bankIdentifier);
+                log.info("BankIdentifier set to {}", bankIdentifier);
+            } else {
+                log.warn("BankIdentifier node not found in response.");
+            }
+        }
+    } catch (XPathExpressionException e) {
+        log.error("XPath evaluation failed while setting BankIdentifier: {}", e.getMessage());
+    }
+}
