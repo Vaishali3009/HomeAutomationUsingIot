@@ -44,19 +44,11 @@ failFastInboundJwt=false
 
 
 
-#Aurora and Liquibase Properties
-#spring.datasource.driver-class-name=org.postgresql.Driver
-#spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
-#spring.jpa.hibernate.ddl-auto=none
 
-
-
-#spring.datasource.url=jdbc:postgresql://localhost:5432db.changelog-master/drools_rules
-#spring.datasource.username=postgres
 #spring.datasource.password=******
 secret.manager.enabled=false
 spring.liquibase.enabled=false
-#spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
 
 spring.datasource.url=jdbc:h2:mem:testdb
 spring.datasource.driver-class-name=org.h2.Driver
@@ -64,29 +56,3 @@ spring.datasource.username=sa
 spring.datasource.password=
 spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
 spring.jpa.hibernate.ddl-auto=none
-
-
----------------
-2025-06-23T04:32:53.446+01:00  WARN 12936 --- [  restartedMain] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling
-refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springfra
-mework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to initialize dependency 'liquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error cr
-eating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]:
- liquibase.exception.CommandExecutionException: liquibase.exception.ChangeLogParseException: classpath:/db/changelog/db.changelog-master.yaml does not exist
-2025-06-23T04:32:53.447+01:00  INFO 12936 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
-2025-06-23T04:32:53.448+01:00  INFO 12936 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
-2025-06-23T04:32:53.455+01:00  INFO 12936 --- [  restartedMain] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
-2025-06-23T04:32:53.483+01:00  INFO 12936 --- [  restartedMain] .s.b.a.l.ConditionEvaluationReportLogger :
-
-Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
-2025-06-23T04:32:53.597+01:00 ERROR 12936 --- [  restartedMain] o.s.b.d.LoggingFailureAnalysisReporter   :
-
-***************************
-APPLICATION FAILED TO START
-***************************
-
-Description:
-
-Liquibase failed to start because no changelog could be found at 'classpath:/db/changelog/db.changelog-master.yaml'.
-
-Action:
-
