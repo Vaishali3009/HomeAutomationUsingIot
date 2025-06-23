@@ -1,5 +1,72 @@
-2025-06-23T04:32:53.442+01:00  INFO 12936 --- [  restartedMain] liquibase.ui                             : ERROR: Exception Primary Source:  4.29.2
-2025-06-23T04:32:53.442+01:00  INFO 12936 --- [  restartedMain] liquibase.command                        : Command execution complete
+
+# These properties can be passed via system property or env variable.
+
+# In spring cloud you can add your app properties in the bootstrap.properties file.
+# Any config var specified in bootstrap.properties will be inherited by the application
+
+# App configs in bootstrap.properties can be overridden in application.properties
+spring.main.banner-mode=console
+server.port=8080
+
+# downstream endpoint
+user.data.service=http://localhost:8085
+
+spring.web.resources.static-locations=classpath:/wsdl/
+
+logging.level.org.apache.http=DEBUG
+logging.level.org.springframework.ws=DEBUG
+logging.level.org.springframework.xml=DEBUG
+spring.main.allow-bean-definition-overriding=true
+
+
+user-service-list.restclient.max-connections=6
+user-service-list.restclient.max-total-connections=6
+user-service-list.restclient.connection-request-timeout.seconds=6
+user-service-list.restclient.connect-timeout.seconds=6
+user-service-list.restclient.socket-timeout.seconds=6
+
+logging.level.org.springframework.ws.server.MessageTracing.sent= DEBUG
+# -----------------
+# actuator settings
+# -----------------
+management.endpoints.web.exposure.include=health,info
+management.endpoints.enabled-by-default=true
+management.endpoint.info.enabled=true
+management.endpoint.health.enabled=true
+
+info.app.version=@project.version@
+management.info.defaults.enabled=true
+management.info.git.mode=full
+
+# Toggle whether the fail fast on missing inbound jwt, inbound jwt might be required for service if it
+# is going to make a request east/west within EKS
+failFastInboundJwt=false
+
+
+
+#Aurora and Liquibase Properties
+#spring.datasource.driver-class-name=org.postgresql.Driver
+#spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
+#spring.jpa.hibernate.ddl-auto=none
+
+
+
+#spring.datasource.url=jdbc:postgresql://localhost:5432db.changelog-master/drools_rules
+#spring.datasource.username=postgres
+#spring.datasource.password=******
+secret.manager.enabled=false
+spring.liquibase.enabled=false
+#spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.hibernate.ddl-auto=none
+
+
+---------------
 2025-06-23T04:32:53.446+01:00  WARN 12936 --- [  restartedMain] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling
 refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springfra
 mework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to initialize dependency 'liquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error cr
@@ -23,11 +90,3 @@ Liquibase failed to start because no changelog could be found at 'classpath:/db/
 
 Action:
 
-Make sure a Liquibase changelog is present at the configured path.
-
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  15.704 s
-[INFO] Finished at: 2025-06-23T04:32:53+01:00
-[INFO] ------------------------------------------------------------------------
