@@ -1,169 +1,80 @@
-<NS1:Envelope
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:pdt="http://com/rbsg/soa/DataTypes/PrimitiveDataTypes/V03/"
-        xmlns:NS1="http://schemas.xmlsoap.org/soap/envelope/">
-   <NS1:Body>
-      <NS2:validateArrangementForPaymentResponse
-              xmlns:NS2="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/">
-         <response>
-            <responseHeader>
-               <responseId>
-                  <systemId>ESP</systemId>
-                  <transactionId>3flS1c3fdecbf61bad3e001f4e40720211216055128893h</transactionId>
-               </responseId>
-               <operatingBrand>UBR</operatingBrand>
-               <refRequestIds>
-                  <systemId>RequestID</systemId>
-                  <transactionId>123456789</transactionId>
-               </refRequestIds>
-               <cmdType>Response</cmdType>
-               <cmdStatus>Succeeded</cmdStatus>
-               <cmdNotifications>
-                  <returnCode>0</returnCode>
-                  <category>Success</category>
-                  <description>Success</description>
-                  <systemNotifications>
-                     <returnCode>0</returnCode>
-                     <category>Success</category>
-                     <description>Success</description>
-                     <processingId>
-                        <systemId>AccountDB</systemId>
-                     </processingId>
-                  </systemNotifications>
-                  <systemNotifications>
-                     <returnCode>0</returnCode>
-                     <category>Success</category>
-                     <description>Success</description>
-                     <processingId>
-                        <systemId>BPP</systemId>
-                     </processingId>
-                  </systemNotifications>
-               </cmdNotifications>
-            </responseHeader>
-            <validatedArrangement>
-               <isSubjectOf xsi:type="avfpto:AccountArrangementIdentifierAssessment_TO">
-                  <modulusCheckStatus>
-                     <schemeName>AccountArrangementIdentifierStatus</schemeName>
-                     <codeValue>Passed</codeValue>
-                  </modulusCheckStatus>
-               </isSubjectOf>
-               <isClassifiedBy>
-                  <schemeName>AccountingCategory</schemeName>
-                  <codeValue>SUSP</codeValue>
-               </isClassifiedBy>
-               <name>ZER DEZPJ R/I</name>
-               <accountingUnits>
-                  <status>
-                     <schemeName>AccountingUnitStatus</schemeName>
-                     <codeValue>Domestic - Unrestricted</codeValue>
-                  </status>
-               </accountingUnits>
-               <managingOrganizationUnit>
-                  <hasForName>
-                     <nameText>BALLYCONNELL (A)</nameText>
-                  </hasForName>
-                  <parentOrganization>
-                     <alternativeIdentifier>
-                        <identifier>980</identifier>
-                        <context>
-                           <schemeName>OrganizationEnterpriseIdType</schemeName>
-                           <codeValue>BankIdentifier</codeValue>
-                        </context>
-                        <extendedProperties xsi:type="pdt:Property">
-                           <string>ULSTER BANK IRL DAC</string>
-                           <name>BankShortName</name>
-                        </extendedProperties>
-                     </alternativeIdentifier>
-                     <hasForName>
-                        <nameText>ULSTER BANK IRELAND DAC</nameText>
-                     </hasForName>
-                     <parentOrganization>
-                        <alternativeIdentifier>
-                           <identifier>K</identifier>
-                           <context>
-                              <schemeName>OrganizationEnterpriseIdType</schemeName>
-                              <codeValue>InstanceIdentifier</codeValue>
-                           </context>
-                        </alternativeIdentifier>
-                     </parentOrganization>
-                  </parentOrganization>
-                  <sortCodeRegistration>
-                     <extendedProperties>
-                        <string>Q1</string>
-                        <name>CausticSubsection</name>
-                     </extendedProperties>
-                     <extendedProperties>
-                        <string>N</string>
-                        <name>EuroSortcode</name>
-                     </extendedProperties>
-                     <lifeCycleStatus>
-                        <status>
-                           <schemeName>RegistrationLifecycleStatus</schemeName>
-                           <codeValue>Effective</codeValue>
-                        </status>
-                     </lifeCycleStatus>
-                     <isIssuedIn>
-                        <universalUniqueIdentifier>
-                           <identifier>Republic of Ireland</identifier>
-                           <context>
-                              <schemeName>GeographicAreaType</schemeName>
-                              <codeValue>Region</codeValue>
-                           </context>
-                        </universalUniqueIdentifier>
-                     </isIssuedIn>
-                     <isTrainingBranch>false</isTrainingBranch>
-                     <sortCodeRegistrationType>
-                        <schemeName>SortCodeRegistrationType</schemeName>
-                        <codeValue>None</codeValue>
-                     </sortCodeRegistrationType>
-                     <paymentServicesProviderType>
-                        <schemeName>PaymentServicesProviderType</schemeName>
-                        <codeValue>Internal</codeValue>
-                     </paymentServicesProviderType>
-                     <agencyIndicator>N</agencyIndicator>
-                     <activeIndicator>A</activeIndicator>
-                     <nonFPSettlementSortCode>0</nonFPSettlementSortCode>
-                     <nonFPSettlementAccountNumber>0</nonFPSettlementAccountNumber>
-                     <isCreditCardHOCA>false</isCreditCardHOCA>
-                     <FPSettlementSortCode>0</FPSettlementSortCode>
-                     <FPSettlementAccountNumber>0</FPSettlementAccountNumber>
-                     <FPSettlementType>N</FPSettlementType>
-                     <isFPEnabled>N</isFPEnabled>
-                     <isInternalFunction>false</isInternalFunction>
-                  </sortCodeRegistration>
-               </managingOrganizationUnit>
-               <switchingArrangement>
-                  <switchingStatus>
-                     <schemeName>AccountArrangementSwitchingStatus</schemeName>
-                     <codeValue>Not Switching</codeValue>
-                  </switchingStatus>
-               </switchingArrangement>
-               <isBasedOnProduct>
-                  <identifier>90</identifier>
-                  <context>
-                     <schemeName>ProductEnterpriseIdType</schemeName>
-                     <codeValue>ProductIdentifier</codeValue>
-                  </context>
-               </isBasedOnProduct>
-               <currency>
-                  <alphabeticCode>
-                     <schemeName>CurrencyType</schemeName>
-                     <codeValue>EUR</codeValue>
-                  </alphabeticCode>
-               </currency>
-            </validatedArrangement>
-         </response>
-      </NS2:validateArrangementForPaymentResponse>
-   </NS1:Body>
-</NS1:Envelope>
 
-
-
-
--------------------
-alternativeIdentifier>
-                        <identifier>980</identifier>
-                        <context>
-                           <schemeName>OrganizationEnterpriseIdType</schemeName>
-                           <codeValue>BankIdentifier</codeValue>
-                        </context>
+2025-06-24T12:25:12.346Z  WARN 1 --- [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to initialize dependency 'SpringLiquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'SpringLiquibase' defined in class path resource [com/rbs/bdd/application/awsconfig/DatabaseConfig.class]: liquibase.exception.DatabaseException: org.postgresql.util.PSQLException: The connection attempt failed.
+2025-06-24T12:25:12.353Z DEBUG 1 --- [           main] h.i.c.PoolingHttpClientConnectionManager : Connection manager is shutting down
+2025-06-24T12:25:12.357Z DEBUG 1 --- [           main] h.i.c.DefaultManagedHttpClientConnection : http-outgoing-0: Close connection
+2025-06-24T12:25:12.361Z DEBUG 1 --- [           main] h.i.c.PoolingHttpClientConnectionManager : Connection manager shut down
+2025-06-24T12:25:12.395Z  INFO 1 --- [           main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2025-06-24T12:25:12.440Z  INFO 1 --- [           main] .s.b.a.l.ConditionEvaluationReportLogger :
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-06-24T12:25:12.510Z ERROR 1 --- [           main] o.s.boot.SpringApplication               : Application run failed
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to initialize dependency 'SpringLiquibase' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'SpringLiquibase' defined in class path resource [com/rbs/bdd/application/awsconfig/DatabaseConfig.class]: liquibase.exception.DatabaseException: org.postgresql.util.PSQLException: The connection attempt failed.
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:328) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:207) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:970) ~[spring-context-6.2.6.jar!/:6.2.6]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627) ~[spring-context-6.2.6.jar!/:6.2.6]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.4.5.jar!/:3.4.5]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:753) ~[spring-boot-3.4.5.jar!/:3.4.5]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) ~[spring-boot-3.4.5.jar!/:3.4.5]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) ~[spring-boot-3.4.5.jar!/:3.4.5]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1362) ~[spring-boot-3.4.5.jar!/:3.4.5]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1351) ~[spring-boot-3.4.5.jar!/:3.4.5]
+	at com.rbs.bdd.EspSimulatorEngine.main(EspSimulatorEngine.java:22) ~[!/:1.0]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:102) ~[application.jar:1.0]
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:64) ~[application.jar:1.0]
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40) ~[application.jar:1.0]
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'SpringLiquibase' defined in class path resource [com/rbs/bdd/application/awsconfig/DatabaseConfig.class]: liquibase.exception.DatabaseException: org.postgresql.util.PSQLException: The connection attempt failed.
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1818) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:315) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	... 15 common frames omitted
+Caused by: liquibase.exception.UnexpectedLiquibaseException: liquibase.exception.DatabaseException: org.postgresql.util.PSQLException: The connection attempt failed.
+	at liquibase.integration.spring.SpringLiquibase.afterPropertiesSet(SpringLiquibase.java:267) ~[liquibase-core-4.29.2.jar!/:na]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1865) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1814) ~[spring-beans-6.2.6.jar!/:6.2.6]
+	... 22 common frames omitted
+Caused by: liquibase.exception.DatabaseException: org.postgresql.util.PSQLException: The connection attempt failed.
+	at liquibase.integration.spring.SpringLiquibase.lambda$afterPropertiesSet$0(SpringLiquibase.java:259) ~[liquibase-core-4.29.2.jar!/:na]
+	at liquibase.Scope.lambda$child$0(Scope.java:191) ~[liquibase-core-4.29.2.jar!/:na]
+	at liquibase.Scope.child(Scope.java:200) ~[liquibase-core-4.29.2.jar!/:na]
+	at liquibase.Scope.child(Scope.java:190) ~[liquibase-core-4.29.2.jar!/:na]
+	at liquibase.Scope.child(Scope.java:169) ~[liquibase-core-4.29.2.jar!/:na]
+	at liquibase.Scope.child(Scope.java:257) ~[liquibase-core-4.29.2.jar!/:na]
+	at liquibase.integration.spring.SpringLiquibase.afterPropertiesSet(SpringLiquibase.java:250) ~[liquibase-core-4.29.2.jar!/:na]
+	... 24 common frames omitted
+Caused by: org.postgresql.util.PSQLException: The connection attempt failed.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:364) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at org.postgresql.Driver.makeConnection(Driver.java:446) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at org.postgresql.Driver.connect(Driver.java:298) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:137) ~[HikariCP-5.1.0.jar!/:na]
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:360) ~[HikariCP-5.1.0.jar!/:na]
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:202) ~[HikariCP-5.1.0.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:461) ~[HikariCP-5.1.0.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:550) ~[HikariCP-5.1.0.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:98) ~[HikariCP-5.1.0.jar!/:na]
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:111) ~[HikariCP-5.1.0.jar!/:na]
+	at liquibase.integration.spring.SpringLiquibase.lambda$afterPropertiesSet$0(SpringLiquibase.java:254) ~[liquibase-core-4.29.2.jar!/:na]
+	... 30 common frames omitted
+Caused by: java.net.SocketTimeoutException: Read timed out
+	at java.base/sun.nio.ch.NioSocketImpl.timedRead(NioSocketImpl.java:278) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:304) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796) ~[na:na]
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099) ~[na:na]
+	at org.postgresql.core.VisibleBufferedInputStream.readMore(VisibleBufferedInputStream.java:192) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at org.postgresql.core.VisibleBufferedInputStream.ensureBytes(VisibleBufferedInputStream.java:159) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at org.postgresql.core.VisibleBufferedInputStream.ensureBytes(VisibleBufferedInputStream.java:144) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at org.postgresql.core.VisibleBufferedInputStream.read(VisibleBufferedInputStream.java:76) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at org.postgresql.core.PGStream.receiveChar(PGStream.java:476) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at org.postgresql.core.v3.ConnectionFactoryImpl.enableSSL(ConnectionFactoryImpl.java:600) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:201) ~[postgresql-42.7.5.jar!/:42.7.5]
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268) ~[postgresql-42.7.5.jar!/:42.7.5]
+	... 42 common frames omitted
