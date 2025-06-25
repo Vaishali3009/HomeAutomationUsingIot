@@ -1,1 +1,126 @@
-.
+databaseChangeLog:
+  - changeSet:
+      id: drop-customer-record-table
+      author: esp-simulation-service
+      changes:
+        - dropTable:
+            tableName: customer_record
+            cascadeConstraints: true
+
+  - changeSet:
+      id: create-esp-simulation-record-table
+      author: esp-simulation-service
+      changes:
+        - createTable:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                  defaultValueComputed: gen_random_uuid()
+              - column:
+                  name: account_no
+                  type: varchar(50)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: account_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_prefix
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_first_name
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_last_name
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: insert-esp-simulation-record-1
+      author: esp-simulation-service
+      changes:
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: GB29NWBK60161331926201
+              - column:
+                  name: account_type
+                  value: InternationalBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MRS
+              - column:
+                  name: customer_first_name
+                  value: Alisa
+              - column:
+                  name: customer_last_name
+                  value: Johnson
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: GB29NWBK60161331926401
+              - column:
+                  name: account_type
+                  value: InternationalBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MR
+              - column:
+                  name: customer_first_name
+                  value: Alexander
+              - column:
+                  name: customer_last_name
+                  value: Gram
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: GB29NWBK60161331926501
+              - column:
+                  name: account_type
+                  value: InternationalBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MR
+              - column:
+                  name: customer_first_name
+                  value: Antony
+              - column:
+                  name: customer_last_name
+                  value: Nason
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: 60161331926501
+              - column:
+                  name: account_type
+                  value: UKBasicBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MRS
+              - column:
+                  name: customer_first_name
+                  value: Simmi
+              - column:
+                  name: customer_last_name
+                  value: Nason
