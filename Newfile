@@ -1,6 +1,39 @@
 databaseChangeLog:
   - changeSet:
-      id: insert-esp-simulation-record-1
+      id: drop-customer-record-table
+      author: esp-simulation-service
+      changes:
+        - dropTable:
+            tableName: customer_record
+            cascadeConstraints: true
+
+  - changeSet:
+      id: create-customer-record-table
+      author: esp-simulation-service
+      changes:
+        - createTable:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_type
+                  type: VARCHAR(50)
+              - column:
+                  name: customer_prefix
+                  type: VARCHAR(10)
+              - column:
+                  name: customer_first_name
+                  type: VARCHAR(100)
+              - column:
+                  name: customer_last_name
+                  type: VARCHAR(100)
+
+  - changeSet:
+      id: insert-esp-simulation-records
       author: esp-simulation-service
       changes:
         - insert:
@@ -21,6 +54,7 @@ databaseChangeLog:
               - column:
                   name: customer_last_name
                   value: Johnson
+
         - insert:
             tableName: customer_record
             columns:
