@@ -1,367 +1,122 @@
 
-package com.rbs.bdd.domain.model;
-
-
-
-/**
- * Represents a structured error detail used for SOAP fault responses.
- * This record encapsulates:
- * <ul>
- *     <li>Error return code</li>
- *     <li>Human-readable description</li>
- *     <li>System notification code</li>
- *     <li>System notification description</li>
- * </ul>
- *
- * @param returnCode Unique identifier for the error
- * @param description User-friendly description of the error
- * @param systemNotificationCode Optional system-level notification code
- * @param systemNotificationDesc Optional system-level notification description
- */
-public record ErrorDetail(
-        String returnCode,
-        String description,
-        String systemNotificationCode,
-        String systemNotificationDesc
-) {}
-
------------------
-
-
-package com.rbs.bdd.application.service;
-
-import com.rbs.bdd.application.port.out.AccountValidationPort;
-import com.rbs.bdd.application.port.in.PaymentValidationPort;
-import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.ws.WebServiceMessage;
-
-/**
- * Service class responsible for orchestrating the validation flow of payment arrangement requests.
- * Implements {@link PaymentValidationPort} and delegates schema and business rule validation
- * to the appropriate output port.
- */
-@Service
-@RequiredArgsConstructor
-@Slf4j
-public class PaymentOrchestrator implements PaymentValidationPort {
-
-    private final AccountValidationPort accountValidationPort;
-
-
-
-
-    /**
-     * Entry point for handling the SOAP request. Validates schema and applies business rules.
-     *
-     * @param request the incoming SOAP request payload
-     * @param message the SOAP WebServiceMessage used to write the final response
-     */
-    @Override
-    public void validateArrangementForPayment(ValidateArrangementForPaymentRequest request,WebServiceMessage message) {
-        log.info("Customer Retrieval Orchestrator Service is called for customer Retrieval");
-        accountValidationPort.validateSchema(request); // automatic validation through interceptors
-         accountValidationPort.validateBusinessRules(request,message);
-    }
-
-}
-
-
-
------
-package com.rbs.bdd.application.service;
-
-import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
-import com.rbs.bdd.application.port.in.PaymentValidationPort;
-import com.rbs.bdd.application.port.out.AccountValidationPort;
-import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.ws.WebServiceMessage;
-import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
-
-
-
-/**
- * Service class responsible for orchestrating the validation flow of Customer Retrieval requests.
- * Implements {@link CustomerRetrievalPort} and delegates schema and business rule validation
- * to the appropriate output port.
- */
-@Service
-@RequiredArgsConstructor
-@Slf4j
-public class CustomerRetrievalOrchestrator implements CustomerRetrievalPort {
-
-    private final RetrieveCustomerPort retrieveCustomerPort;
-
-
-    /**
-     * Entry point for handling the SOAP request. Validates schema and applies business rules.
-     *
-     * @param request the incoming SOAP request payload
-     * @param message the SOAP WebServiceMessage used to write the final response
-     */
-    @Override
-    public void validateCustomerRetrieval(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message) {
-        log.info("Customer Retrieval Orchestrator Service is called for customer Retrieval");
-        retrieveCustomerPort.validateSchema(request); // automatic validation through interceptors
-        retrieveCustomerPort.retrieveCustomer(request, message);
-    }
-
-}
-
----------------
-package com.rbs.bdd.infrastructure.soap.api;
-
-import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
-import com.rbs.bdd.application.port.in.PaymentValidationPort;
-
-import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
-import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.server.endpoint.annotation.Endpoint;
-import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
-import org.springframework.ws.server.endpoint.annotation.RequestPayload;
-import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
-
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL;
-
-
-/**
- * SOAP endpoint adapter class for handling the `validateArrangementForPayment` operation.
- * It uses Spring WS annotations to route incoming SOAP requests to the appropriate service layer.
- */
-@Slf4j
-@Endpoint
-public class PaymentValidationSoapAdapter {
-
-    /**Changes for the request*/
-
-
-    private final PaymentValidationPort paymentValidationPort;
-    private final CustomerRetrievalPort customerRetrievalPort;
-
-    /**
-     * Constructor-based injection of the orchestrator that handles business logic.
-     *
-     * @param paymentValidationPort the orchestrator service
-     */
-    public PaymentValidationSoapAdapter(PaymentValidationPort paymentValidationPort,CustomerRetrievalPort customerRetrievalPort) {
-        this.paymentValidationPort = paymentValidationPort;
-        this.customerRetrievalPort = customerRetrievalPort;
-    }
-
-
-
-    /**
-     * Handles the `validateArrangementForPayment` SOAP request.
-     * Delegates request processing to the orchestrator which modifies the response message directly.
-     *
-     * @param request the SOAP request payload
-     * @param context the Spring WS message context
-     */
-    @PayloadRoot(namespace = NAMESPACE_URI_FOR_ACCOUNT_VALIDATION, localPart = "validateArrangementForPayment")
-    @ResponsePayload
-    public void validateArrangementForPayment(@RequestPayload ValidateArrangementForPaymentRequest request,
-                                                MessageContext context) {
-        log.info("validateArrangementForPayment is called");
-        WebServiceMessage response = context.getResponse();
-        paymentValidationPort.validateArrangementForPayment(request, response);
-         }
-
-    /**
-     * Handles the `RetrieveCustomerRequest` SOAP request.
-     * Delegates request processing to the orchestrator which modifies the response message directly.
-     *
-     * @param request the SOAP request payload
-     * @param context the Spring WS message context
-     */
-    @PayloadRoot(namespace = NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL, localPart = "retrievePrimaryCustomerForArr")
-    @ResponsePayload
-    public void validateCustomerRetrieval(@RequestPayload RetrievePrimaryCustomerForArrRequest request,
-                                              MessageContext context) {
-        log.info("validateCustomerRetrieval is called");
-        WebServiceMessage response = context.getResponse();
-
-        customerRetrievalPort.validateCustomerRetrieval(request, response);
-    }
-
-}
-
------------
 package com.rbs.bdd.infrastructure.soap.interceptor;
 
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import com.rbs.bdd.util.SoapInterceptorUtils;
-
-import lombok.extern.slf4j.Slf4j;
+import jakarta.xml.soap.MessageFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.ws.WebServiceMessage;
 import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor; import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
 import org.xml.sax.SAXParseException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.ERROR_XML_PATH;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.SCHEMA_VALIDATION_ERROR_XML;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.SYSTEM_ID;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.TAG_TRANSACTION_ID;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+class AccountSchemaValidationInterceptorTest {
 
-/**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
- */
-@Slf4j
-public class AccountSchemaValidationInterceptor extends PayloadValidatingInterceptor {
+    private AccountSchemaValidationInterceptor interceptor;
 
-
-
-
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
-        if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_ACCOUNT_VALIDATION)) {
-            return true;
-        }
-        return super.handleRequest(messageContext, endpoint);
+    @BeforeEach
+    void setUp() {
+        interceptor = new AccountSchemaValidationInterceptor();
     }
 
+    @Test
+    void testHandleSchemaValidationFailure_customResponse() throws Exception {
+        String dummyXml = """
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+              <soapenv:Body>
+                <testRequest></testRequest>
+              </soapenv:Body>
+            </soapenv:Envelope>
+            """;
 
-    /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
-     */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        log.error("Schema validation failed. Returning custom schemaValidationError.xml");
-        return SoapInterceptorUtils.handleSchemaValidationErrors(messageContext
-                ,ERROR_XML_PATH,"accountValidation");
+        WebServiceMessage request = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(dummyXml.getBytes()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(request);
+
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest, servletResponse));
+
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[] {});
+        assertFalse(result);
+
+        String response = servletResponse.getContentAsString();
+        assertTrue(response.contains("transactionId"));
+        assertEquals(500, servletResponse.getStatus());
     }
-
-
-
-    /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
-     */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
-    }
-
 }
 
-----------------
+
+
+----
 package com.rbs.bdd.infrastructure.soap.interceptor;
 
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import com.rbs.bdd.util.SoapInterceptorUtils;
-
-import lombok.extern.slf4j.Slf4j;
+import jakarta.xml.soap.MessageFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.ws.WebServiceMessage;
 import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
 import org.xml.sax.SAXParseException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.SCHEMA_VALIDATION_ERROR_XML;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.SYSTEM_ID;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.TAG_TRANSACTION_ID;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+class CustomerSchemaValidationInterceptorTest {
 
-/**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
- */
-@Slf4j
-public class CustomerSchemaValidationInterceptor extends PayloadValidatingInterceptor {
+    private CustomerSchemaValidationInterceptor interceptor;
 
-
-
-
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
-        if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL)) {
-            return true;
-        }
-        return super.handleRequest(messageContext, endpoint);
+    @BeforeEach
+    void setUp() {
+        interceptor = new CustomerSchemaValidationInterceptor();
     }
 
+    @Test
+    void testHandleSchemaValidationFailure_customResponse() throws Exception {
+        String dummyXml = """
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+              <soapenv:Body>
+                <testRequest></testRequest>
+              </soapenv:Body>
+            </soapenv:Envelope>
+            """;
 
-    /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
-     */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        log.error("Schema validation failed. Returning custom schemaValidationError.xml");
-        return SoapInterceptorUtils.handleSchemaValidationErrors(messageContext,
-                SCHEMA_VALIDATION_ERROR_XML,"customerRetrieval");
+        WebServiceMessage request = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(dummyXml.getBytes()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(request);
+
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest, servletResponse));
+
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[] {});
+        assertFalse(result);
+
+        String response = servletResponse.getContentAsString();
+        assertTrue(response.contains("transactionId"));
+        assertEquals(500, servletResponse.getStatus());
     }
-
-
-    /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
-     */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
-    }
-
 }
