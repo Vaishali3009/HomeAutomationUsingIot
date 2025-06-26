@@ -1,35 +1,289 @@
-package com.rbs.bdd.application.service;
-
-import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
-import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+package com.rbs.bdd.infrastructure.soap.interceptor;
+import com.rbs.bdd.application.exception.SchemaValidationException;
+import jakarta.xml.soap.MessageFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXParseException;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class CustomerRetrievalOrchestratorTest {
+/**
+ * Unit tests for {@link AccountSchemaValidationInterceptorTest}, ensuring schema validation errors
+ * are intercepted and custom static error SOAP responses are returned with dynamic field replacements.
+ */
+@ActiveProfiles("test")
+@Slf4j
+class AccountSchemaValidationInterceptorTest {
 
-    private RetrieveCustomerPort retrieveCustomerPort;
-    private CustomerRetrievalOrchestrator orchestrator;
-    private RetrievePrimaryCustomerForArrRequest mockRequest;
-    private WebServiceMessage mockMessage;
+    private AccountSchemaValidationInterceptor interceptor;
 
     @BeforeEach
-    void setUp() {
-        retrieveCustomerPort = mock(RetrieveCustomerPort.class);
-        orchestrator = new CustomerRetrievalOrchestrator(retrieveCustomerPort);
-        mockRequest = mock(RetrievePrimaryCustomerForArrRequest.class);
-        mockMessage = mock(WebServiceMessage.class);
+    void setup() {
+        interceptor = new AccountSchemaValidationInterceptor();
     }
 
+    /**
+     * Tests that a custom SOAP fault is returned with HTTP 500 when schema validation fails.
+     */
     @Test
-    void validateCustomerRetrieval_shouldDelegateToPorts() {
+    @DisplayName("Should return custom error XML response with replaced transactionId and timestamp")
+    void testHandleRequestValidationErrors_customFaultReturned() throws Exception {
+        // Arrange: Load request XML that includes transactionId and systemId
+        InputStream requestXml = getClass().getClassLoader().getResourceAsStream("static-request/account-validation-request.xml");
+        assertNotNull(requestXml);
+
+        ByteArrayOutputStream requestOut = new ByteArrayOutputStream();
+        requestXml.transferTo(requestOut);
+
+        WebServiceMessage webServiceMessage = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(requestOut.toByteArray()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(webServiceMessage);
+
+        // Mock HTTP response and Spring context
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest,servletResponse));
+
         // Act
-        orchestrator.validateCustomerRetrieval(mockRequest, mockMessage);
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{});
 
         // Assert
-        verify(retrieveCustomerPort).validateSchema(mockRequest);
-        verify(retrieveCustomerPort).retrieveCustomer(mockRequest, mockMessage);
+        assertFalse(result); // false = custom SOAP sent successfully
+
+        String responseContent = servletResponse.getContentAsString();
+        log.debug("Schema Validation Error ");
+        log.debug("Actual response"+responseContent);
+        assertTrue(responseContent.contains("<transactionId>"), "transactionId should be injected");
+        assertTrue(responseContent.contains("<systemId>ESP</systemId>")); // use actual expected value from request
+        assertEquals(500, servletResponse.getStatus());
+    }
+
+    /**
+     * Tests that a SchemaValidationException is thrown when static XML is missing.
+     */
+    @Test
+    @DisplayName("Should throw SchemaValidationException when error XML is not found")
+    void testHandleRequestValidationErrors_missingStaticXml() {
+        // Use subclass to override file loading behavior to simulate missing file
+        AccountSchemaValidationInterceptor customInterceptor = new AccountSchemaValidationInterceptor() {
+            @Override
+            protected InputStream getClassLoaderResource(String path) {
+                return null; // simulate missing file
+            }
+        };
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(mock(WebServiceMessage.class));
+
+        assertThrows(SchemaValidationException.class,
+                () -> customInterceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{}));
+    }
+
+    /**
+     * Tests that <refRequestIds> is removed if request doesn't contain requestIds.
+     */
+    @Test
+    @DisplayName("Should remove <refRequestIds> if <requestIds> missing in request")
+    void testRemoveRefRequestIds_whenRequestIdsMissing() throws Exception {
+        // Arrange: request XML without transactionId/systemId
+        String malformedXml = """
+                <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+                    <soapenv:Body>
+                        <testRequest></testRequest>
+                    </soapenv:Body>
+                </soapenv:Envelope>
+                """;
+
+        WebServiceMessage message = new SaajSoapMessage(
+               MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(malformedXml.getBytes()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(message);
+
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest,servletResponse));
+
+        // Act
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{});
+
+        // Assert
+        assertFalse(result);
+        Document responseDoc = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(new ByteArrayInputStream(servletResponse.getContentAsByteArray()));
+        log.debug("Should remove <refRequestIds> if <requestIds> missing in request");
+        NodeList refRequestIds = responseDoc.getElementsByTagNameNS("*", "refRequestIds");
+        assertEquals(0, refRequestIds.getLength(), "refRequestIds should be removed");
+    }
+}
+
+
+---------------------
+package com.rbs.bdd.infrastructure.soap.interceptor;
+
+
+        import com.rbs.bdd.application.exception.SchemaValidationException;
+        import jakarta.xml.soap.MessageFactory;
+        import lombok.extern.slf4j.Slf4j;
+        import org.junit.jupiter.api.BeforeEach;
+        import org.junit.jupiter.api.DisplayName;
+        import org.junit.jupiter.api.Test;
+        import org.springframework.mock.web.MockHttpServletRequest;
+        import org.springframework.mock.web.MockHttpServletResponse;
+        import org.springframework.web.context.request.RequestContextHolder;
+        import org.springframework.web.context.request.ServletRequestAttributes;
+        import org.springframework.ws.WebServiceMessage;
+        import org.springframework.ws.context.MessageContext;
+        import org.springframework.ws.soap.saaj.SaajSoapMessage;
+        import org.w3c.dom.Document;
+        import org.w3c.dom.NodeList;
+        import org.xml.sax.SAXParseException;
+
+        import javax.xml.parsers.DocumentBuilderFactory;
+        import java.io.ByteArrayInputStream;
+        import java.io.ByteArrayOutputStream;
+        import java.io.InputStream;
+
+        import static org.junit.jupiter.api.Assertions.*;
+        import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for {@link CustomerRetrievalSchemaValidationInterceptorTest}, ensuring schema validation errors
+ * are intercepted and custom static error SOAP responses are returned with dynamic field replacements.
+ */
+
+@Slf4j
+class CustomerRetrievalSchemaValidationInterceptorTest {
+
+    private CustomerSchemaValidationInterceptor interceptor;
+
+    @BeforeEach
+    void setup() {
+        interceptor = new CustomerSchemaValidationInterceptor();
+    }
+
+    /**
+     * Tests that a custom SOAP fault is returned with HTTP 500 when schema validation fails.
+     */
+    @Test
+    @DisplayName("Should return custom error XML response with replaced transactionId and timestamp")
+    void testHandleRequestValidationErrors_customFaultReturned() throws Exception {
+        // Arrange: Load request XML that includes transactionId and systemId
+        InputStream requestXml = getClass().getClassLoader().getResourceAsStream("static-request/customer-retrieval-request.xml");
+        assertNotNull(requestXml);
+
+        ByteArrayOutputStream requestOut = new ByteArrayOutputStream();
+        requestXml.transferTo(requestOut);
+
+        WebServiceMessage webServiceMessage = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(requestOut.toByteArray()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(webServiceMessage);
+
+        // Mock HTTP response and Spring context
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest,servletResponse));
+
+        // Act
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{});
+
+        // Assert
+        assertFalse(result); // false = custom SOAP sent successfully
+
+        String responseContent = servletResponse.getContentAsString();
+        log.debug("Actual response"+responseContent);
+        assertTrue(responseContent.contains("<transactionId>"), "transactionId should be injected");
+        assertTrue(responseContent.contains("<systemId>ESP</systemId>")); // use actual expected value from request
+        assertEquals(500, servletResponse.getStatus());
+    }
+
+    /**
+     * Tests that a SchemaValidationException is thrown when static XML is missing.
+     */
+    @Test
+    @DisplayName("Should throw SchemaValidationException when error XML is not found")
+    void testHandleRequestValidationErrors_missingStaticXml() {
+        // Use subclass to override file loading behavior to simulate missing file
+        AccountSchemaValidationInterceptor customInterceptor = new AccountSchemaValidationInterceptor() {
+            @Override
+            protected InputStream getClassLoaderResource(String path) {
+                return null; // simulate missing file
+            }
+        };
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(mock(WebServiceMessage.class));
+
+        assertThrows(SchemaValidationException.class,
+                () -> customInterceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{}));
+    }
+
+    /**
+     * Tests that <refRequestIds> is removed if request doesn't contain requestIds.
+     */
+    @Test
+    @DisplayName("Should remove <refRequestIds> if <requestIds> missing in request")
+    void testRemoveRefRequestIds_whenRequestIdsMissing() throws Exception {
+        // Arrange: request XML without transactionId/systemId
+        String malformedXml = """
+                <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+                    <soapenv:Body>
+                        <testRequest></testRequest>
+                    </soapenv:Body>
+                </soapenv:Envelope>
+                """;
+
+        WebServiceMessage message = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(malformedXml.getBytes()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(message);
+
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest,servletResponse));
+
+        // Act
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{});
+
+        // Assert
+        assertFalse(result);
+        Document responseDoc = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(new ByteArrayInputStream(servletResponse.getContentAsByteArray()));
+        log.debug("Should remove <refRequestIds> if <requestIds> missing in request");
+        NodeList refRequestIds = responseDoc.getElementsByTagNameNS("*", "refRequestIds");
+        assertEquals(0, refRequestIds.getLength(), "refRequestIds should be removed");
     }
 }
