@@ -1,3 +1,33 @@
+
+package com.rbs.bdd.domain.model;
+
+
+
+/**
+ * Represents a structured error detail used for SOAP fault responses.
+ * This record encapsulates:
+ * <ul>
+ *     <li>Error return code</li>
+ *     <li>Human-readable description</li>
+ *     <li>System notification code</li>
+ *     <li>System notification description</li>
+ * </ul>
+ *
+ * @param returnCode Unique identifier for the error
+ * @param description User-friendly description of the error
+ * @param systemNotificationCode Optional system-level notification code
+ * @param systemNotificationDesc Optional system-level notification description
+ */
+public record ErrorDetail(
+        String returnCode,
+        String description,
+        String systemNotificationCode,
+        String systemNotificationDesc
+) {}
+
+-----------------
+
+
 package com.rbs.bdd.application.service;
 
 import com.rbs.bdd.application.port.out.AccountValidationPort;
