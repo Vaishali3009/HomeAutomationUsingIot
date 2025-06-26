@@ -1,35 +1,35 @@
 package com.rbs.bdd.application.service;
 
-import com.rbs.bdd.application.port.out.AccountValidationPort;
-import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ws.WebServiceMessage;
 
 import static org.mockito.Mockito.*;
 
-class PaymentOrchestratorTest {
+class CustomerRetrievalOrchestratorTest {
 
-    private AccountValidationPort accountValidationPort;
-    private PaymentOrchestrator orchestrator;
-    private ValidateArrangementForPaymentRequest mockRequest;
+    private RetrieveCustomerPort retrieveCustomerPort;
+    private CustomerRetrievalOrchestrator orchestrator;
+    private RetrievePrimaryCustomerForArrRequest mockRequest;
     private WebServiceMessage mockMessage;
 
     @BeforeEach
     void setUp() {
-        accountValidationPort = mock(AccountValidationPort.class);
-        orchestrator = new PaymentOrchestrator(accountValidationPort);
-        mockRequest = mock(ValidateArrangementForPaymentRequest.class);
+        retrieveCustomerPort = mock(RetrieveCustomerPort.class);
+        orchestrator = new CustomerRetrievalOrchestrator(retrieveCustomerPort);
+        mockRequest = mock(RetrievePrimaryCustomerForArrRequest.class);
         mockMessage = mock(WebServiceMessage.class);
     }
 
     @Test
-    void validateArrangementForPayment_shouldDelegateToPorts() {
+    void validateCustomerRetrieval_shouldDelegateToPorts() {
         // Act
-        orchestrator.validateArrangementForPayment(mockRequest, mockMessage);
+        orchestrator.validateCustomerRetrieval(mockRequest, mockMessage);
 
         // Assert
-        verify(accountValidationPort).validateSchema(mockRequest);
-        verify(accountValidationPort).validateBusinessRules(mockRequest, mockMessage);
+        verify(retrieveCustomerPort).validateSchema(mockRequest);
+        verify(retrieveCustomerPort).retrieveCustomer(mockRequest, mockMessage);
     }
 }
