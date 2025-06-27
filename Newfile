@@ -1,102 +1,24 @@
-package com.rbs.bdd.application.service;
+package com.rbs.bdd;
 
-import com.rbs.bdd.application.exception.CustomerRetrievalException;
-import com.rbs.bdd.infrastructure.entity.CustomerData;
-import com.rbs.bdd.infrastructure.repository.CustomerRepository;
-import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.ws.WebServiceMessage;
-import org.w3c.dom.Document;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import java.io.IOException;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+/**
 
-class CustomerRetrievalServiceTest {
+ * Main Spring boot entry class for the Esp Simulator application.
+ * This class bootstraps the spring context and launches the application.
 
-    private CustomerRepository repository;
-    private CustomerRetrievalService service;
+ * Main Spring boot entry class for the Esp Simulator application.
+ * This class bootstraps the spring context and launches the application.
+ */
+@ComponentScan("com.rbs.bdd")
+@SpringBootApplication(scanBasePackages = "com.rbs.bdd" )
+       // ,exclude = {org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration.class})
+public class EspSimulatorEngine {
 
-    @BeforeEach
-    void setUp() {
-        repository = mock(CustomerRepository.class);
-        service = new CustomerRetrievalService(repository);
-    }
-
-    @Test
-    void shouldPassSchemaValidation() {
-        RetrievePrimaryCustomerForArrRequest request = new RetrievePrimaryCustomerForArrRequest();
-        assertDoesNotThrow(() -> service.validateSchema(request));
-    }
-
-    @Test
-    void shouldReturnSuccessResponseIfCustomerFoundInDB() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = buildRequest("12345678901234", "UKBasicBankAccountNumber");
-        CustomerData dbRecord = new CustomerData("Mr", "John", "Doe", "12345678901234", "UKBasicBankAccountNumber");
-        when(repository.findByAccountNo("12345678901234")).thenReturn(Optional.of(dbRecord));
-
-        WebServiceMessage message = mock(WebServiceMessage.class);
-        assertDoesNotThrow(() -> service.retrieveCustomer(request, message));
-    }
-
-    @Test
-    void shouldReturnSuccessResponseIfCustomerFoundInStaticMapping() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = buildRequest("56781234123412", "UKBasicBankAccountNumber");
-        when(repository.findByAccountNo("56781234123412")).thenReturn(Optional.empty());
-
-        WebServiceMessage message = mock(WebServiceMessage.class);
-        assertDoesNotThrow(() -> service.retrieveCustomer(request, message));
-    }
-
-    @Test
-    void shouldReturnErrorIfCustomerNotFound() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = buildRequest("99999999999999", "UKBasicBankAccountNumber");
-        when(repository.findByAccountNo("99999999999999")).thenReturn(Optional.empty());
-
-        WebServiceMessage message = mock(WebServiceMessage.class);
-        assertDoesNotThrow(() -> service.retrieveCustomer(request, message));
-    }
-
-    @Test
-    void shouldReturnErrorIfUBANLengthIsInvalid() {
-        RetrievePrimaryCustomerForArrRequest request = buildRequest("1234", "UKBasicBankAccountNumber");
-        WebServiceMessage message = mock(WebServiceMessage.class);
-
-        assertDoesNotThrow(() -> service.retrieveCustomer(request, message));
-    }
-
-    @Test
-    void shouldThrowExceptionIfXmlNotFound() {
-        RetrievePrimaryCustomerForArrRequest request = buildRequest("00001111222233", "UKBasicBankAccountNumber");
-        WebServiceMessage message = mock(WebServiceMessage.class);
-
-        // Force an unknown identifier to trigger XML error response load
-        assertThrows(CustomerRetrievalException.class, () -> service.retrieveCustomer(request, message));
-    }
-
-    private RetrievePrimaryCustomerForArrRequest buildRequest(String identifier, String codeValue) {
-        RetrievePrimaryCustomerForArrRequest request = new RetrievePrimaryCustomerForArrRequest();
-
-        ArrangementIdentifier identifierObj = new ArrangementIdentifier();
-        identifierObj.setIdentifier(identifier);
-        ArrangementContext context = new ArrangementContext();
-        context.setCodeValue(codeValue);
-        identifierObj.setContext(context);
-        request.setArrangementIdentifier(identifierObj);
-
-        RequestHeader header = new RequestHeader();
-        RequestId reqId = new RequestId();
-        reqId.setTransactionId("TXN123456");
-        reqId.setSystemId("SYS001");
-        header.getRequestIds().add(reqId);
-        request.setRequestHeader(header);
-
-        return request;
+    public static void main(String[] args) {
+        SpringApplication.run(EspSimulatorEngine.class, args);
     }
 }
