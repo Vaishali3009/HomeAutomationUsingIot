@@ -1,1 +1,19 @@
-.
+package com.rbs.bdd;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+/**
+ * Test class to ensure that the Spring Boot application context for EspSimulatorEngine loads correctly.
+ */
+@SpringBootTest
+class EspSimulatorEngineTest {
+
+    /**
+     * Verifies that the Spring Boot application context loads without throwing any exceptions.
+     */
+    @Test
+    void contextLoads() {
+        // No implementation required; context loading is tested by @SpringBootTest.
+    }
+}
