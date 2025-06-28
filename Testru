@@ -1,403 +1,162 @@
 package com.rbs.bdd.infrastructure.soap.interceptor;
 
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
 import com.rbs.bdd.util.SoapInterceptorUtils;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.ws.WebServiceMessage;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor; import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.ERROR_XML_PATH;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.SCHEMA_VALIDATION_ERROR_XML;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.SYSTEM_ID;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.TAG_TRANSACTION_ID;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+class AccountSchemaValidationInterceptorTest {
 
-/**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
- */
-@Slf4j
-public class AccountSchemaValidationInterceptor extends PayloadValidatingInterceptor {
+    private AccountSchemaValidationInterceptor interceptor;
+    private MessageContext mockMessageContext;
 
+    @BeforeEach
+    void setUp() {
+        interceptor = new AccountSchemaValidationInterceptor();
+        mockMessageContext = mock(MessageContext.class);
+    }
 
+    @Test
+    void testHandleRequest_skipsInterceptorIfNamespaceNotMatched() throws Exception {
+        try (MockedStatic<SoapInterceptorUtils> utilities = mockStatic(SoapInterceptorUtils.class)) {
+            utilities.when(() -> SoapInterceptorUtils
+                    .skipInterceptorIfNamespaceNotMatched(any(), any()))
+                    .thenReturn(true);
 
+            boolean result = interceptor.handleRequest(mockMessageContext, new Object());
+            assertTrue(result);
 
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
-        if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_ACCOUNT_VALIDATION)) {
-            return true;
+            utilities.verify(() -> SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(mockMessageContext, "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/ServiceParameters/V01/"));
         }
-        return super.handleRequest(messageContext, endpoint);
     }
 
+    @Test
+    void testHandleRequest_callsSuperWhenNamespaceMatched() throws Exception {
+        try (MockedStatic<SoapInterceptorUtils> utilities = mockStatic(SoapInterceptorUtils.class)) {
+            utilities.when(() -> SoapInterceptorUtils
+                    .skipInterceptorIfNamespaceNotMatched(any(), any()))
+                    .thenReturn(false);
 
-    /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
-     */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        log.error("Schema validation failed. Returning custom schemaValidationError.xml");
-        return SoapInterceptorUtils.handleSchemaValidationErrors(messageContext
-                ,ERROR_XML_PATH,"accountValidation");
+            AccountSchemaValidationInterceptor interceptorSpy = spy(interceptor);
+            doReturn(true).when((PayloadValidatingInterceptor) interceptorSpy)
+                    .handleRequest(mockMessageContext, new Object());
+
+            boolean result = interceptorSpy.handleRequest(mockMessageContext, new Object());
+            assertTrue(result);
+        }
     }
 
+    @Test
+    void testHandleRequestValidationErrors_callsErrorHandling() {
+        SAXParseException[] errors = new SAXParseException[0];
 
+        try (MockedStatic<SoapInterceptorUtils> utilities = mockStatic(SoapInterceptorUtils.class)) {
+            utilities.when(() -> SoapInterceptorUtils
+                    .handleSchemaValidationErrors(any(), anyString(), anyString()))
+                    .thenReturn(false);
 
-    /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
-     */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
+            boolean result = interceptor.handleRequestValidationErrors(mockMessageContext, errors);
+            assertFalse(result);
+
+            utilities.verify(() ->
+                    SoapInterceptorUtils.handleSchemaValidationErrors(mockMessageContext,
+                            "static-response/error/account-validation/schemaValidationError.xml", "accountValidation"));
+        }
     }
 
+    @Test
+    void testGetClassLoaderResource_returnsStream() {
+        InputStream stream = interceptor.getClassLoaderResource("logback-test.xml");
+        assertNotNull(stream);
+    }
 }
 
----------------
+
+
+
 package com.rbs.bdd.infrastructure.soap.interceptor;
 
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
 import com.rbs.bdd.util.SoapInterceptorUtils;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.ws.WebServiceMessage;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.SCHEMA_VALIDATION_ERROR_XML;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.SYSTEM_ID;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.TAG_TRANSACTION_ID;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+class CustomerSchemaValidationInterceptorTest {
 
-/**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
- */
-@Slf4j
-public class CustomerSchemaValidationInterceptor extends PayloadValidatingInterceptor {
+    private CustomerSchemaValidationInterceptor interceptor;
+    private MessageContext mockMessageContext;
 
+    @BeforeEach
+    void setUp() {
+        interceptor = new CustomerSchemaValidationInterceptor();
+        mockMessageContext = mock(MessageContext.class);
+    }
 
+    @Test
+    void testHandleRequest_skipsInterceptorIfNamespaceNotMatched() throws Exception {
+        try (MockedStatic<SoapInterceptorUtils> utilities = mockStatic(SoapInterceptorUtils.class)) {
+            utilities.when(() -> SoapInterceptorUtils
+                    .skipInterceptorIfNamespaceNotMatched(any(), any()))
+                    .thenReturn(true);
 
+            boolean result = interceptor.handleRequest(mockMessageContext, new Object());
+            assertTrue(result);
 
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
-        if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL)) {
-            return true;
+            utilities.verify(() -> SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(mockMessageContext, "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/ServiceParameters/V01/"));
         }
-        return super.handleRequest(messageContext, endpoint);
     }
 
+    @Test
+    void testHandleRequest_callsSuperWhenNamespaceMatched() throws Exception {
+        try (MockedStatic<SoapInterceptorUtils> utilities = mockStatic(SoapInterceptorUtils.class)) {
+            utilities.when(() -> SoapInterceptorUtils
+                    .skipInterceptorIfNamespaceNotMatched(any(), any()))
+                    .thenReturn(false);
 
-    /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
-     */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        log.error("Schema validation failed. Returning custom schemaValidationError.xml");
-        return SoapInterceptorUtils.handleSchemaValidationErrors(messageContext,
-                SCHEMA_VALIDATION_ERROR_XML,"customerRetrieval");
-    }
+            CustomerSchemaValidationInterceptor interceptorSpy = spy(interceptor);
+            doReturn(true).when((PayloadValidatingInterceptor) interceptorSpy)
+                    .handleRequest(mockMessageContext, new Object());
 
-
-    /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
-     */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
-    }
-
-}
-
-----------------
-
-package com.rbs.bdd.infrastructure.soap.api;
-
-import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
-import com.rbs.bdd.application.port.in.PaymentValidationPort;
-
-import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
-import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.server.endpoint.annotation.Endpoint;
-import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
-import org.springframework.ws.server.endpoint.annotation.RequestPayload;
-import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
-
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL;
-
-
-/**
- * SOAP endpoint adapter class for handling the `validateArrangementForPayment` operation.
- * It uses Spring WS annotations to route incoming SOAP requests to the appropriate service layer.
- */
-@Slf4j
-@Endpoint
-public class PaymentValidationSoapAdapter {
-
-    /**Changes for the request*/
-
-
-    private final PaymentValidationPort paymentValidationPort;
-    private final CustomerRetrievalPort customerRetrievalPort;
-
-    /**
-     * Constructor-based injection of the orchestrator that handles business logic.
-     *
-     * @param paymentValidationPort the orchestrator service
-     */
-    public PaymentValidationSoapAdapter(PaymentValidationPort paymentValidationPort,CustomerRetrievalPort customerRetrievalPort) {
-        this.paymentValidationPort = paymentValidationPort;
-        this.customerRetrievalPort = customerRetrievalPort;
-    }
-
-
-
-    /**
-     * Handles the `validateArrangementForPayment` SOAP request.
-     * Delegates request processing to the orchestrator which modifies the response message directly.
-     *
-     * @param request the SOAP request payload
-     * @param context the Spring WS message context
-     */
-    @PayloadRoot(namespace = NAMESPACE_URI_FOR_ACCOUNT_VALIDATION, localPart = "validateArrangementForPayment")
-    @ResponsePayload
-    public void validateArrangementForPayment(@RequestPayload ValidateArrangementForPaymentRequest request,
-                                                MessageContext context) {
-        log.info("validateArrangementForPayment is called");
-        WebServiceMessage response = context.getResponse();
-        paymentValidationPort.validateArrangementForPayment(request, response);
-         }
-
-    /**
-     * Handles the `RetrieveCustomerRequest` SOAP request.
-     * Delegates request processing to the orchestrator which modifies the response message directly.
-     *
-     * @param request the SOAP request payload
-     * @param context the Spring WS message context
-     */
-    @PayloadRoot(namespace = NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL, localPart = "retrievePrimaryCustomerForArr")
-    @ResponsePayload
-    public void validateCustomerRetrieval(@RequestPayload RetrievePrimaryCustomerForArrRequest request,
-                                              MessageContext context) {
-        log.info("validateCustomerRetrieval is called");
-        WebServiceMessage response = context.getResponse();
-
-        customerRetrievalPort.validateCustomerRetrieval(request, response);
-    }
-
-}
-
--------------
-package com.rbs.bdd.infrastructure.config;
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import com.rbs.bdd.application.exception.XsdSchemaLoadingException;
-import com.rbs.bdd.infrastructure.soap.interceptor.AccountSchemaValidationInterceptor;
-import com.rbs.bdd.infrastructure.soap.interceptor.CustomerSchemaValidationInterceptor;
-import com.rbs.bdd.util.SoapInterceptorUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.servlet.ServletRegistrationBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.ws.config.annotation.EnableWs;
-import org.springframework.ws.config.annotation.WsConfigurerAdapter;
-import org.springframework.ws.server.EndpointInterceptor;
-import org.springframework.ws.transport.http.MessageDispatcherServlet;
-import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
-import org.springframework.xml.xsd.XsdSchemaCollection;
-import org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection;
-import java.util.List;
-
-/**
- * Configures Spring Web Services (Spring WS) for the application.
- * <p>
- * This configuration includes:
- * <ul>
- *     <li>Publishing WSDL endpoints for SOAP web services</li>
- *     <li>Enabling automatic XML Schema (XSD) validation of incoming SOAP requests</li>
- *     <li>Registering interceptors for request validation</li>
- * </ul>
- */
-@Configuration
-@EnableWs
-@Slf4j
-public class SoapWebServiceConfig extends WsConfigurerAdapter {
-
-    /**
-     * Registers the {@link MessageDispatcherServlet} which is the main dispatcher for Spring WS.
-     * It handles SOAP messages and dispatches them to appropriate endpoints.
-     *
-     * @param context the Spring application context
-     * @return servlet registration bean mapped to the /ws/* URI
-     */
-    @Bean
-    public ServletRegistrationBean<MessageDispatcherServlet> messageDispatcherServlet(ApplicationContext context) {
-        MessageDispatcherServlet servlet = new MessageDispatcherServlet();
-        servlet.setApplicationContext(context);
-        servlet.setTransformWsdlLocations(true);
-        return new ServletRegistrationBean<>(servlet, "/ws/*");
-    }
-
-    /**
-     * Adds a custom interceptor for schema validation. This interceptor validates incoming SOAP
-     * messages against the configured XSD schema.
-     *
-     * @param interceptors list of interceptors to which this validation interceptor is added
-     */
-    @Override
-    public void addInterceptors(List<EndpointInterceptor> interceptors) {
-
-        log.debug(" Adding Interceptors");
-
-        CustomerSchemaValidationInterceptor customerRetrievalInterceptor = new CustomerSchemaValidationInterceptor();
-        customerRetrievalInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
-        customerRetrievalInterceptor.setValidateResponse(false); // Do not validate outgoing responses
-        try {
-            customerRetrievalInterceptor.setXsdSchemaCollection(updateCustomerRetrievalXsd());
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
+            boolean result = interceptorSpy.handleRequest(mockMessageContext, new Object());
+            assertTrue(result);
         }
-        interceptors.add(customerRetrievalInterceptor);
+    }
 
-        AccountSchemaValidationInterceptor validatingInterceptor = new AccountSchemaValidationInterceptor();
-        validatingInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
-        validatingInterceptor.setValidateResponse(false); // Do not validate outgoing responses
-        try {
-            validatingInterceptor.setXsdSchemaCollection(updateContactXsd());
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
+    @Test
+    void testHandleRequestValidationErrors_callsErrorHandling() {
+        SAXParseException[] errors = new SAXParseException[0];
+
+        try (MockedStatic<SoapInterceptorUtils> utilities = mockStatic(SoapInterceptorUtils.class)) {
+            utilities.when(() -> SoapInterceptorUtils
+                    .handleSchemaValidationErrors(any(), anyString(), anyString()))
+                    .thenReturn(false);
+
+            boolean result = interceptor.handleRequestValidationErrors(mockMessageContext, errors);
+            assertFalse(result);
+
+            utilities.verify(() ->
+                    SoapInterceptorUtils.handleSchemaValidationErrors(mockMessageContext,
+                            "static-response/error/account-validation/schemaValidationError.xml", "customerRetrieval"));
         }
-        interceptors.add(validatingInterceptor);
-
-
     }
 
-    /**
-     * Publishes a WSDL endpoint based on the `ArrValidationForPaymentParameters.xsd` file.
-     * This exposes the WSDL dynamically under /ws/ArrValidationForPaymentParameters.wsdl
-     *
-     * @return a configured WSDL definition bean
-     * @throws SchemaValidationException if XSD loading fails
-     */
-    @Bean(name = "ArrValidationForPaymentParameters")
-    public DefaultWsdl11Definition accountValidationWSDL() throws SchemaValidationException {
-        log.info("Account Validation Endpoint is invoked");
-         return  SoapInterceptorUtils.buildWsdlDefinition(
-                "IArrValidationForPayment",
-                "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/",
-                updateContactXsd()
-        );
+    @Test
+    void testGetClassLoaderResource_returnsStream() {
+        InputStream stream = interceptor.getClassLoaderResource("logback-test.xml");
+        assertNotNull(stream);
     }
-
-    /**
-     * Loads the primary XSD schema (`ArrValidationForPaymentParameters.xsd`) from the classpath
-     * and enables inlining for WSDL generation and schema validation.
-     *
-     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
-     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
-     */
-    @Bean
-    public XsdSchemaCollection updateContactXsd() {
-        return SoapInterceptorUtils.loadSchema("xsd/account-validation/ArrValidationForPaymentParameters.xsd");
-
-    }
-
-
-    /**
-     * Publishes a WSDL endpoint based on the `CustomerRetrievalForPaymentParameters.xsd` file.
-     * This exposes the WSDL dynamically under /ws/CustomerRetrievalForPaymentParameters.wsdl
-     *
-     * @return a configured WSDL definition bean
-     * @throws SchemaValidationException if XSD loading fails
-     */
-    @Bean(name = "CustomerRetrievalForPayment")
-    public DefaultWsdl11Definition customerRetrievalWSDL() throws SchemaValidationException {
-        log.info("Customer Retrieval Endpoint is invoked");
-        return  SoapInterceptorUtils.buildWsdlDefinition(
-                "ICustomerRetrievalForPayment",
-                "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/",
-                updateCustomerRetrievalXsd()
-        );
-    }
-
-
-    /**
-     * Loads the primary XSD schema (`CustomerRetrievalForPaymentParameters.xsd`) from the classpath
-     * and enables inlining for WSDL generation and schema validation.
-     *
-     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
-     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
-     */
-    @Bean
-    public XsdSchemaCollection updateCustomerRetrievalXsd() {
-        return SoapInterceptorUtils.loadSchema("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd");
-    }
-
-
 }
