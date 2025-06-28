@@ -1,170 +1,147 @@
 package com.rbs.bdd.infrastructure.soap.interceptor;
 
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
 import com.rbs.bdd.util.SoapInterceptorUtils;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.ws.WebServiceMessage;
+import jakarta.xml.soap.MessageFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor; import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.springframework.ws.WebServiceMessage;
 import org.xml.sax.SAXParseException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.ERROR_XML_PATH;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.SCHEMA_VALIDATION_ERROR_XML;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.SYSTEM_ID;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.TAG_TRANSACTION_ID;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+class AccountSchemaValidationInterceptorTest {
 
-/**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
- */
-@Slf4j
-public class AccountSchemaValidationInterceptor extends PayloadValidatingInterceptor {
+    private AccountSchemaValidationInterceptor interceptor;
 
+    @BeforeEach
+    void setUp() {
+        interceptor = new AccountSchemaValidationInterceptor();
+    }
 
+    /**
+     * Test custom schema validation error handling response.
+     */
+    @Test
+    void testHandleSchemaValidationFailure_customResponse() throws Exception {
+        String dummyXml = """
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+              <soapenv:Body>
+                <testRequest></testRequest>
+              </soapenv:Body>
+            </soapenv:Envelope>
+            """;
 
+        WebServiceMessage request = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(dummyXml.getBytes()))
+        );
 
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
-        if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_ACCOUNT_VALIDATION)) {
-            return true;
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(request);
+
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest, servletResponse));
+
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[] {});
+        assertFalse(result);
+
+        String response = servletResponse.getContentAsString();
+        assertTrue(response.contains("transactionId"));
+        assertEquals(500, servletResponse.getStatus());
+    }
+
+    /**
+     * Test interceptor skips request if namespace doesn't match.
+     */
+    @Test
+    void testHandleRequest_skipsInterceptorIfNamespaceMismatch() throws Exception {
+        MessageContext messageContext = mock(MessageContext.class);
+
+        try (MockedStatic<SoapInterceptorUtils> mockedUtils = mockStatic(SoapInterceptorUtils.class)) {
+            mockedUtils.when(() ->
+                    SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(any(), any()))
+                    .thenReturn(true);
+
+            boolean result = interceptor.handleRequest(messageContext, new Object());
+
+            assertTrue(result);
+            mockedUtils.verify(() ->
+                    SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext,
+                            "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/ServiceParameters/V01/"));
         }
-        return super.handleRequest(messageContext, endpoint);
     }
-
 
     /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
+     * Test interceptor continues to super handleRequest if namespace matches.
      */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        log.error("Schema validation failed. Returning custom schemaValidationError.xml");
-        return SoapInterceptorUtils.handleSchemaValidationErrors(messageContext
-                ,ERROR_XML_PATH,"accountValidation");
-    }
+    @Test
+    void testHandleRequest_callsSuperIfNamespaceMatches() throws Exception {
+        MessageContext messageContext = mock(MessageContext.class);
+        AccountSchemaValidationInterceptor spyInterceptor = spy(interceptor);
 
+        try (MockedStatic<SoapInterceptorUtils> mockedUtils = mockStatic(SoapInterceptorUtils.class)) {
+            mockedUtils.when(() ->
+                    SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(any(), any()))
+                    .thenReturn(false);
 
+            doReturn(true).when((PayloadValidatingInterceptor) spyInterceptor)
+                    .handleRequest(messageContext, new Object());
 
-    /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
-     */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
-    }
+            boolean result = spyInterceptor.handleRequest(messageContext, new Object());
 
-}
-
------------------
-package com.rbs.bdd.infrastructure.soap.interceptor;
-
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import com.rbs.bdd.util.SoapInterceptorUtils;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
-
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.SCHEMA_VALIDATION_ERROR_XML;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.SYSTEM_ID;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.TAG_TRANSACTION_ID;
-
-
-/**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
- */
-@Slf4j
-public class CustomerSchemaValidationInterceptor extends PayloadValidatingInterceptor {
-
-
-
-
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
-        if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL)) {
-            return true;
+            assertTrue(result);
+            verify(spyInterceptor).handleRequest(messageContext, new Object());
         }
-        return super.handleRequest(messageContext, endpoint);
     }
 
-
     /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
+     * Validates getClassLoaderResource returns a stream if file exists.
      */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        log.error("Schema validation failed. Returning custom schemaValidationError.xml");
-        return SoapInterceptorUtils.handleSchemaValidationErrors(messageContext,
-                SCHEMA_VALIDATION_ERROR_XML,"customerRetrieval");
+    @Test
+    void testGetClassLoaderResource_shouldReturnStream() {
+        InputStream stream = interceptor.getClassLoaderResource("logback-test.xml"); // You can replace with existing resource
+        assertNotNull(stream);
     }
 
+    /**
+     * Validates getClassLoaderResource returns null for non-existent file.
+     */
+    @Test
+    void testGetClassLoaderResource_returnsNullIfNotFound() {
+        InputStream stream = interceptor.getClassLoaderResource("non-existent.xml");
+        assertNull(stream);
+    }
 
     /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
+     * Verifies handleRequestValidationErrors logs error when errors are not empty.
      */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
+    @Test
+    void testHandleRequestValidationErrors_withErrorArray() throws Exception {
+        MessageContext messageContext = mock(MessageContext.class);
+
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest, servletResponse));
+
+        SAXParseException[] errors = new SAXParseException[] {
+                new SAXParseException("Test", null)
+        };
+
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, errors);
+        assertFalse(result);
+        assertEquals(500, servletResponse.getStatus());
     }
 
 }
