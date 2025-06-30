@@ -1,17 +1,623 @@
-private static final Map<String, String> BANK_CODES = Map.of(
-    "NWB", "278",
-    "RBS", "365",
-    "UBN", "391"
-);
+package com.rbs.bdd.application.service;
 
-private String resolveBankIdentifier(String iban) {
-    if (iban == null || iban.isEmpty()) return null;
-    return BANK_CODES.entrySet()
-                     .stream()
-                     .filter(entry -> iban.contains(entry.getKey()))
-                     .map(Map.Entry::getValue)
-                     .findFirst()
-                     .orElse(null);
+
+import com.rbs.bdd.application.exception.AccountValidationException;
+import com.rbs.bdd.application.port.out.AccountValidationPort;
+import com.rbs.bdd.domain.enums.*;
+import com.rbs.bdd.domain.model.ErrorDetail;
+import com.rbs.bdd.util.ValidationUtils;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+
+import jakarta.xml.soap.SOAPException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
+import com.rbs.bdd.util.ValidationUtils.RequestParams;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.ZonedDateTime;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+
+
+import static com.rbs.bdd.domain.enums.AccountStatus.DOMESTIC_RESTRICTED;
+import static com.rbs.bdd.domain.enums.AccountStatus.DOMESTIC_UNRESTRICTED;
+import static com.rbs.bdd.domain.enums.ModulusCheckStatus.FAILED;
+import static com.rbs.bdd.domain.enums.ModulusCheckStatus.PASSED;
+import static com.rbs.bdd.domain.enums.ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT;
+import static com.rbs.bdd.domain.enums.ServiceConstants.IBANs.*;
+import static com.rbs.bdd.domain.enums.SwitchingStatus.NOT_SWITCHING;
+import static com.rbs.bdd.domain.enums.SwitchingStatus.SWITCHED;
+import static com.rbs.bdd.util.ValidationUtils.generateTxnId;
+import static com.rbs.bdd.util.ValidationUtils.writeResponseToSoapMessage;
+
+/**
+ * Service responsible for validating SOAP requests for account validation and returning
+ * static success or error responses based on configured rules.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AccountValidationService implements AccountValidationPort {
+
+
+    /**
+     * Logs the fact that schema validation is already handled by Spring WS.
+     */
+    @Override
+    public void validateSchema(ValidateArrangementForPaymentRequest request) {
+        log.info("Schema validation completed by Spring WS");
+    }
+
+
+
+    /**
+     * Applies business rule validation based on account identifiers, code values, and IBAN/UBAN checks.
+     * Depending on the logic, either a static success or error response is returned.
+     *
+     * @param request the incoming SOAP request
+     * @param message the SOAP response message to be modified
+     */
+    @Override
+    public void validateBusinessRules(ValidateArrangementForPaymentRequest request, WebServiceMessage message) {
+        try {
+            log.info("Starting business rule validation for request.");
+            RequestParams params = extractParams(request);
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            Document responseDoc = handleBusinessValidation(params, xpath);
+
+            writeResponseToSoapMessage(message,responseDoc);
+            log.info("Response sent Successfully");
+
+        } catch (Exception ex) {
+            log.error("Business rule validation failed", ex);
+            throw new AccountValidationException("Validation failed", ex);
+        }
+    }
+
+
+
+    private Document handleBusinessValidation(RequestParams params, XPath xpath) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException { log.debug("Checking for the error in the request");
+
+        Optional<ErrorDetail> error = determineError(params);
+        if (error.isPresent()) {
+            return buildErrorResponse(error.get(), params.originalTxnId(), xpath);
+        }
+
+        Optional<ResponseConfig> config = determineMatchingConfig(params);
+        if (config.isPresent()) {
+            return buildSuccessResponse(params, config.get(), xpath);
+        }
+
+        return buildErrorResponse(ErrorConstants.ERR_MOD97_IBAN.detail(), params.originalTxnId(), xpath);
+    }
+    private Document buildErrorResponse(ErrorDetail detail, String txnId, XPath xpath)
+            throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+        Document errorDoc = loadAndParseXml(ServiceConstants.Paths.ACCOUNT_VALIDATION_ERROR_XML);
+        applyErrorResponse(errorDoc, xpath, detail, txnId);
+        return errorDoc;
+    }
+
+    private Document buildSuccessResponse(RequestParams params, ResponseConfig config, XPath xpath)
+            throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+        Document successDoc = loadAndParseXml("static-response/account-validation/success-response.xml");
+
+        if (INTL_BANK_ACCOUNT.equals(params.codeValue()) && config.bankIdentifier() == null) {
+            return buildErrorResponse(ErrorConstants.ERR_MOD97_IBAN.detail(), params.originalTxnId(), xpath);
+        }
+
+        updateSuccessResponse(successDoc, xpath, config, params);
+        return successDoc;
+    }
+
+    private String resolveBankIdentifier(String iban) {
+       Map<String, String> BANK_CODES = Map.of(
+                "NWB", "278",
+                "RBS", "365",
+                "UBN", "391"
+        );
+        if (iban == null || iban.isEmpty()) return null;
+        return BANK_CODES.entrySet()
+                .stream()
+                .filter(entry -> iban.contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(null);
+    }
+
+
+    /**
+     * Extracts key fields like identifier, codeValue, transactionId, and systemId from the SOAP request.
+     */
+    private RequestParams extractParams(ValidateArrangementForPaymentRequest request) {
+        String identifier = request.getArrangementIdentifier().getIdentifier();
+        String codeValue = request.getArrangementIdentifier().getContext().getCodeValue();
+        String txnId = request.getRequestHeader().getRequestIds().get(0).getTransactionId();
+        String systemId = request.getRequestHeader().getRequestIds().get(0).getSystemId();
+        log.debug("Extracted request parameters: identifier={}, codeValue={}, txnId={}, systemId={}",
+                identifier, codeValue, txnId, systemId);
+        return new RequestParams(identifier, codeValue, txnId, systemId);
+    }
+
+    /**
+     * Validates error conditions such as invalid IBAN/UBAN format or mismatched values.
+     */
+    private Optional<ErrorDetail> determineError(RequestParams p) {
+        Map<ValidationErrorType, ErrorDetail> errorMap = Map.of(
+                ValidationErrorType.INVALID_PREFIX, ErrorConstants.ERR_DB2_SQL.detail(),
+                ValidationErrorType.INVALID_IBAN_LENGTH, ErrorConstants.ERR_INVALID_IBAN_LENGTH.detail(),
+                ValidationErrorType.INVALID_UBAN_LENGTH, ErrorConstants.ERR_INVALID_UBAN_LENGTH.detail(),
+                ValidationErrorType.INVALID_MODULUS, ErrorConstants.ERR_MOD97_UBAN.detail(),
+                ValidationErrorType.INVALID_COUNTRY_CODE , ErrorConstants.ERR_WRONG_COUNTRY_CODE.detail()
+        );
+
+        return ValidationUtils.validateAccount(p, errorMap, this::isUbanValid, "AccountValidation");
+    }
+
+    /**
+     * Matches the request against known account types and configurations.
+     */
+    private Optional<ResponseConfig> determineMatchingConfig(RequestParams p) {
+    log.info("Entering in determineMatchingConfig "+p.identifier());
+        log.info("Entering in determineMatchingConfig "+p.codeValue());
+        String bankIdentifier = INTL_BANK_ACCOUNT.equals(p.codeValue()) ? resolveBankIdentifier(p.identifier()) : null;
+
+        Map<String, ResponseConfig> ruleMap = Map.of(
+        IBAN_1, new ResponseConfig(DOMESTIC_RESTRICTED, SWITCHED, PASSED,bankIdentifier),
+        IBAN_2, new ResponseConfig(DOMESTIC_RESTRICTED, NOT_SWITCHING, PASSED,bankIdentifier),
+        IBAN_3, new ResponseConfig(DOMESTIC_UNRESTRICTED, SWITCHED, PASSED,bankIdentifier),
+        IBAN_4, new ResponseConfig(DOMESTIC_UNRESTRICTED, NOT_SWITCHING, FAILED,bankIdentifier)
+
+    );
+
+    return ruleMap.entrySet().stream()
+        .filter(e -> isMatch(p, e.getKey()))
+        .findFirst()
+        .map(Map.Entry::getValue)
+        .map(Optional::of)
+        .orElse(Optional.empty());
+
+    }
+
+    /**
+     * Checks if the request identifier matches exactly or by suffix.
+     */
+    private boolean isMatch(RequestParams p, String account) {
+        return p.identifier().equals(account) || extractLast14Digits(account).equals(p.identifier());
+    }
+
+    /**
+     * Verifies if the given UBAN matches the suffix of known IBANs.
+     */
+    private boolean isUbanValid(String identifier) {
+        return ServiceConstants.IBANs.ALL_IBANS.stream()
+                .map(this::extractLast14Digits)
+                .anyMatch(ibanSuffix -> ibanSuffix.equals(identifier));
+    }
+
+    /**
+     * Extracts last 14 digits from a given IBAN string.
+     */
+    private String extractLast14Digits(String iban) {
+        return iban.length() >= 14 ? iban.substring(iban.length() - 14) : "";
+    }
+
+    /**
+     * Reads and parses a static XML file from the classpath.
+     */
+    private Document loadAndParseXml(String path) throws ParserConfigurationException, IOException, SAXException {
+        log.debug("Loading XML from path: {}", path);
+        InputStream xml = getClass().getClassLoader().getResourceAsStream(path);
+        if (Objects.isNull(xml)) {
+            log.error("XML file not found at path: {}", path);
+            throw new AccountValidationException("XML not found: " + path);
+        }
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        factory.setXIncludeAware(false);
+        factory.setExpandEntityReferences(false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        return builder.parse(xml);
+    }
+
+    /**
+     * Populates values in the success response based on matched config.
+     */
+    private void updateSuccessResponse(Document doc, XPath xpath, ResponseConfig config, RequestParams p) throws XPathExpressionException {
+        log.info("Started Updating the response XML with success values");
+        updateText(xpath, doc, "//responseId/systemId", p.systemId());
+        updateText(xpath, doc, "//responseId/transactionId", generateTxnId());
+        updateText(xpath, doc, "//status", config.accountStatus.getValue());
+        updateText(xpath, doc, "//switchingStatus", config.switchingStatus.getValue());
+        updateText(xpath, doc, "//modulusCheckStatus/codeValue", config.modulusCheckStatus.getValue());
+        if(config.bankIdentifier()!=null)
+        {
+            updateText(xpath, doc, "//parentOrganization/alternativeIdentifier/identifier",config.bankIdentifier());
+
+        }
+        log.info("Updated response XML with success values");
+    }
+
+    /**
+     * Populates values in the static error response XML.
+     */
+    private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail errorDetail, String txnId) throws XPathExpressionException {
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_REF_REQUEST_TXN_ID, txnId);
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_STATUS, "Failed");
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION, errorDetail.description());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RETURN_CODE, errorDetail.returnCode());
+        if (Objects.nonNull(errorDetail.systemNotificationDesc())) {
+            log.info("inside  systemNotificationDesc");
+            log.info("errorDetail.systemNotificationDesc()"+errorDetail.systemNotificationDesc());
+            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC, errorDetail.systemNotificationDesc());
+            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_CODE, errorDetail.returnCode());
+        } else {
+            log.info("no  systemNotificationDesc");
+            Node node = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
+            if (node != null && node.getParentNode() != null) {
+                node.getParentNode().removeChild(node);
+                log.debug("Removed systemNotification block as it was not applicable.");
+            }
+        }
+        log.info("Updated response XML with error values: {}", errorDetail.description());
+    }
+
+    /**
+     * Utility method to update a specific XML node’s text content.
+     */
+    private void updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
+        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
+        if (node != null && value != null) {
+            node.setTextContent(value);
+            log.debug("Updated XML node {} with value {}", path, value);
+        }
+    }
+
+
+
+    /**
+     * Immutable container representing a valid account configuration.
+     * this record is left without methods or additional logic,as it is only
+     * used to group and transport validation results such as
+     * <ul>
+     *     <li>{@code accountStatus} - the classification of the account(eg , restricted,unrestricted)</li>
+     *      <li>{@code switchingStatus} - whether the account has been switched or not switching </li>
+     *       <li>{@code modulusStatus} - result of modulus check </li>
+     *       <li>{@code bankIdentifier} - result of bankIdentifier </li>
+     * </ul>
+     */
+     @SuppressWarnings("unused")
+    public record ResponseConfig(AccountStatus accountStatus, SwitchingStatus switchingStatus,ModulusCheckStatus modulusCheckStatus,String bankIdentifier ) {
+     // this record is left without methods or additional logic,as it is only used to group and transport validation results
+     }
+
+
+
 }
 
 
+--------------------
+package com.rbs.bdd.domain.enums;
+
+import java.util.List;
+
+/**
+ * Enum container for grouping constants related to service configuration, IBAN validation, file paths, and XPath expressions.
+ * Constants are organized as nested interfaces for better readability and modular access.
+ */
+public enum ServiceConstants {
+    // Empty enum just to hold grouped constants via nested interfaces
+    ;
+
+    /**
+     * File paths for static response and error XMLs.
+     */
+    public final class  Paths {
+        private Paths() {}
+       public static final  String  ACCOUNT_VALIDATION_REQUEST="src/test/resources/static-request/account-validation-request.xml";
+        public static final String  CUSTOMER_RETRIEVAL_REQUEST="src/test/resources/static-request/customer-retrieval-request.xml";
+
+        public static final String ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL= "error-response/error-response-customer-retrieval.xml";
+        public static final String ACCOUNT_VALIDATION_SCHEMA_VALIDATION_ERROR_XML = "error-response/account-validation-schema-error.xml";
+        public static final String CUSTOMER_SCHEMA_VALIDATION_ERROR_XML = "error-response/customer-retrieval-schema-error.xml";
+        public static final String RESPONSE_XML_PATH = "static-response/account-validation/success-response.xml";
+        public static final String ACCOUNT_VALIDATION_ERROR_XML = "error-response/account-validation-error.xml";
+
+    }
+
+    /**
+     * Namespace URIs used in Spring WS handler for request mapping.
+     */
+    public final class  Namespaces {
+        private Namespaces() {}
+        public static final String NAMESPACE_URI_FOR_ACCOUNT_VALIDATION = "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/";
+        public static final String NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL = "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/";
+    }
+
+    /**
+     * Static IBANs used for known test scenarios.
+     */
+    public final class IBANs {
+        private IBANs(){}
+        public static final  String IBAN_1 = "GB29NWBK60161331926801";
+        public static final String IBAN_2 = "GB82RBST12345698765437";
+        public static final String IBAN_3 = "GB94UBNC10201530093422";
+        public static final String IBAN_4 = "GB33RBSB20201555555567";
+
+
+
+        public static final  List<String> ALL_IBANS = List.of(
+                IBAN_1, IBAN_2, IBAN_3, IBAN_4
+        );
+    }
+
+    /**
+     * Code values used to distinguish between IBAN and UBAN.
+     */
+    public final class  AccountTypes {
+        private AccountTypes(){}
+        public static final String INTL_BANK_ACCOUNT = "InternationalBankAccountNumber";
+        public static final String UK_BASIC_BANK_ACCOUNT = "UKBasicBankAccountNumber";
+    }
+
+    /**
+     * XPath expressions for extracting and updating SOAP request/response values.
+     */
+    public final class  XPath {
+        private XPath(){}
+        public static final String XPATH_TRANSACTION_ID = "//*[local-name()='transactionId']";
+        public static final String XPATH_HAS_PARTY_ASSOC="//*[local-name()='hasInvolvedPartyAssociation']";
+        public static final  String XPATH_ASSOCIATED_PARTY=XPATH_HAS_PARTY_ASSOC+ "/*[local-name()='associatedInvolvedParty']";
+        public static final String XPATH_FIRST_NAME =XPATH_ASSOCIATED_PARTY +
+                "/*[local-name()='hasForName']/*[local-name()='firstName']";
+        public static final String XPATH_PREFIX_TYPE = XPATH_ASSOCIATED_PARTY +
+                "/*[local-name()='hasForName']/*[local-name()='prefixTitle']/*[local-name()='codeValue']";
+        public static final  String XPATH_LAST_NAME = XPATH_ASSOCIATED_PARTY +
+                "/*[local-name()='hasForName']/*[local-name()='lastName']";
+        public static final String XPATH_ACCOUNT_STATUS = "//*[local-name()='accountingUnits']/*[local-name()='status']/*[local-name()='codeValue']";
+        public static final String XPATH_SWITCHING_STATUS = "//*[local-name()='switchingStatus']/*[local-name()='codeValue']";
+        public static final String XPATH_MODULUS_STATUS = "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']";
+
+        // Fault-specific
+        public static final String XPATH_FAULT_TRANSACTION_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
+        public static final String XPATH_FAULT_RESPONSE_ID = "//*[local-name()='responseId']";
+        public static final String XPATH_FAULT_TIMESTAMP = "//*[local-name()='timestamp']";
+
+        /**
+         * XPath to locate transactionId under responseId node.
+         */
+        public static final String XPATH_RESPONSE_ID_TXN_ID = "//*[local-name()='responseId']/*[local-name()='transactionId']";
+
+        /**
+         * XPath to locate transactionId under refRequestIds node.
+         */
+        public static final String XPATH_REF_REQUEST_TXN_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
+
+        /**
+         * XPath to locate cmdStatus node for command result status.
+         */
+        public static final String XPATH_CMD_STATUS = "//*[local-name()='cmdStatus']";
+
+        /**
+         * XPath to locate description node inside cmdNotifications block.
+         */
+        public static final String XPATH_CMD_DESCRIPTION = "//*[local-name()='cmdNotifications']/*[local-name()='description']";
+
+        /**
+         * XPath to locate timestamp node inside cmdNotifications block.
+         */
+        public static final String XPATH_TIMESTAMP = "//*[local-name()='cmdNotifications']/*[local-name()='timestamp']";
+
+        /**
+         * XPath to locate returnCode node inside cmdNotifications block.
+         */
+        public static final String XPATH_RETURN_CODE = "//*[local-name()='cmdNotifications']/*[local-name()='returnCode']";
+
+        /**
+         * XPath to locate description inside systemNotifications block.
+         */
+        public static final  String XPATH_SYS_NOTIFICATION_DESC = "//*[local-name()='systemNotifications']/*[local-name()='description']";
+
+        /**
+         * XPath to locate returnCode inside systemNotifications block.
+         */
+        public static final String XPATH_SYS_NOTIFICATION_CODE = "//*[local-name()='systemNotifications']/*[local-name()='returnCode']";
+
+        /**
+         * XPath to locate the entire systemNotifications block node.
+         */
+        public static final String XPATH_SYS_NOTIFICATION_BLOCK = "//*[local-name()='systemNotifications']";
+
+    }
+
+    /**
+     * Common tag names.
+     */
+    public final class  Tags {
+        private Tags(){}
+        public static final String TAG_TRANSACTION_ID = "transactionId";
+        public static final String SYSTEM_ID="systemId";
+    }
+}
+
+=================
+package com.rbs.bdd.domain.model;
+
+
+
+/**
+ * Represents a structured error detail used for SOAP fault responses.
+ * This record encapsulates:
+ * <ul>
+ *     <li>Error return code</li>
+ *     <li>Human-readable description</li>
+ *     <li>System notification code</li>
+ *     <li>System notification description</li>
+ * </ul>
+ *
+ * @param returnCode Unique identifier for the error
+ * @param description User-friendly description of the error
+ * @param systemNotificationCode Optional system-level notification code
+ * @param systemNotificationDesc Optional system-level notification description
+ */
+public record ErrorDetail(
+        String returnCode,
+        String description,
+        String systemNotificationCode,
+        String systemNotificationDesc
+) {}
+
+
+---------------
+
+account-validation-error.xml
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                  xmlns:ns="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <ns:validateArrangementForPaymentResponse>
+            <exception>
+                <responseId>
+                    <systemId>ESP</systemId>
+                    <transactionId>RESPONSE_ID_PLACEHOLDER</transactionId>
+                </responseId>
+                <refRequestIds>
+                    <systemId>RequestID</systemId>
+                    <transactionId>TXN_ID_PLACEHOLDER</transactionId>
+                </refRequestIds>
+                <operatingBrand>ALL</operatingBrand>
+                <serviceName>ArrValidationForPayment</serviceName>
+                <operationName>validateArrangementForPayment</operationName>
+                <cmdStatus>Failed</cmdStatus>
+                <cmdNotifications>
+                    <returnCode>ERR006</returnCode>
+                    <category>Error</category>
+                    <description>Error description placeholder</description>
+                    <timestamp>2025-06-01T00:00:00.000+01:00</timestamp>
+                    <systemNotifications>
+                        <returnCode>0010</returnCode>
+                        <category>Error</category>
+                        <description>System notification placeholder</description>
+                        <processingId>
+                            <systemId>PMP</systemId>
+                        </processingId>
+                    </systemNotifications>
+                </cmdNotifications>
+            </exception>
+        </ns:validateArrangementForPaymentResponse>
+    </soapenv:Body>
+</soapenv:Envelope>
+
+
+----
+Actual Response :-
+
+<soapenv:Envelope xmlns:nsVer="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+   <soapenv:Body>
+      <nsVer:validateArrangementForPaymentResponse>
+         <exception>
+            <responseId>
+               <systemId>ESP</systemId>
+               <transactionId>5flS3ea4afb7968627bbe0cdd6ca520250630125750965h</transactionId>
+            </responseId>
+            <refRequestIds>
+               <systemId>RequestID</systemId>
+               <transactionId>123456789</transactionId>
+            </refRequestIds>
+            <operatingBrand>ALL</operatingBrand>
+            <serviceName>ArrValidationForPayment</serviceName>
+            <operationName>validateArrangementForPayment</operationName>
+            <cmdStatus>Failed</cmdStatus>
+            <cmdNotifications>
+               <returnCode>ERR006</returnCode>
+               <category>Error</category>
+               <description>Unable to Complete Request</description>
+               <timestamp>2025-06-30T12:57:51.020793+01:00</timestamp>
+               <systemNotifications>
+                  <returnCode>0013</returnCode>
+                  <category>Error</category>
+                  <description>Length of IBAN is Invalid</description>
+                  <processingId>
+                     <systemId>PMP</systemId>
+                  </processingId>
+               </systemNotifications>
+            </cmdNotifications>
+         </exception>
+      </nsVer:validateArrangementForPaymentResponse>
+   </soapenv:Body>
+</soapenv:Envelope>
+
+
+-----------
+
+I am getting response:-\
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <ns:validateArrangementForPaymentResponse>
+         <exception>
+            <responseId>
+               <systemId>ESP</systemId>
+               <transactionId>1alN4ae632e5ac1f423bb8dfff671d8976e2h</transactionId>
+            </responseId>
+            <refRequestIds>
+               <systemId>RequestID</systemId>
+               <transactionId>123456789</transactionId>
+            </refRequestIds>
+            <operatingBrand>ALL</operatingBrand>
+            <serviceName>ArrValidationForPayment</serviceName>
+            <operationName>validateArrangementForPayment</operationName>
+            <cmdStatus>Failed</cmdStatus>
+            <cmdNotifications>
+               <returnCode>ERR006</returnCode>
+               <category>Error</category>
+               <description>Length of IBAN is Invalid</description>
+               <timestamp>2025-06-30T12:58:07.821412600+01:00[Europe/London]</timestamp>
+               <systemNotifications>
+                  <returnCode>ERR006</returnCode>
+                  <category>Error</category>
+                  <description>Length of IBAN is Invalid</description>
+                  <processingId>
+                     <systemId>PMP</systemId>
+                  </processingId>
+               </systemNotifications>
+            </cmdNotifications>
+         </exception>
+      </ns:validateArrangementForPaymentResponse>
+   </soapenv:Body>
+</soapenv:Envelope>
