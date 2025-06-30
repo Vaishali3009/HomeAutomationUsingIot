@@ -1,8 +1,5 @@
 package com.rbs.bdd.application.service;
 
-
-
-
 import com.rbs.bdd.application.exception.AccountValidationException;
 import com.rbs.bdd.application.exception.CustomerRetrievalException;
 import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
@@ -16,10 +13,9 @@ import com.rbs.bdd.infrastructure.repository.CustomerRepository;
 import com.rbs.bdd.util.ValidationUtils.RequestParams;
 import com.rbs.bdd.util.ValidationUtils;
 import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.ws.WebServiceMessage;
 import org.w3c.dom.Document;
@@ -34,6 +30,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.ZonedDateTime;
@@ -46,8 +43,11 @@ import static com.rbs.bdd.util.ValidationUtils.generateTxnId;
 import static com.rbs.bdd.util.ValidationUtils.writeResponseToSoapMessage;
 
 /**
- * Service to handle logic for retrieving customer details based on account number.
- * Matches specific identifiers and dynamically updates SOAP XML response.
+ * Service implementation for handling customer retrieval logic via SOAP.
+ * <p>
+ * The class validates incoming request data and returns a static or error SOAP XML response
+ * based on IBAN/account matches in DB or hardcoded list.
+ * </p>
  */
 @Slf4j
 @Service
@@ -55,93 +55,113 @@ import static com.rbs.bdd.util.ValidationUtils.writeResponseToSoapMessage;
 public class CustomerRetrievalService implements RetrieveCustomerPort {
 
     private final CustomerRepository repository;
-
-    private static final Logger logger = LoggerFactory.getLogger(CustomerRetrievalService.class);
     private static final String STATIC_RESPONSE_PATH = "static-response/customer-retrieval/success-response.xml";
 
+    /**
+     * Schema validation is handled by Spring WS automatically.
+     *
+     * @param request the validated SOAP request
+     */
     @Override
     public void validateSchema(RetrievePrimaryCustomerForArrRequest request) {
-        logger.info("Schema validated successfully by Spring WS.");
+        log.info("Schema validated successfully by Spring WS.");
     }
 
+    /**
+     * Processes customer retrieval logic.
+     * Attempts DB match, fallback to hardcoded match, else returns error.
+     *
+     * @param request SOAP request
+     * @param message SOAP response message
+     */
     @Override
     public void retrieveCustomer(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message) {
         try {
             RequestParams params = extractParams(request);
             XPath xpath = XPathFactory.newInstance().newXPath();
             Document responseDoc = handleCustomerRetrieval(params, xpath);
-
             writeResponseToSoapMessage(message, responseDoc);
         } catch (Exception e) {
-            logger.error("Customer retrieval failed", e);
+            log.error("Customer retrieval failed", e);
             throw new CustomerRetrievalException("Customer retrieval failed", e);
         }
     }
 
+    /**
+     * Handles customer lookup logic from DB and hardcoded list with error fallback.
+     */
+    private Document handleCustomerRetrieval(RequestParams params, XPath xpath)
+            throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
 
-    private Document handleCustomerRetrieval(RequestParams params, XPath xpath) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
-        logger.debug("Handle Customer Retrieval");
         Optional<ErrorDetail> error = determineCustomerRetrievalError(params);
         if (error.isPresent()) {
-            logger.info("Error occured while retrieving Customer info: "+ error);
-            Document errorDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL);
-            applyErrorResponse(errorDoc, xpath, error.get(), params.originalTxnId());
-            return errorDoc;
+            return buildErrorResponse(error.get(), xpath, params.originalTxnId(),
+                    ServiceConstants.Paths.ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL);
         }
-        else {
-            CustomerInfo customerData;
-            Optional<CustomerData> dbResult = repository.findByAccountNo(params.identifier());
-            log.info("Account Number found in database: ");
-            log.info("Account Number : "+params.identifier());
-            log.info("Searching account in the database");
-            if (dbResult.isPresent() && dbResult.get().getAccountType().equals(params.codeValue())) {
-                log.info("Account Number and Account Type is matched");
-                customerData = new CustomerInfo(
-                        dbResult.get().getPrefixType(),
-                        dbResult.get().getFirstName(),
-                        dbResult.get().getLastName()
-                );
-                Document responseDoc = loadAndParseXml(STATIC_RESPONSE_PATH);
-                updateName(responseDoc, xpath, customerData);
-                  logger.info("Returning matched customer response from Database  for IBAN: {}");
-                return responseDoc;
-            } else if(CustomerNameMapping.fromIdentifier(params.identifier())!=null){
-                log.debug("Searching account in the Pre-configured List of Accounts");
-                CustomerNameMapping matched = CustomerNameMapping.fromIdentifier(params.identifier());
 
-                    Document responseDoc = loadAndParseXml(STATIC_RESPONSE_PATH);
-                    CustomerInfo custData = new CustomerInfo(
-                            matched.getPrefixType(), matched.getFirstName(), matched.getLastName()
-
-                    );
-                    updateName(responseDoc, xpath, custData);
-                    logger.info("Returning matched customer response for IBAN: {}");
-                    return responseDoc;
-
-                }
-            else {
-                logger.error("Customer Not Found");
-
-                Document notFoundDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH);
-                applyErrorResponse(notFoundDoc, xpath, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail(), params.originalTxnId());
-                return notFoundDoc;
-            }
+        Optional<CustomerData> dbResult = repository.findByAccountNo(params.identifier());
+        if (dbResult.isPresent() && dbResult.get().getAccountType().equals(params.codeValue())) {
+            log.info("DB match found for IBAN: {}", params.identifier());
+            CustomerInfo customer = new CustomerInfo(
+                    dbResult.get().getPrefixType(),
+                    dbResult.get().getFirstName(),
+                    dbResult.get().getLastName()
+            );
+            return buildSuccessResponse(xpath, customer);
         }
+
+        CustomerNameMapping matched = CustomerNameMapping.fromIdentifier(params.identifier());
+        if (matched != null) {
+            log.info("Hardcoded account matched for IBAN: {}", params.identifier());
+            CustomerInfo customer = new CustomerInfo(
+                    matched.getPrefixType(),
+                    matched.getFirstName(),
+                    matched.getLastName()
+            );
+            return buildSuccessResponse(xpath, customer);
+        }
+
+        log.error("Customer not found for IBAN: {}", params.identifier());
+        return buildErrorResponse(
+                ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail(), xpath,
+                params.originalTxnId(), ServiceConstants.Paths.ERROR_XML_PATH);
     }
 
+    /**
+     * Builds a success response document from the static XML and populates name fields.
+     */
+    private Document buildSuccessResponse(XPath xpath, CustomerInfo customer)
+            throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
 
-
-
-
-
-    private void updateName(Document doc, XPath xpath, CustomerInfo customerData) throws XPathExpressionException {
-        updateText(xpath, doc, XPATH_PREFIX_TYPE, customerData.prefixType());
-        updateText(xpath, doc, XPATH_FIRST_NAME, customerData.firstName);
-        updateText(xpath, doc, XPATH_LAST_NAME, customerData.lastName());
+        Document responseDoc = loadAndParseXml(STATIC_RESPONSE_PATH);
+        updateName(responseDoc, xpath, customer);
+        return responseDoc;
     }
 
+    /**
+     * Builds an error response document by loading the template and injecting error fields.
+     */
+    private Document buildErrorResponse(ErrorDetail detail, XPath xpath, String txnId, String path)
+            throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+
+        Document doc = loadAndParseXml(path);
+        applyErrorResponse(doc, xpath, detail, txnId);
+        return doc;
+    }
+
+    /**
+     * Populates name fields in the static XML response.
+     */
+    private void updateName(Document doc, XPath xpath, CustomerInfo customer) throws XPathExpressionException {
+        updateText(xpath, doc, XPATH_PREFIX_TYPE, customer.prefixType());
+        updateText(xpath, doc, XPATH_FIRST_NAME, customer.firstName());
+        updateText(xpath, doc, XPATH_LAST_NAME, customer.lastName());
+    }
+
+    /**
+     * Performs error checks based on prefix, length, or modulus check.
+     */
     private Optional<ErrorDetail> determineCustomerRetrievalError(RequestParams param) {
-
         Map<ValidationErrorType, ErrorDetail> errorMap = Map.of(
                 ValidationErrorType.INVALID_PREFIX, ErrorConstants.ERR_UBAN_GB.detail(),
                 ValidationErrorType.INVALID_LENGTH, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail(),
@@ -152,47 +172,24 @@ public class CustomerRetrievalService implements RetrieveCustomerPort {
     }
 
     /**
-     * Verifies if the given UBAN matches the suffix of known IBANs.
+     * Validates UBAN by matching last 14 digits against known IBAN list.
      */
     private boolean isUbanValid(String identifier) {
         return ServiceConstants.IBANs.ALL_IBANS.stream()
                 .map(this::extractLast14Digits)
-                .anyMatch(ibanSuffix -> ibanSuffix.equals(identifier));
+                .anyMatch(suffix -> suffix.equals(identifier));
     }
 
     /**
-     * Extracts last 14 digits from a given IBAN string.
+     * Returns last 14 digits from full IBAN.
      */
     private String extractLast14Digits(String iban) {
-        log.debug("Entered in extractLast14Digits ");
         return iban.length() >= 14 ? iban.substring(iban.length() - 14) : "";
     }
-    private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail detail, String txnId) throws XPathExpressionException {
-        log.debug("Entered in applyErrorResponse");
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_REF_REQUEST_TXN_ID, txnId);
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_STATUS, "Failed");
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION, detail.description());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RETURN_CODE, detail.returnCode());
 
-        if ("Unable To Complete Request".equals(detail.description())){
-            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC, detail.systemNotificationDesc());
-            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_CODE, detail.returnCode());
-        } else {
-            Node node = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
-            if (Objects.nonNull(node) && Objects.nonNull(node.getParentNode())) {
-                node.getParentNode().removeChild(node);
-            }
-        }
-    }
-
-    private void
-    updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
-        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
-        if (node != null && value != null) node.setTextContent(value);
-    }
-
+    /**
+     * Loads an XML file from the classpath and parses it into a DOM document.
+     */
     private Document loadAndParseXml(String path) throws ParserConfigurationException, IOException, SAXException {
         InputStream stream = getClass().getClassLoader().getResourceAsStream(path);
         if (Objects.isNull(stream)) {
@@ -208,8 +205,20 @@ public class CustomerRetrievalService implements RetrieveCustomerPort {
         return builder.parse(stream);
     }
 
+    /**
+     * Updates the text content of a node based on an XPath expression.
+     */
+    private void updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
+        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
+        if (node != null && value != null) {
+            node.setTextContent(value);
+        }
+    }
+
+    /**
+     * Extracts core request values into a simple parameter container.
+     */
     private RequestParams extractParams(RetrievePrimaryCustomerForArrRequest request) {
-        logger.debug("Extract Params from request ");
         return new RequestParams(
                 request.getArrangementIdentifier().getIdentifier(),
                 request.getArrangementIdentifier().getContext().getCodeValue(),
@@ -217,21 +226,10 @@ public class CustomerRetrievalService implements RetrieveCustomerPort {
                 request.getRequestHeader().getRequestIds().get(0).getSystemId()
         );
     }
-    /**
-     * Immutable container representing a valid request configuration.
-     * this record is left without methods or additional logic,as it is only
-     *  used to group and transport request fields such as
-     *  <ul>
-     *     <li>{@code identifier} - contains account number </li>
-     *     <li>{@code codeValue} - used to identify
-     * whether account is UKBasicBankAccountNumber or InternationalBankAccountNumber</li>
-     *      <li>{@code originalTxnId} - return the transactionId of the request </li>
-     *       <li>{@code systemId} - returns the systemId from the request </li>
-     *       </ul>
-     */
-    @SuppressWarnings("unused")
-    public record CustomerInfo(String prefixType, String firstName, String lastName) {
-        // this record is left without methods or additional logic,as it is only used to group and transport request fields
 
+    /**
+     * Record for holding structured customer name details.
+     */
+    public record CustomerInfo(String prefixType, String firstName, String lastName) {
     }
-   }
+}
