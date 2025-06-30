@@ -1,61 +1,41 @@
- public void validateBusinessRules(ValidateArrangementForPaymentRequest request, WebServiceMessage message) {
-        try {
-            log.info("Starting business rule validation for request.");
-            RequestParams params = extractParams(request);
-            XPath xpath = XPathFactory.newInstance().newXPath();
-            Document responseDoc = handleBusinessValidation(params, xpath);
+private Document handleBusinessValidation(RequestParams params, XPath xpath) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+    log.debug("Checking for the error in the request");
 
-            writeResponseToSoapMessage(message,responseDoc);
-            log.info("Response sent Successfully");
+    Document resultDoc;
+    Optional<ErrorDetail> error = determineError(params);
 
-        } catch (Exception ex) {
-            log.error("Business rule validation failed", ex);
-            throw new AccountValidationException("Validation failed", ex);
-        }
+    if (error.isPresent()) {
+        log.info("Business error condition detected: {}", error.get().description());
+        resultDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH);
+        applyErrorResponse(resultDoc, xpath, error.get(), params.originalTxnId());
+        return resultDoc;
     }
 
+    Optional<ResponseConfig> config = determineMatchingConfig(params);
+    resultDoc = loadAndParseXml("static-response/account-validation/success-response.xml");
 
+    if (config.isPresent()) {
+        ResponseConfig cfg = config.get();
+        String bankIdentifier = null;
 
-    private Document handleBusinessValidation(RequestParams params, XPath xpath) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
-        log.debug("Checking for the error in the request");
-        Optional<ErrorDetail> error = determineError(params);
+        log.info("Matched account configuration: {}", cfg);
 
-        if (error.isPresent()) {
-            log.info("Business error condition detected: {}", error.get().description());
-            Document errorDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH);
-            applyErrorResponse(errorDoc, xpath, error.get(), params.originalTxnId());
-            return errorDoc;
-        }
-
-        Optional<ResponseConfig> config = determineMatchingConfig(params);
-        if (config.isPresent()) {
-            String bankIdentifier =null;
-            log.info("Matched account configuration: {}", config.get());
-            Document successDoc = loadAndParseXml("static-response/account-validation/success-response.xml");
-            if(params.codeValue().equals(INTL_BANK_ACCOUNT)){
-                 bankIdentifier =setBankIdentifier(params);
-                if(bankIdentifier!=null)
-                {
-                    log.info("Bank Identifier Value is "+bankIdentifier);
-                    updateSuccessResponse(successDoc, xpath, config.get(), params,  bankIdentifier);
-                    return successDoc;
-                }
-                else{
-
-                    log.warn("Incorrcet Bank Identifier Returning MOD97 failure.");
-                    Document mod97Doc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH);
-                    applyErrorResponse(mod97Doc, xpath, ErrorConstants.ERR_MOD97_IBAN.detail(), params.originalTxnId());
-                    return mod97Doc;
-                }
-            }
-            else {
-                updateSuccessResponse(successDoc, xpath, config.get(), params, bankIdentifier);
-                return successDoc;
+        if (INTL_BANK_ACCOUNT.equals(params.codeValue())) {
+            bankIdentifier = setBankIdentifier(params);
+            if (bankIdentifier == null) {
+                log.warn("Incorrect Bank Identifier. Returning MOD97 failure.");
+                resultDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH);
+                applyErrorResponse(resultDoc, xpath, ErrorConstants.ERR_MOD97_IBAN.detail(), params.originalTxnId());
+                return resultDoc;
             }
         }
 
+        updateSuccessResponse(resultDoc, xpath, cfg, params, bankIdentifier);
+    } else {
         log.error("No account matched. Returning MOD97 failure.");
-        Document mod97Doc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH);
-        applyErrorResponse(mod97Doc, xpath, ErrorConstants.ERR_MOD97_IBAN.detail(), params.originalTxnId());
-        return mod97Doc;
+        resultDoc = loadAndParseXml(ServiceConstants.Paths.ERROR_XML_PATH);
+        applyErrorResponse(resultDoc, xpath, ErrorConstants.ERR_MOD97_IBAN.detail(), params.originalTxnId());
     }
+
+    return resultDoc;
+}
