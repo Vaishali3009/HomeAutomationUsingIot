@@ -1,14 +1,343 @@
-package com.rbs.bdd.application.exception;
+package com.rbs.bdd.application.awsconfig;
 
-public class SecretsNotFoundException extends RuntimeException{
-    public SecretsNotFoundException(String message){
-        super(message);
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+
+@Slf4j
+@Configuration
+public class AwsSecretManagerConfig {
+
+    @Bean
+    @ConditionalOnProperty(name = "secret.manager.enabled", havingValue = "true")
+    public SecretsManagerClient secretsManagerClient(@Value("${aws.region}") String region,
+                                                     @Value("${secret.datasource.name}") String secretDatasourceName) {
+        log.info("AWS-AWS_REGION {}", region);
+        SecretsManagerClient client = SecretsManagerClient.builder()
+                .region(Region.of(region))
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
+        log.info("Verify access");
+        log.info("Secret DatasourceName "+secretDatasourceName);
+
+        GetSecretValueRequest request = GetSecretValueRequest.builder()
+                .secretId(secretDatasourceName)
+                .build();
+
+        log.info("Trying to establish"+secretDatasourceName);
+
+        try {
+            log.error("Request"+request);
+            GetSecretValueResponse response = client.getSecretValue(request);
+            log.error("Trying to establish");
+            if (response.sdkHttpResponse().isSuccessful()) {
+                log.info("aws secret retrieved [{}] successfully [{}]", secretDatasourceName,
+                        response.secretString());
+            }
+        } catch (Exception u) {
+            log.error("Unable to get the secret", u);
+        }
+        return client;
+    }
+}
+
+
+
+------------------
+package com.rbs.bdd.application.awsconfig;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rbs.bdd.application.exception.SecretsNotFoundException;
+import com.zaxxer.hikari.HikariDataSource;
+import liquibase.integration.spring.SpringLiquibase;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
+
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
+@Configuration
+@ConditionalOnProperty(name = "secret.manager.enabled", havingValue = "true")
+
+public class DatabaseConfig {
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    @Value("${spring.datasource.base.url}")
+    private String springDatasourceBaseUrl;
+
+    @Value("${spring.datasource.username}")
+    private String springDatasourceUsername;
+
+    @Value("${spring.datasource.password}")
+    private String springDatasourcePassword;
+
+    @Value("${spring.liquibase.default-schema}")
+    private String springLiquibaseDefaultSchema;
+
+    @Value("${secret.datasource.name}")
+    private String secretDatasourceName;
+
+    @Autowired(required = false)
+    private SecretsManagerClient secretsManagerClient;
+
+
+    private static final String USERNAME = "username";
+    private static final String PASSWORD = "password";
+    private static final String DBNAME = "dbname";
+
+    //Fetch kubernetes secrets from the aws server
+    private Map<String, String> fetchSecrets(final SecretsManagerClient secretsManagerClient, final String secretName) {
+
+        log.debug("Request received to retrieve secrets for  : {}", secretName);
+        Map<String, String> secretMap = new HashMap<>();
+        GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(secretName).build();
+
+        GetSecretValueResponse response = secretsManagerClient.getSecretValue(request);
+        if (response.sdkHttpResponse().isSuccessful()) {
+            log.info("Secret retrieved for [{}] ", secretName);
+            try {
+                secretMap = mapper.readValue(response.secretString(), Map.class);
+                log.info("SecretMap: Username: {}", secretMap.get(USERNAME));
+            } catch (Exception e) {
+                log.error("unable to retrieve data from secret");
+                throw new SecretsNotFoundException("Unable to retrieve data from secrets!");
+            }
+        }
+        return secretMap;
+    }
+
+    @ConfigurationProperties(prefix = "spring.datasource")
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+
+    @Bean
+    public DataSourceProperties dataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Primary
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+    @Bean
+    public DataSource dataSource() {
+        Map<String, String> secrets = fetchSecrets(secretsManagerClient, secretDatasourceName);
+        HikariDataSource hikariDataSource = new HikariDataSource();
+        log.debug("Using aws secretDatasource : {} and  secretsManagerClient: {}", secretDatasourceName, secretsManagerClient);
+
+        hikariDataSource.setJdbcUrl(springDatasourceBaseUrl + secrets.get(DBNAME));
+        log.debug("Connecting to Datasource : {} ", hikariDataSource.getJdbcUrl());
+        log.debug("Secrets are available for user : {} ", secrets.get(USERNAME));
+
+        hikariDataSource.setUsername(secrets.get(USERNAME));
+        hikariDataSource.setPassword(secrets.get(PASSWORD));
+        return hikariDataSource;
+    }
+
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+    @Bean
+
+    public SpringLiquibase SpringLiquibase() {
+        SpringLiquibase springLiquibase=null;
+        try {
+            Map<String, String> secrets = fetchSecrets(secretsManagerClient, secretDatasourceName);
+             springLiquibase = new SpringLiquibase();
+            springLiquibase.setDataSource(dataSource());
+            log.info("DBNAME :" + DBNAME);
+            log.info("secretsManagerClient : " + secretsManagerClient);
+            log.info("secretDatasourceName :" + secretDatasourceName);
+            springLiquibase.setDefaultSchema(secrets.get(DBNAME));
+            log.info("Default Scehma :" + springLiquibase.getDefaultSchema());
+
+            springLiquibase.setChangeLog("classpath:/db/changelog/db.changelog-master.yaml");
+            springLiquibase.setContexts("");
+            return springLiquibase;
+        }
+        catch(Exception ex)
+        {
+            log.error("error occured : "+ex);
+        }
+        return springLiquibase;
     }
 
 }
 
 
-------------------
+
+----------------
+package com.rbs.bdd.application.port.in;
+
+import org.springframework.ws.WebServiceMessage;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+
+/**
+ * Entry port for handling SOAP requests related to customer retrieval.
+ * Follows hexagonal architecture's `port in` pattern.
+ */
+public interface CustomerRetrievalPort {
+        /**
+         * Validates a customer retrieval request by delegating to the underlying orchestrator/service.
+         *
+         * @param request The SOAP request payload.
+         * @param message The outgoing WebServiceMessage to be modified and returned.
+         */
+        void validateCustomerRetrieval(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message);
+
+
+    }
+
+
+-----------
+package com.rbs.bdd.application.port.in;
+
+
+import org.springframework.ws.WebServiceMessage;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+/**
+ * Entry port for handling SOAP requests related to payment validation.
+ * Follows hexagonal architecture's `port in` pattern.
+ */
+public interface PaymentValidationPort {
+
+
+    /**
+     * Validates a payment arrangement request by delegating to the underlying orchestrator/service.
+     *
+     * @param request The SOAP request payload.
+     * @param message The outgoing WebServiceMessage to be modified and returned.
+     */
+    void validateArrangementForPayment(ValidateArrangementForPaymentRequest request,WebServiceMessage message);
+
+
+
+}
+
+
+
+-----------------
+package com.rbs.bdd.application.port.out;
+
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+
+import org.springframework.ws.WebServiceMessage;
+
+/**
+ * Defines the business contract for validating payment accounts.
+ * Used by the orchestrator to call schema and business rule validators.
+ */
+public interface AccountValidationPort {
+    /**
+     * Performs XSD schema validation of the request. (Currently delegated to Spring WS config.)
+     *
+     * @param request The SOAP request payload.
+     */
+    void validateSchema(ValidateArrangementForPaymentRequest request);
+
+
+    /**
+     * Applies business rules on the static response XML based on request content,
+     * and writes the final SOAP response directly to the output message.
+     *
+     * @param request The incoming SOAP request.
+     * @param message The WebServiceMessage to write the modified response to.
+     */
+    void validateBusinessRules(ValidateArrangementForPaymentRequest request,WebServiceMessage message);
+
+     }
+
+---------------
+package com.rbs.bdd.application.port.out;
+
+
+
+import org.springframework.ws.WebServiceMessage;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+
+
+/**
+ * Defines the business contract for validating customer  accounts.
+ * Used by the orchestrator to call schema and business rule validators.
+ */
+public interface RetrieveCustomerPort {
+    /**
+     * Performs XSD schema validation of the request. (Currently delegated to Spring WS config.)
+     *
+     * @param request The SOAP request payload.
+     */
+    void validateSchema(RetrievePrimaryCustomerForArrRequest request);
+
+
+    /**
+     * Applies business rules on the  response XML based on request content,
+     * and writes the final SOAP response directly to the output message.
+     *
+     * @param request The incoming SOAP request.
+     * @param message The WebServiceMessage to write the modified response to.
+     */
+    void retrieveCustomer(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message);
+
+}
+
+
+------
+package com.rbs.bdd.application.service;
+
+import com.rbs.bdd.application.port.out.AccountValidationPort;
+import com.rbs.bdd.application.port.in.PaymentValidationPort;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.ws.WebServiceMessage;
+
+/**
+ * Service class responsible for orchestrating the validation flow of payment arrangement requests.
+ * Implements {@link PaymentValidationPort} and delegates schema and business rule validation
+ * to the appropriate output port.
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AccountValidationOrchestrator implements PaymentValidationPort {
+
+    private final AccountValidationPort accountValidationPort;
+
+
+
+
+    /**
+     * Entry point for handling the SOAP request. Validates schema and applies business rules.
+     *
+     * @param request the incoming SOAP request payload
+     * @param message the SOAP WebServiceMessage used to write the final response
+     */
+    @Override
+    public void validateArrangementForPayment(ValidateArrangementForPaymentRequest request,WebServiceMessage message) {
+        log.info("Account Validation Orchestrator Service is called for account validation");
+        accountValidationPort.validateSchema(request); // automatic validation through interceptors
+        accountValidationPort.validateBusinessRules(request,message);
+    }
+
+}
+----
 package com.rbs.bdd.application.service;
 
 
@@ -336,8 +665,49 @@ public class AccountValidationService implements AccountValidationPort {
 
 }
 
+------
+package com.rbs.bdd.application.service;
 
-------------------
+import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
+import com.rbs.bdd.application.port.in.PaymentValidationPort;
+import com.rbs.bdd.application.port.out.AccountValidationPort;
+import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.ws.WebServiceMessage;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+
+
+
+/**
+ * Service class responsible for orchestrating the validation flow of Customer Retrieval requests.
+ * Implements {@link CustomerRetrievalPort} and delegates schema and business rule validation
+ * to the appropriate output port.
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class CustomerRetrievalOrchestrator implements CustomerRetrievalPort {
+
+    private final RetrieveCustomerPort retrieveCustomerPort;
+
+
+    /**
+     * Entry point for handling the SOAP request. Validates schema and applies business rules.
+     *
+     * @param request the incoming SOAP request payload
+     * @param message the SOAP WebServiceMessage used to write the final response
+     */
+    @Override
+    public void validateCustomerRetrieval(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message) {
+        log.info("Customer Retrieval Orchestrator Service is called for customer Retrieval");
+        retrieveCustomerPort.validateSchema(request); // automatic validation through interceptors
+        retrieveCustomerPort.retrieveCustomer(request, message);
+    }
+
+}
+-----
 package com.rbs.bdd.application.service;
 
 
@@ -508,7 +878,7 @@ public class CustomerRetrievalService implements RetrieveCustomerPort {
         updateText(xpath, doc, ServiceConstants.XPath.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
         updateText(xpath, doc, ServiceConstants.XPath.XPATH_RETURN_CODE, detail.returnCode());
 
-        if ("Unable To Complete Request".equals(detail.description())){
+        if ("Customer Not Found".equals(detail.systemNotificationDesc())){
             updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC, detail.systemNotificationDesc());
             updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_CODE, detail.systemNotificationCode());
         } else {
@@ -567,553 +937,270 @@ public class CustomerRetrievalService implements RetrieveCustomerPort {
 
     }
    }
-
--------------------
-package com.rbs.bdd.domain.enums;
-import com.rbs.bdd.domain.model.ErrorDetail;
-import com.rbs.bdd.domain.model.ErrorDetail;
-
-import static com.rbs.bdd.common.ErrorCodeConstants.ERR_006;
-import static com.rbs.bdd.common.ErrorCodeConstants.ERR_10;
-
-/**
- * Enum representing predefined error types for validation responses.
- * Each constant wraps an {@link ErrorDetail} object with metadata used for SOAP fault construction.
- */
-public enum ErrorConstants {
-
-
-    ERR_INVALID_IBAN_LENGTH(new ErrorDetail("ERR006", "Unable to Complete Request", "0013", "Length of IBAN is Invalid")),
-
-
-    ERR_DB2_SQL(new ErrorDetail(ERR_006, "Service operation validateArrangementForPayment failed due to an error in the ESP. Contact systems management to resolve the problem.", null, null)),
-    ERR_UBAN_GB(new ErrorDetail(ERR_006, "Service operation retrievePrimaryCustomerForArr failed due to an error in the ESP. Contact systems management to resolve the problem.", null, null)),
-
-    ERR_WRONG_COUNTRY_CODE(new ErrorDetail(ERR_006, "Unable to Complete Request", "0050", "SYSTEM_ERROR,incidentID=1f2ff299-9d93-41a5-9119-b4a552f0191e")),
-
-    ERR_MOD97_IBAN(new ErrorDetail(ERR_006, "Unable to Complete Request", "0020", "MOD97 failure for the IBAN")),
-
-    ERR_INVALID_UBAN_LENGTH(new ErrorDetail(ERR_006, "Unable to Complete Request", "0013", "100||INVALID SORT CODE OR ISSUING AUTH ID PASSED||Execution Successful")),
-
-    ERR_CUSTOMER_NOT_FOUND(new ErrorDetail(ERR_006, "Unable To Complete Request", "4", "Customer Not Found")),
-
-    ERR_MOD97_UBAN(new ErrorDetail(ERR_006, "MOD97 failure for the UBAN", "0020", "MOD97 failure for the UBAN"));
-
-    private final ErrorDetail detail;
-
-    ErrorConstants(ErrorDetail detail) {
-        this.detail = detail;
-    }
-
-    /**
-     * Returns the {@link ErrorDetail} wrapped in this constant.
-     */
-    public ErrorDetail detail() {
-        return detail;
-    }
-
-}
-
----------------
-package com.rbs.bdd.domain.enums;
-
-import java.util.List;
-
-/**
- * Enum container for grouping constants related to service configuration, IBAN validation, file paths, and XPath expressions.
- * Constants are organized as nested interfaces for better readability and modular access.
- */
-public enum ServiceConstants {
-    // Empty enum just to hold grouped constants via nested interfaces
-    ;
-
-    /**
-     * File paths for static response and error XMLs.
-     */
-    public final class  Paths {
-        private Paths() {}
-       public static final  String  ACCOUNT_VALIDATION_REQUEST="src/test/resources/static-request/account-validation-request.xml";
-        public static final String  CUSTOMER_RETRIEVAL_REQUEST="src/test/resources/static-request/customer-retrieval-request.xml";
-
-        public static final String ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL= "error-response/error-response-customer-retrieval.xml";
-        public static final String ACCOUNT_VALIDATION_SCHEMA_VALIDATION_ERROR_XML = "error-response/account-validation-schema-error.xml";
-        public static final String CUSTOMER_SCHEMA_VALIDATION_ERROR_XML = "error-response/customer-retrieval-schema-error.xml";
-        public static final String RESPONSE_XML_PATH = "static-response/account-validation/success-response.xml";
-        public static final String ACCOUNT_VALIDATION_ERROR_XML = "error-response/account-validation-error.xml";
-
-    }
-
-    /**
-     * Namespace URIs used in Spring WS handler for request mapping.
-     */
-    public final class  Namespaces {
-        private Namespaces() {}
-        public static final String NAMESPACE_URI_FOR_ACCOUNT_VALIDATION = "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/";
-        public static final String NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL = "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/";
-    }
-
-    /**
-     * Static IBANs used for known test scenarios.
-     */
-    public final class IBANs {
-        private IBANs(){}
-        public static final  String IBAN_1 = "GB29NWBK60161331926801";
-        public static final String IBAN_2 = "GB82RBST12345698765437";
-        public static final String IBAN_3 = "GB94UBNC10201530093422";
-        public static final String IBAN_4 = "GB33RBSB20201555555567";
-
-
-
-        public static final  List<String> ALL_IBANS = List.of(
-                IBAN_1, IBAN_2, IBAN_3, IBAN_4
-        );
-    }
-
-    /**
-     * Code values used to distinguish between IBAN and UBAN.
-     */
-    public final class  AccountTypes {
-        private AccountTypes(){}
-        public static final String INTL_BANK_ACCOUNT = "InternationalBankAccountNumber";
-        public static final String UK_BASIC_BANK_ACCOUNT = "UKBasicBankAccountNumber";
-    }
-
-    /**
-     * XPath expressions for extracting and updating SOAP request/response values.
-     */
-    public final class  XPath {
-        private XPath(){}
-        public static final String XPATH_TRANSACTION_ID = "//*[local-name()='transactionId']";
-        public static final String XPATH_HAS_PARTY_ASSOC="//*[local-name()='hasInvolvedPartyAssociation']";
-        public static final  String XPATH_ASSOCIATED_PARTY=XPATH_HAS_PARTY_ASSOC+ "/*[local-name()='associatedInvolvedParty']";
-        public static final String XPATH_FIRST_NAME =XPATH_ASSOCIATED_PARTY +
-                "/*[local-name()='hasForName']/*[local-name()='firstName']";
-        public static final String XPATH_PREFIX_TYPE = XPATH_ASSOCIATED_PARTY +
-                "/*[local-name()='hasForName']/*[local-name()='prefixTitle']/*[local-name()='codeValue']";
-        public static final  String XPATH_LAST_NAME = XPATH_ASSOCIATED_PARTY +
-                "/*[local-name()='hasForName']/*[local-name()='lastName']";
-        public static final String XPATH_ACCOUNT_STATUS = "//*[local-name()='accountingUnits']/*[local-name()='status']/*[local-name()='codeValue']";
-        public static final String XPATH_SWITCHING_STATUS = "//*[local-name()='switchingStatus']/*[local-name()='codeValue']";
-        public static final String XPATH_MODULUS_STATUS = "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']";
-
-        // Fault-specific
-        public static final String XPATH_FAULT_TRANSACTION_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
-        public static final String XPATH_FAULT_RESPONSE_ID = "//*[local-name()='responseId']";
-        public static final String XPATH_FAULT_TIMESTAMP = "//*[local-name()='timestamp']";
-
-        /**
-         * XPath to locate transactionId under responseId node.
-         */
-        public static final String XPATH_RESPONSE_ID_TXN_ID = "//*[local-name()='responseId']/*[local-name()='transactionId']";
-
-        /**
-         * XPath to locate transactionId under refRequestIds node.
-         */
-        public static final String XPATH_REF_REQUEST_TXN_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
-
-        /**
-         * XPath to locate cmdStatus node for command result status.
-         */
-        public static final String XPATH_CMD_STATUS = "//*[local-name()='cmdStatus']";
-
-        /**
-         * XPath to locate description node inside cmdNotifications block.
-         */
-        public static final String XPATH_CMD_DESCRIPTION = "//*[local-name()='cmdNotifications']/*[local-name()='description']";
-
-        /**
-         * XPath to locate timestamp node inside cmdNotifications block.
-         */
-        public static final String XPATH_TIMESTAMP = "//*[local-name()='cmdNotifications']/*[local-name()='timestamp']";
-
-        /**
-         * XPath to locate returnCode node inside cmdNotifications block.
-         */
-        public static final String XPATH_RETURN_CODE = "//*[local-name()='cmdNotifications']/*[local-name()='returnCode']";
-
-        /**
-         * XPath to locate description inside systemNotifications block.
-         */
-        public static final  String XPATH_SYS_NOTIFICATION_DESC = "//*[local-name()='systemNotifications']/*[local-name()='description']";
-
-        /**
-         * XPath to locate returnCode inside systemNotifications block.
-         */
-        public static final String XPATH_SYS_NOTIFICATION_CODE = "//*[local-name()='systemNotifications']/*[local-name()='returnCode']";
-
-        /**
-         * XPath to locate the entire systemNotifications block node.
-         */
-        public static final String XPATH_SYS_NOTIFICATION_BLOCK = "//*[local-name()='systemNotifications']";
-
-    }
-
-    /**
-     * Common tag names.
-     */
-    public final class  Tags {
-        private Tags(){}
-        public static final String TAG_TRANSACTION_ID = "transactionId";
-        public static final String SYSTEM_ID="systemId";
-    }
-}
-
-
----------------
-package com.rbs.bdd.domain.enums;
-
-public enum ValidationErrorType {
-    INVALID_PREFIX,
-
-    INVALID_IBAN_LENGTH, INVALID_UBAN_LENGTH, INVALID_COUNTRY_CODE, INVALID_LENGTH, INVALID_MODULUS
-}
-
-
----------------------
-package com.rbs.bdd.infrastructure.config;
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import com.rbs.bdd.application.exception.XsdSchemaLoadingException;
-import com.rbs.bdd.infrastructure.soap.interceptor.AccountSchemaValidationInterceptor;
-import com.rbs.bdd.infrastructure.soap.interceptor.CustomerSchemaValidationInterceptor;
-import com.rbs.bdd.util.SoapInterceptorUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.servlet.ServletRegistrationBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.ws.config.annotation.EnableWs;
-import org.springframework.ws.config.annotation.WsConfigurerAdapter;
-import org.springframework.ws.server.EndpointInterceptor;
-import org.springframework.ws.transport.http.MessageDispatcherServlet;
-import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
-import org.springframework.xml.xsd.XsdSchemaCollection;
-import org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection;
-import java.util.List;
-
-/**
- * Configures Spring Web Services (Spring WS) for the application.
- * <p>
- * This configuration includes:
- * <ul>
- *     <li>Publishing WSDL endpoints for SOAP web services</li>
- *     <li>Enabling automatic XML Schema (XSD) validation of incoming SOAP requests</li>
- *     <li>Registering interceptors for request validation</li>
- * </ul>
- */
-@Configuration
-@EnableWs
-@Slf4j
-public class SoapWebServiceConfig extends WsConfigurerAdapter {
-
-    /**
-     * Registers the {@link MessageDispatcherServlet} which is the main dispatcher for Spring WS.
-     * It handles SOAP messages and dispatches them to appropriate endpoints.
-     *
-     * @param context the Spring application context
-     * @return servlet registration bean mapped to the /ws/* URI
-     */
-    @Bean
-    public ServletRegistrationBean<MessageDispatcherServlet> messageDispatcherServlet(ApplicationContext context) {
-        MessageDispatcherServlet servlet = new MessageDispatcherServlet();
-        servlet.setApplicationContext(context);
-        servlet.setTransformWsdlLocations(true);
-        return new ServletRegistrationBean<>(servlet, "/ws/*");
-    }
-
-    /**
-     * Adds a custom interceptor for schema validation. This interceptor validates incoming SOAP
-     * messages against the configured XSD schema.
-     *
-     * @param interceptors list of interceptors to which this validation interceptor is added
-     */
-    @Override
-    public void addInterceptors(List<EndpointInterceptor> interceptors) {
-
-        log.debug(" Adding Interceptors");
-
-        CustomerSchemaValidationInterceptor customerRetrievalInterceptor = new CustomerSchemaValidationInterceptor();
-        customerRetrievalInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
-        customerRetrievalInterceptor.setValidateResponse(false); // Do not validate outgoing responses
-        try {
-            customerRetrievalInterceptor.setXsdSchemaCollection(updateCustomerRetrievalXsd());
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
-        }
-        interceptors.add(customerRetrievalInterceptor);
-
-        AccountSchemaValidationInterceptor validatingInterceptor = new AccountSchemaValidationInterceptor();
-        validatingInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
-        validatingInterceptor.setValidateResponse(false); // Do not validate outgoing responses
-        try {
-            validatingInterceptor.setXsdSchemaCollection(updateContactXsd());
-        } catch (Exception e) {
-            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
-        }
-        interceptors.add(validatingInterceptor);
-
-
-    }
-
-    /**
-     * Publishes a WSDL endpoint based on the `ArrValidationForPaymentParameters.xsd` file.
-     * This exposes the WSDL dynamically under /ws/ArrValidationForPaymentParameters.wsdl
-     *
-     * @return a configured WSDL definition bean
-     * @throws SchemaValidationException if XSD loading fails
-     */
-    @Bean(name = "ArrValidationForPaymentParameters")
-    public DefaultWsdl11Definition accountValidationWSDL() throws SchemaValidationException {
-        log.info("Account Validation Endpoint is invoked");
-         return  SoapInterceptorUtils.buildWsdlDefinition(
-                "IArrValidationForPayment",
-                "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/",
-                updateContactXsd()
-        );
-    }
-
-    /**
-     * Loads the primary XSD schema (`ArrValidationForPaymentParameters.xsd`) from the classpath
-     * and enables inlining for WSDL generation and schema validation.
-     *
-     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
-     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
-     */
-    @Bean
-    public XsdSchemaCollection updateContactXsd() {
-        return SoapInterceptorUtils.loadSchema("xsd/account-validation/ArrValidationForPaymentParameters.xsd");
-
-    }
-
-
-    /**
-     * Publishes a WSDL endpoint based on the `CustomerRetrievalForPaymentParameters.xsd` file.
-     * This exposes the WSDL dynamically under /ws/CustomerRetrievalForPaymentParameters.wsdl
-     *
-     * @return a configured WSDL definition bean
-     * @throws SchemaValidationException if XSD loading fails
-     */
-    @Bean(name = "CustomerRetrievalForPayment")
-    public DefaultWsdl11Definition customerRetrievalWSDL() throws SchemaValidationException {
-        log.info("Customer Retrieval Endpoint is invoked");
-        return  SoapInterceptorUtils.buildWsdlDefinition(
-                "ICustomerRetrievalForPayment",
-                "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/",
-                updateCustomerRetrievalXsd()
-        );
-    }
-
-
-    /**
-     * Loads the primary XSD schema (`CustomerRetrievalForPaymentParameters.xsd`) from the classpath
-     * and enables inlining for WSDL generation and schema validation.
-     *
-     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
-     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
-     */
-    @Bean
-    public XsdSchemaCollection updateCustomerRetrievalXsd() {
-        return SoapInterceptorUtils.loadSchema("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd");
-    }
-
-
-}
-
-
-------------------
-
-
-package com.rbs.bdd.infrastructure.entity;
-import jakarta.persistence.*;
-import lombok.*;
-
-import java.util.UUID;
-
-@Entity
-@Table(name = "customer_record")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class CustomerData {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private UUID id;
-
-    @Column(name = "account_no", nullable = false, unique = true)
-    private String accountNo;
-
-    @Column(name = "customer_prefix")
-    private String prefixType;
-
-    @Column(name = "customer_first_name")
-    private String firstName;
-
-    @Column(name = "customer_last_name")
-    private String lastName;
-
-    @Column(name = "account_type")
-    private String accountType;
-
-
-}
-
-----------------
-
-package com.rbs.bdd.infrastructure.repository;
-
-import com.rbs.bdd.infrastructure.entity.CustomerData;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
+------
+package com.rbs.bdd.util;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Predicate;
 
-@Repository public interface CustomerRepository extends JpaRepository<CustomerData, Long> {
-
-    Optional<CustomerData> findByAccountNo(String accountNo);
-}
-
-
----------------
-
-package com.rbs.bdd.infrastructure.soap.interceptor;
-
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import com.rbs.bdd.util.SoapInterceptorUtils;
-
+import com.rbs.bdd.application.service.AccountValidationService;
+import com.rbs.bdd.domain.enums.ServiceConstants;
+import com.rbs.bdd.domain.enums.ValidationErrorType;
+import com.rbs.bdd.domain.model.ErrorDetail;
+import jakarta.xml.soap.SOAPException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import javax.xml.transform.TransformerException;
-import java.io.IOException;
-import java.io.InputStream;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.ACCOUNT_VALIDATION_SCHEMA_VALIDATION_ERROR_XML;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import javax.xml.XMLConstants;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 /**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
+ * Utility class for validating account identifiers like IBAN or UBAN
+ * across different service contexts such as Account Validation or Customer Retrieval.
+ * <p>
+ * This class centralizes error evaluation logic based on account type, identifier format,
+ * length, and modulus check results.
  */
 @Slf4j
-public class AccountSchemaValidationInterceptor extends PayloadValidatingInterceptor {
+public class ValidationUtils {
+    /**
+     * Immutable container representing a valid request configuration.
+     * this record is left without methods or additional logic,as it is only
+     *  used to group and transport request fields such as
+     *  <ul>
+     *     <li>{@code identifier} - contains account number </li>
+     *     <li>{@code codeValue} - used to identify
+     * whether account is UKBasicBankAccountNumber or InternationalBankAccountNumber</li>
+     *      <li>{@code originalTxnId} - return the transactionId of the request </li>
+     *       <li>{@code systemId} - returns the systemId from the request </li>
+     *       </ul>
+     */
+    @SuppressWarnings("unused")
+    public record RequestParams(String identifier, String codeValue, String originalTxnId, String systemId) {
+        // this record is left without methods or additional logic,as it is only used to group and transport request fields
+
+    }
 
 
-
-
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
-        if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_ACCOUNT_VALIDATION)) {
-            return true;
+    /**
+     * Checks if the given node is empty or only contains non-element children.
+     */
+    public static boolean isNodeEmpty(Node node) {
+        if (node == null) return true;
+        NodeList children = node.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            if (children.item(i).getNodeType() == Node.ELEMENT_NODE) return false;
         }
-        return super.handleRequest(messageContext, endpoint);
+        return true;
     }
+
+    /**
+     * Removes a specific child element from the parent node.
+     */
+    public static void removeNodes(Node parent, String tagName) {
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (tagName.equals(child.getLocalName())) {
+                parent.removeChild(child);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Validates the provided {@link RequestParams} based on predefined rules for
+     * account type (UK Basic or International) and returns a mapped {@link ErrorDetail}
+     * from the provided {@code errorMap} based on failure conditions.
+     * <p>
+     * This method is reusable across multiple services and logs the validation
+     * outcome per service context.
+     * @param p              the request parameter object containing account details
+     * @param errorMap       a mapping of {@link ValidationErrorType} to corresponding {@link ErrorDetail}
+     * @param ibanValidator  a predicate used to validate IBAN or UBAN using modulus or custom rule
+     * @param serviceContext a string to log the calling service (e.g., "AccountValidation", "CustomerRetrieval")
+     * @return an {@code Optional<ErrorDetail>} containing the matched error if validation fails; empty otherwise
+     */
+    public static Optional<ErrorDetail> validateAccount(
+            RequestParams p,
+            Map<ValidationErrorType, ErrorDetail> errorMap,
+            Predicate<String> ibanValidator,
+            String serviceContext
+    ) {
+        if (ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT.equals(p.codeValue())) {
+            log.info("Account Type is :"+ ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT);
+            return validateUbanAccount(p, errorMap, ibanValidator, serviceContext);
+        }
+
+        if (ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT.equals(p.codeValue())) {
+            log.info("Account Type is :"+ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT);
+            return validateIbanAccount(p, errorMap, serviceContext);
+        }
+
+        return Optional.empty();
+    }
+
+    /**
+     * Validates a UK Basic Bank Account (UBAN).
+     */
+    private static Optional<ErrorDetail> validateUbanAccount(
+            RequestParams p,
+            Map<ValidationErrorType, ErrorDetail> errorMap,
+            Predicate<String> ibanValidator,
+            String context
+    ) {
+        if (!p.identifier().matches("\\d+")) {
+            log.error("UBAN account is starting with GB prefix");
+            return Optional.of(errorMap.get(ValidationErrorType.INVALID_PREFIX));
+        }
+
+        if (p.identifier().length() != 14) {
+            log.error("UBAN account is not equal to 14 characters");
+            return Optional.of(context.equals("CustomerRetrieval")
+                    ? errorMap.get(ValidationErrorType.INVALID_LENGTH)
+                    : errorMap.get(ValidationErrorType.INVALID_UBAN_LENGTH));
+        }
+
+        if (!ibanValidator.test(p.identifier())) {
+            log.error("UBAN account is not valid");
+            return Optional.of(errorMap.get(ValidationErrorType.INVALID_MODULUS));
+        }
+
+        log.info("No error for UBAN [{}] in {} with identifier: {}", p.codeValue(), context, p.identifier());
+        return Optional.empty();
+    }
+
+    /**
+     * Validates an International Bank Account Number (IBAN).
+     */
+    private static Optional<ErrorDetail> validateIbanAccount(
+            RequestParams p,
+            Map<ValidationErrorType, ErrorDetail> errorMap,
+            String context
+    ) {
+
+        if (!p.identifier().startsWith("GB")) {
+            log.error("IBAN account is not starting with GB prefix");
+            return Optional.of(context.equals("CustomerRetrieval")
+                    ? errorMap.get(ValidationErrorType.INVALID_PREFIX)
+                    : errorMap.get(ValidationErrorType.INVALID_COUNTRY_CODE));
+        }
+
+        if (p.identifier().length() != 22) {
+            log.error("IBAN account is not equal to 22 characters");
+            return Optional.of(context.equals("CustomerRetrieval")
+                    ? errorMap.get(ValidationErrorType.INVALID_LENGTH)
+                    : errorMap.get(ValidationErrorType.INVALID_IBAN_LENGTH));
+
+        }
+
+        log.info("No error for IBAN [{}] in {} with identifier: {}", p.codeValue(), context, p.identifier());
+        return Optional.empty();
+    }
+
+
 
 
     /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
+     * Generates a unique transaction ID using UUID.
      */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        log.warn("Schema validation failed. Returning custom schemaValidationError.xml");
-        return SoapInterceptorUtils.handleSchemaValidationErrors(messageContext
-                ,ACCOUNT_VALIDATION_SCHEMA_VALIDATION_ERROR_XML,"accountValidation");
+    public static String generateTxnId() {
+        return "1alN" + UUID.randomUUID().toString().replace("-", "") + "h";
     }
-
-
+    /**
+     * Removes a child node from the specified parent node.
+     * <ul>
+     *     <li>If {@code tagName} is {@code null}, it removes the node directly from its parent.</li>
+     *     <li>If {@code tagName} is provided, it searches the children of the parent node and removes the first match based on local name.</li>
+     * </ul>
+     *
+     * @param parentOrNode the node to be removed directly (if {@code tagName} is null), or parent node (if tagName is provided)
+     * @param tagName       the local name of the child node to remove; {@code null} for direct removal
+     */
+    public static void removeChildNode(Node parentOrNode, String tagName) {
+        if (tagName == null) {
+            removeDirectNode(parentOrNode);
+        } else {
+            removeChildByTag(parentOrNode, tagName);
+        }
+    }
 
     /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
+     * Sets a value for the node matching the given XPath expression.
      */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
+    public static void setXPathValue(Document doc, String path, String value) throws XPathExpressionException {
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
+        if (node != null) {
+            node.setTextContent(value);
+        }
     }
+
+    /**
+     * Removes the given node from its parent if both are non-null.
+     */
+    private static void removeDirectNode(Node node) {
+        if (node != null && node.getParentNode() != null) {
+            node.getParentNode().removeChild(node);
+        }
+    }
+
+    /**
+     * Removes the first child of the parent that matches the given local tag name.
+     */
+    private static void removeChildByTag(Node parent, String tagName) {
+        if (parent == null || tagName == null) return;
+
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (tagName.equals(child.getLocalName())) {
+                parent.removeChild(child);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Finds a node by its local name using wildcard namespace.
+     */
+    public static Node getNode(Document doc, String localName) {
+        NodeList nodes = doc.getElementsByTagNameNS("*", localName);
+        return nodes.getLength() > 0 ? nodes.item(0) : null;
+    }
+
+    public static  void writeResponseToSoapMessage(WebServiceMessage message, Document responseDoc) throws TransformerException, SOAPException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+        Transformer transformer = transformerFactory.newTransformer();
+        transformer.transform(new DOMSource(responseDoc), new StreamResult(out));
+        ((SaajSoapMessage) message).getSaajMessage().getSOAPPart()
+                .setContent(new StreamSource(new ByteArrayInputStream(out.toByteArray())));
+    }
+
+
 
 }
-
----------------------
-
-package com.rbs.bdd.infrastructure.soap.interceptor;
-
-
-
-import com.rbs.bdd.util.SoapInterceptorUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import javax.xml.transform.TransformerException;
-import java.io.IOException;
-import java.io.InputStream;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.CUSTOMER_SCHEMA_VALIDATION_ERROR_XML;
-
-
-/**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
- */
-@Slf4j
-public class CustomerSchemaValidationInterceptor extends PayloadValidatingInterceptor {
-
-
-
-
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
-        if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL)) {
-            return true;
-        }
-        return super.handleRequest(messageContext, endpoint);
-    }
-
-
-    /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
-     */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        log.error("Schema validation failed. Returning custom schemaValidationError.xml");
-        return SoapInterceptorUtils.handleSchemaValidationErrors(messageContext,
-                CUSTOMER_SCHEMA_VALIDATION_ERROR_XML,"customerRetrieval");
-    }
-
-
-    /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
-     */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
-    }
-
-}
-
-
--------------------
+-----
 package com.rbs.bdd.util;
 
 import com.rbs.bdd.application.exception.SchemaValidationException;
@@ -1462,264 +1549,452 @@ public class SoapInterceptorUtils {
 
 }
 
--------
-package com.rbs.bdd.util;
+----
+package com.rbs.bdd.infrastructure.config;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Predicate;
-
-import com.rbs.bdd.application.service.AccountValidationService;
-import com.rbs.bdd.domain.enums.ServiceConstants;
-import com.rbs.bdd.domain.enums.ValidationErrorType;
-import com.rbs.bdd.domain.model.ErrorDetail;
-import jakarta.xml.soap.SOAPException;
+import com.rbs.bdd.application.exception.SchemaValidationException;
+import com.rbs.bdd.application.exception.XsdSchemaLoadingException;
+import com.rbs.bdd.infrastructure.soap.interceptor.AccountSchemaValidationInterceptor;
+import com.rbs.bdd.infrastructure.soap.interceptor.CustomerSchemaValidationInterceptor;
+import com.rbs.bdd.util.SoapInterceptorUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.soap.saaj.SaajSoapMessage;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import javax.xml.XMLConstants;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.ws.config.annotation.EnableWs;
+import org.springframework.ws.config.annotation.WsConfigurerAdapter;
+import org.springframework.ws.server.EndpointInterceptor;
+import org.springframework.ws.transport.http.MessageDispatcherServlet;
+import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
+import org.springframework.xml.xsd.XsdSchemaCollection;
+import org.springframework.xml.xsd.commons.CommonsXsdSchemaCollection;
+import java.util.List;
 
 /**
- * Utility class for validating account identifiers like IBAN or UBAN
- * across different service contexts such as Account Validation or Customer Retrieval.
+ * Configures Spring Web Services (Spring WS) for the application.
  * <p>
- * This class centralizes error evaluation logic based on account type, identifier format,
- * length, and modulus check results.
+ * This configuration includes:
+ * <ul>
+ *     <li>Publishing WSDL endpoints for SOAP web services</li>
+ *     <li>Enabling automatic XML Schema (XSD) validation of incoming SOAP requests</li>
+ *     <li>Registering interceptors for request validation</li>
+ * </ul>
  */
+@Configuration
+@EnableWs
 @Slf4j
-public class ValidationUtils {
+public class SoapWebServiceConfig extends WsConfigurerAdapter {
+
     /**
-     * Immutable container representing a valid request configuration.
-     * this record is left without methods or additional logic,as it is only
-     *  used to group and transport request fields such as
-     *  <ul>
-     *     <li>{@code identifier} - contains account number </li>
-     *     <li>{@code codeValue} - used to identify
-     * whether account is UKBasicBankAccountNumber or InternationalBankAccountNumber</li>
-     *      <li>{@code originalTxnId} - return the transactionId of the request </li>
-     *       <li>{@code systemId} - returns the systemId from the request </li>
-     *       </ul>
+     * Registers the {@link MessageDispatcherServlet} which is the main dispatcher for Spring WS.
+     * It handles SOAP messages and dispatches them to appropriate endpoints.
+     *
+     * @param context the Spring application context
+     * @return servlet registration bean mapped to the /ws/* URI
      */
-    @SuppressWarnings("unused")
-    public record RequestParams(String identifier, String codeValue, String originalTxnId, String systemId) {
-        // this record is left without methods or additional logic,as it is only used to group and transport request fields
+    @Bean
+    public ServletRegistrationBean<MessageDispatcherServlet> messageDispatcherServlet(ApplicationContext context) {
+        MessageDispatcherServlet servlet = new MessageDispatcherServlet();
+        servlet.setApplicationContext(context);
+        servlet.setTransformWsdlLocations(true);
+        return new ServletRegistrationBean<>(servlet, "/ws/*");
+    }
+
+    /**
+     * Adds a custom interceptor for schema validation. This interceptor validates incoming SOAP
+     * messages against the configured XSD schema.
+     *
+     * @param interceptors list of interceptors to which this validation interceptor is added
+     */
+    @Override
+    public void addInterceptors(List<EndpointInterceptor> interceptors) {
+
+        log.debug(" Adding Interceptors");
+
+        CustomerSchemaValidationInterceptor customerRetrievalInterceptor = new CustomerSchemaValidationInterceptor();
+        customerRetrievalInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
+        customerRetrievalInterceptor.setValidateResponse(false); // Do not validate outgoing responses
+        try {
+            customerRetrievalInterceptor.setXsdSchemaCollection(updateCustomerRetrievalXsd());
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
+        }
+        interceptors.add(customerRetrievalInterceptor);
+
+        AccountSchemaValidationInterceptor validatingInterceptor = new AccountSchemaValidationInterceptor();
+        validatingInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
+        validatingInterceptor.setValidateResponse(false); // Do not validate outgoing responses
+        try {
+            validatingInterceptor.setXsdSchemaCollection(updateContactXsd());
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
+        }
+        interceptors.add(validatingInterceptor);
+
+
+    }
+
+    /**
+     * Publishes a WSDL endpoint based on the `ArrValidationForPaymentParameters.xsd` file.
+     * This exposes the WSDL dynamically under /ws/ArrValidationForPaymentParameters.wsdl
+     *
+     * @return a configured WSDL definition bean
+     * @throws SchemaValidationException if XSD loading fails
+     */
+    @Bean(name = "ArrValidationForPaymentParameters")
+    public DefaultWsdl11Definition accountValidationWSDL() throws SchemaValidationException {
+        log.info("Account Validation Endpoint is invoked");
+         return  SoapInterceptorUtils.buildWsdlDefinition(
+                "IArrValidationForPayment",
+                "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/",
+                updateContactXsd()
+        );
+    }
+
+    /**
+     * Loads the primary XSD schema (`ArrValidationForPaymentParameters.xsd`) from the classpath
+     * and enables inlining for WSDL generation and schema validation.
+     *
+     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
+     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     */
+    @Bean
+    public XsdSchemaCollection updateContactXsd() {
+        return SoapInterceptorUtils.loadSchema("xsd/account-validation/ArrValidationForPaymentParameters.xsd");
 
     }
 
 
     /**
-     * Checks if the given node is empty or only contains non-element children.
+     * Publishes a WSDL endpoint based on the `CustomerRetrievalForPaymentParameters.xsd` file.
+     * This exposes the WSDL dynamically under /ws/CustomerRetrievalForPaymentParameters.wsdl
+     *
+     * @return a configured WSDL definition bean
+     * @throws SchemaValidationException if XSD loading fails
      */
-    public static boolean isNodeEmpty(Node node) {
-        if (node == null) return true;
-        NodeList children = node.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            if (children.item(i).getNodeType() == Node.ELEMENT_NODE) return false;
-        }
+    @Bean(name = "CustomerRetrievalForPayment")
+    public DefaultWsdl11Definition customerRetrievalWSDL() throws SchemaValidationException {
+        log.info("Customer Retrieval Endpoint is invoked");
+        return  SoapInterceptorUtils.buildWsdlDefinition(
+                "ICustomerRetrievalForPayment",
+                "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/",
+                updateCustomerRetrievalXsd()
+        );
+    }
+
+
+    /**
+     * Loads the primary XSD schema (`CustomerRetrievalForPaymentParameters.xsd`) from the classpath
+     * and enables inlining for WSDL generation and schema validation.
+     *
+     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
+     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     */
+    @Bean
+    public XsdSchemaCollection updateCustomerRetrievalXsd() {
+        return SoapInterceptorUtils.loadSchema("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd");
+    }
+
+
+}
+
+
+----
+package com.rbs.bdd.infrastructure.config;
+
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.server.EndpointInterceptor;
+
+import java.io.ByteArrayOutputStream;
+/**
+ * Interceptor to log incoming and outgoing SOAP messages for debugging and monitoring.
+ * This class logs the full request, response, and fault messages.
+ */
+@Slf4j
+public class SoapLoggingInterceptor implements EndpointInterceptor {
+
+
+    /**
+     * Logs the incoming SOAP request before it reaches the endpoint.
+     *
+     * @param messageContext the message context containing the request
+     * @param endpoint        the targeted endpoint
+     * @return true to continue processing the request
+     */
+    @Override
+    public boolean handleRequest(MessageContext messageContext, Object endpoint) {
+        logMessage("SOAP Request", messageContext.getRequest());
         return true;
     }
 
     /**
-     * Removes a specific child element from the parent node.
-     */
-    public static void removeNodes(Node parent, String tagName) {
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (tagName.equals(child.getLocalName())) {
-                parent.removeChild(child);
-                break;
-            }
-        }
-    }
-
-    /**
-     * Validates the provided {@link RequestParams} based on predefined rules for
-     * account type (UK Basic or International) and returns a mapped {@link ErrorDetail}
-     * from the provided {@code errorMap} based on failure conditions.
-     * <p>
-     * This method is reusable across multiple services and logs the validation
-     * outcome per service context.
-     * @param p              the request parameter object containing account details
-     * @param errorMap       a mapping of {@link ValidationErrorType} to corresponding {@link ErrorDetail}
-     * @param ibanValidator  a predicate used to validate IBAN or UBAN using modulus or custom rule
-     * @param serviceContext a string to log the calling service (e.g., "AccountValidation", "CustomerRetrieval")
-     * @return an {@code Optional<ErrorDetail>} containing the matched error if validation fails; empty otherwise
-     */
-    public static Optional<ErrorDetail> validateAccount(
-            RequestParams p,
-            Map<ValidationErrorType, ErrorDetail> errorMap,
-            Predicate<String> ibanValidator,
-            String serviceContext
-    ) {
-        if (ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT.equals(p.codeValue())) {
-            log.info("Account Type is :"+ ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT);
-            return validateUbanAccount(p, errorMap, ibanValidator, serviceContext);
-        }
-
-        if (ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT.equals(p.codeValue())) {
-            log.info("Account Type is :"+ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT);
-            return validateIbanAccount(p, errorMap, serviceContext);
-        }
-
-        return Optional.empty();
-    }
-
-    /**
-     * Validates a UK Basic Bank Account (UBAN).
-     */
-    private static Optional<ErrorDetail> validateUbanAccount(
-            RequestParams p,
-            Map<ValidationErrorType, ErrorDetail> errorMap,
-            Predicate<String> ibanValidator,
-            String context
-    ) {
-        if (!p.identifier().matches("\\d+")) {
-            log.error("UBAN account is starting with GB prefix");
-            return Optional.of(errorMap.get(ValidationErrorType.INVALID_PREFIX));
-        }
-
-        if (p.identifier().length() != 14) {
-            log.error("UBAN account is not equal to 14 characters");
-            return Optional.of(context.equals("CustomerRetrieval")
-                    ? errorMap.get(ValidationErrorType.INVALID_LENGTH)
-                    : errorMap.get(ValidationErrorType.INVALID_UBAN_LENGTH));
-        }
-
-        if (!ibanValidator.test(p.identifier())) {
-            log.error("UBAN account is not valid");
-            return Optional.of(errorMap.get(ValidationErrorType.INVALID_MODULUS));
-        }
-
-        log.info("No error for UBAN [{}] in {} with identifier: {}", p.codeValue(), context, p.identifier());
-        return Optional.empty();
-    }
-
-    /**
-     * Validates an International Bank Account Number (IBAN).
-     */
-    private static Optional<ErrorDetail> validateIbanAccount(
-            RequestParams p,
-            Map<ValidationErrorType, ErrorDetail> errorMap,
-            String context
-    ) {
-
-        if (!p.identifier().startsWith("GB")) {
-            log.error("IBAN account is not starting with GB prefix");
-            return Optional.of(errorMap.get(ValidationErrorType.INVALID_COUNTRY_CODE));
-        }
-
-        if (p.identifier().length() != 22) {
-            log.error("IBAN account is not equal to 22 characters");
-            return Optional.of(context.equals("CustomerRetrieval")
-                    ? errorMap.get(ValidationErrorType.INVALID_LENGTH)
-                    : errorMap.get(ValidationErrorType.INVALID_IBAN_LENGTH));
-
-        }
-
-        log.info("No error for IBAN [{}] in {} with identifier: {}", p.codeValue(), context, p.identifier());
-        return Optional.empty();
-    }
-
-
-
-
-    /**
-     * Generates a unique transaction ID using UUID.
-     */
-    public static String generateTxnId() {
-        return "1alN" + UUID.randomUUID().toString().replace("-", "") + "h";
-    }
-    /**
-     * Removes a child node from the specified parent node.
-     * <ul>
-     *     <li>If {@code tagName} is {@code null}, it removes the node directly from its parent.</li>
-     *     <li>If {@code tagName} is provided, it searches the children of the parent node and removes the first match based on local name.</li>
-     * </ul>
+     * Logs the outgoing SOAP response after the endpoint returns a result.
      *
-     * @param parentOrNode the node to be removed directly (if {@code tagName} is null), or parent node (if tagName is provided)
-     * @param tagName       the local name of the child node to remove; {@code null} for direct removal
+     * @param messageContext the message context containing the response
+     * @param endpoint        the targeted endpoint
+     * @return true to continue processing the response
      */
-    public static void removeChildNode(Node parentOrNode, String tagName) {
-        if (tagName == null) {
-            removeDirectNode(parentOrNode);
-        } else {
-            removeChildByTag(parentOrNode, tagName);
-        }
+    @Override
+    public boolean handleResponse(MessageContext messageContext, Object endpoint) {
+        logMessage("SOAP Response", messageContext.getResponse());
+        return true;
     }
 
     /**
-     * Sets a value for the node matching the given XPath expression.
+     * Logs the SOAP fault message if an exception occurs during processing.
+     *
+     * @param messageContext the message context containing the fault
+     * @param endpoint        the targeted endpoint
+     * @return true to continue processing the fault
      */
-    public static void setXPathValue(Document doc, String path, String value) throws XPathExpressionException {
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
-        if (node != null) {
-            node.setTextContent(value);
-        }
+    @Override
+    public boolean handleFault(MessageContext messageContext, Object endpoint) {
+        logMessage("SOAP Fault", messageContext.getResponse());
+        return true;
     }
 
     /**
-     * Removes the given node from its parent if both are non-null.
+     * Called after the completion of the message exchange.
+     * No action is needed here, but method must be implemented.
      */
-    private static void removeDirectNode(Node node) {
-        if (node != null && node.getParentNode() != null) {
-            node.getParentNode().removeChild(node);
-        }
+    @Override
+    public void afterCompletion(MessageContext messageContext, Object endpoint, Exception ex) {
+        // No action needed after completion
     }
 
     /**
-     * Removes the first child of the parent that matches the given local tag name.
+     * Helper method to log the SOAP message by writing it to a byte array output stream.
+     *
+     * @param type    the type of SOAP message (Request, Response, Fault)
+     * @param message the WebServiceMessage to be logged
      */
-    private static void removeChildByTag(Node parent, String tagName) {
-        if (parent == null || tagName == null) return;
-
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (tagName.equals(child.getLocalName())) {
-                parent.removeChild(child);
-                break;
-            }
+    private void logMessage(String type, org.springframework.ws.WebServiceMessage message) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            message.writeTo(out);  // Serialize the message to an output stream
+            log.info("{}:\n{}", type, out.toString());  // Log the message content
+        } catch (Exception e) {
+            log.error("Error logging {} message: {}", type, e.getMessage());
         }
     }
+}
+
+
+----
+package com.rbs.bdd.infrastructure.soap.api;
+
+import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
+import com.rbs.bdd.application.port.in.PaymentValidationPort;
+
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.server.endpoint.annotation.Endpoint;
+import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
+import org.springframework.ws.server.endpoint.annotation.RequestPayload;
+import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
+
+import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
+import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL;
+
+
+/**
+ * SOAP endpoint adapter class for handling the `validateArrangementForPayment` operation.
+ * It uses Spring WS annotations to route incoming SOAP requests to the appropriate service layer.
+ */
+@Slf4j
+@Endpoint
+public class PaymentValidationSoapAdapter {
+
+    /**Changes for the request*/
+
+
+    private final PaymentValidationPort paymentValidationPort;
+    private final CustomerRetrievalPort customerRetrievalPort;
 
     /**
-     * Finds a node by its local name using wildcard namespace.
+     * Constructor-based injection of the orchestrator that handles business logic.
+     *
+     * @param paymentValidationPort the orchestrator service
      */
-    public static Node getNode(Document doc, String localName) {
-        NodeList nodes = doc.getElementsByTagNameNS("*", localName);
-        return nodes.getLength() > 0 ? nodes.item(0) : null;
-    }
-
-    public static  void writeResponseToSoapMessage(WebServiceMessage message, Document responseDoc) throws TransformerException, SOAPException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
-        Transformer transformer = transformerFactory.newTransformer();
-        transformer.transform(new DOMSource(responseDoc), new StreamResult(out));
-        ((SaajSoapMessage) message).getSaajMessage().getSOAPPart()
-                .setContent(new StreamSource(new ByteArrayInputStream(out.toByteArray())));
+    public PaymentValidationSoapAdapter(PaymentValidationPort paymentValidationPort,CustomerRetrievalPort customerRetrievalPort) {
+        this.paymentValidationPort = paymentValidationPort;
+        this.customerRetrievalPort = customerRetrievalPort;
     }
 
 
+
+    /**
+     * Handles the `validateArrangementForPayment` SOAP request.
+     * Delegates request processing to the orchestrator which modifies the response message directly.
+     *
+     * @param request the SOAP request payload
+     * @param context the Spring WS message context
+     */
+    @PayloadRoot(namespace = NAMESPACE_URI_FOR_ACCOUNT_VALIDATION, localPart = "validateArrangementForPayment")
+    @ResponsePayload
+    public void validateArrangementForPayment(@RequestPayload ValidateArrangementForPaymentRequest request,
+                                                MessageContext context) {
+        log.info("validateArrangementForPayment is called");
+        WebServiceMessage response = context.getResponse();
+        paymentValidationPort.validateArrangementForPayment(request, response);
+         }
+
+    /**
+     * Handles the `RetrieveCustomerRequest` SOAP request.
+     * Delegates request processing to the orchestrator which modifies the response message directly.
+     *
+     * @param request the SOAP request payload
+     * @param context the Spring WS message context
+     */
+    @PayloadRoot(namespace = NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL, localPart = "retrievePrimaryCustomerForArr")
+    @ResponsePayload
+    public void validateCustomerRetrieval(@RequestPayload RetrievePrimaryCustomerForArrRequest request,
+                                              MessageContext context) {
+        log.info("validateCustomerRetrieval is called");
+        WebServiceMessage response = context.getResponse();
+
+        customerRetrievalPort.validateCustomerRetrieval(request, response);
+    }
 
 }
+
+-----
+package com.rbs.bdd.infrastructure.soap.interceptor;
+
+
+import com.rbs.bdd.application.exception.SchemaValidationException;
+import com.rbs.bdd.util.SoapInterceptorUtils;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import javax.xml.transform.TransformerException;
+import java.io.IOException;
+import java.io.InputStream;
+import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
+import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.ACCOUNT_VALIDATION_SCHEMA_VALIDATION_ERROR_XML;
+
+
+/**
+ * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
+ * The response is based on a static XML file, with dynamic fields replaced using request data.
+ */
+@Slf4j
+public class AccountSchemaValidationInterceptor extends PayloadValidatingInterceptor {
+
+
+
+
+    @Override
+    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
+        if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_ACCOUNT_VALIDATION)) {
+            return true;
+        }
+        return super.handleRequest(messageContext, endpoint);
+    }
+
+
+    /**
+     * Handles schema validation failures by generating a custom SOAP fault response.
+     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
+     *
+     * @param messageContext the message context
+     * @param errors         the validation errors
+     * @return false to prevent Spring WS from overriding with default fault
+     */
+    @Override
+    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
+        log.warn("Schema validation failed. Returning custom schemaValidationError.xml");
+        return SoapInterceptorUtils.handleSchemaValidationErrors(messageContext
+                ,ACCOUNT_VALIDATION_SCHEMA_VALIDATION_ERROR_XML,"accountValidation");
+    }
+
+
+
+    /**
+     * Retrieves static XML file from classpath. Can be overridden in tests.
+     *
+     * @param path the classpath location of the file
+     * @return input stream for the XML file
+     */
+    protected InputStream getClassLoaderResource(String path) {
+        return getClass().getClassLoader().getResourceAsStream(path);
+    }
+
+}
+
+-------------
+package com.rbs.bdd.infrastructure.soap.interceptor;
+
+
+
+import com.rbs.bdd.util.SoapInterceptorUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import javax.xml.transform.TransformerException;
+import java.io.IOException;
+import java.io.InputStream;
+import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL;
+import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.CUSTOMER_SCHEMA_VALIDATION_ERROR_XML;
+
+
+/**
+ * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
+ * The response is based on a static XML file, with dynamic fields replaced using request data.
+ */
+@Slf4j
+public class CustomerSchemaValidationInterceptor extends PayloadValidatingInterceptor {
+
+
+
+
+    @Override
+    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
+        if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL)) {
+            return true;
+        }
+        return super.handleRequest(messageContext, endpoint);
+    }
+
+
+    /**
+     * Handles schema validation failures by generating a custom SOAP fault response.
+     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
+     *
+     * @param messageContext the message context
+     * @param errors         the validation errors
+     * @return false to prevent Spring WS from overriding with default fault
+     */
+    @Override
+    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
+        log.error("Schema validation failed. Returning custom schemaValidationError.xml");
+        return SoapInterceptorUtils.handleSchemaValidationErrors(messageContext,
+                CUSTOMER_SCHEMA_VALIDATION_ERROR_XML,"customerRetrieval");
+    }
+
+
+    /**
+     * Retrieves static XML file from classpath. Can be overridden in tests.
+     *
+     * @param path the classpath location of the file
+     * @return input stream for the XML file
+     */
+    protected InputStream getClassLoaderResource(String path) {
+        return getClass().getClassLoader().getResourceAsStream(path);
+    }
+
+}
+
