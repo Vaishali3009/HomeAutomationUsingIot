@@ -1,29 +1,222 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: bdd-ms-esp-simulation-service
-  namespace: bdd-sandbox
-data:
-  spring.application.name: "bdd-sandbox-cpo-payment-router"
+ESP Simulation Service – Spring Boot SOAP Microservice
 
-  # Aurora and Liquibase Properties
-  spring.datasource.base.url: "jdbc:postgresql://bdd-global.global-gltoyhswruzl.global.rds.amazonaws.com:5432/"
-  spring.datasource.username: "*****"
-  spring.datasource.password: "*****"
-  secret.datasource.name: "bdd_bdd-primary_esp_simulator_admin"
+📘 Overview
 
-  spring.liquibase.default-schema: "*****"
-  secret.manager.enabled: "true"
-  aws.region: "eu-west-1"
-  spring.liquibase.enabled: "true"
-  spring.liquibase.change-log: "classpath:/db/changelog/db.changelog-master.yaml"
-  logging.level.liquibase: "DEBUG"
+This project simulates an ESP (Electronic Service Provider) backend using Spring Boot, Spring WS, and SOAP Web Services.
+It supports two main operations:
+	•	✅ Account Validation
+	•	✅ Customer Retrieval
 
-  # JPA/Hibernate Configuration
-  spring.jpa.hibernate.ddl-auto: "validate"
-  spring.jpa.show-sql: "false"
-  spring.jpa.database-platform: "org.hibernate.dialect.PostgreSQLDialect"
-  spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: "true"
-  spring.jpa.repositories.enabled: "true"
-  logging.level.org.springframework.jdbc.datasource: "DEBUG"
-  logging.level.org.postgresql: "DEBUG"
+Each operation is implemented using:
+	•	WSDL/XSD-based SOAP
+	•	Schema validation
+	•	Static response XML templates
+	•	DOM/XPath-based dynamic field injection
+
+⸻
+
+📐 Architecture Flow
+
+
+-----
+
++---------------------------------------------+
+|         SOAP Request (WSDL/XSD)             |
++---------------------------------------------+
+                     |
+              [ Soap Adapter ]
+                     |
+                     v
+        +-----------------------------+
+        | PaymentValidationPort       |<--------------------+
+        +-----------------------------+                     |
+                     |                                      |
+        +-----------------------------+                     |
+        | PaymentOrchestrator         |                     |
+        +-----------------------------+                     |
+                     |                                      |
+        +-----------------------------+                     |
+        | AccountValidationPort       |                     |
+        +-----------------------------+                     |
+                                                            |
+        +-----------------------------+                     |
+        | CustomerRetrievalPort       |<------------------+ |
+        +-----------------------------+                   | |
+                     |                                    | |
+        +-----------------------------+                   | |
+        | CustomerRetrievalOrchestrator|                  | |
+        +-----------------------------+                   | |
+                     |                                    | |
+        +-----------------------------+                   | |
+        | CustomerRetrievalService     |                  | |
+        +-----------------------------+                   | |
+                                                          | |
+        +-------------------------------------------------+ |
+        |     All logic flows through Soap Adapter →      | |
+        |     appropriate Port → Orchestrator → Service    |<+
+        +--------------------------------------------------+
+
+
+
+
+
+⸻
+
+📁 Modules & Structure
+com.rbs.bdd
+├── application
+│   ├── exception                 # Custom exception classes
+│   ├── port.in                  # Interfaces for input (SOAP Adapter)
+│   ├── port.out                 # Interfaces for output (Service layer)
+│   └── service                  # Business logic for account validation & customer retrieval
+├── domain
+│   └── enums                    # Enums and constants (namespaces, error types, paths)
+├── infrastructure
+│   ├── config                   # Spring WS configuration
+│   ├── entity                   # JPA Entities
+│   ├── repository               # Spring Data JPA Repos
+│   └── soap
+│       ├── adapter              # SOAP endpoint adapter
+│       └── interceptor          # Interceptors for schema validation and custom errors
+├── util                         # Utility classes (DOM, XPath, Validation)
+├── static-response              # Static success & error response XMLs
+└── static-request               # Static sample SOAP request XMLs
+
+Features
+	•	✅ SOAP Operations
+	•	/validateArrangementForPayment – Account Validation
+	•	/retrievePrimaryCustomerForArr – Customer Lookup
+	•	📜 Schema Validation
+	•	PayloadValidatingInterceptor per operation/namespace
+	•	Handles invalid requests with dynamic SOAP fault response
+	•	🧠 Business Rule Engine
+	•	Validates IBAN (22-digit, GB prefix, MOD97)
+	•	Validates UBAN (14-digit numeric, fails if GB prefix or bad checksum)
+	•	🔁 Static XML Response Handling
+	•	Static templates read from /static-response/
+	•	Fields like transactionId, timestamp, status, and message are modified dynamically
+	•	❌ Error Handling
+	•	Injects <transactionId>, <systemId>, <timestamp> if missing
+	•	Removes <refRequestIds>, <systemNotification> selectively from response
+	•	🧪 JUnit Coverage
+	•	AccountValidationServiceTest
+	•	CustomerRetrievalServiceTest
+	•	SchemaValidationInterceptorTest (Account & Customer)
+	•	PaymentValidationSoapAdapterTest
+
+⸻
+
+🧬 Schemas & WSDLs
+
+📂 Located in: src/main/resources/xsd
+├── account-validation/
+│   └── ArrValidationForPaymentParameters.xsd
+├── customer-retrieval/
+│   └── CustomerRetrievalForPaymentParameters.xsd
+└── shared/
+    ├── PrimitiveDatatypes.xsd
+    └── ServiceDefinitions.xsd
+
+
+├── account-validation/
+│   └── ArrValidationForPaymentParameters.xsd
+├── customer-retrieval/
+│   └── CustomerRetrievalForPaymentParameters.xsd
+└── shared/
+    ├── PrimitiveDatatypes.xsd
+    └── ServiceDefinitions.xsd
+
+Published WSDLs:
+	•	/ws/ArrValidationForPayment.wsdl
+	•	/ws/CustomerRetrievalForPayment.wsdl
+
+⸻
+
+🧪 Test Scenarios Covered
+
+
+Scenario
+Description
+✅ Valid IBAN
+Returns expected static response with name, prefix
+❌ UBAN with GB prefix
+Triggers ERR_UBAN_GB
+❌ UBAN < 14 digits
+Triggers UBAN should be 14 digits
+❌ Invalid IBAN (not GB)
+Triggers DB2 SQL Error
+❌ MOD97 failure
+Triggers MOD97 failure for the IBAN
+❌ Schema validation failure
+Custom fault with 500 response
+❌ Malformed XML
+Spring WS default fault with 500
+✅ Missing fields
+Dynamically removes response fields
+
+
+Scenario
+Description
+✅ Valid IBAN
+Returns expected static response with name, prefix
+❌ UBAN with GB prefix
+Triggers ERR_UBAN_GB
+❌ UBAN < 14 digits
+Triggers UBAN should be 14 digits
+❌ Invalid IBAN (not GB)
+Triggers DB2 SQL Error
+❌ MOD97 failure
+Triggers MOD97 failure for the IBAN
+❌ Schema validation failure
+Custom fault with 500 response
+❌ Malformed XML
+Spring WS default fault with 500
+✅ Missing fields
+Dynamically removes response fields
+
+
+
+Run Tests
+mvn clean test
+
+Generate test coverage (Jacoco):
+mvn clean verify
+
+
+
+⸻
+
+💡 Sample Request (Account Validation)
+<validateArrangementForPayment xmlns="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/">
+  <arrangementIdentifier>
+    <identifier>GB29NWBK60161331926801</identifier>
+    <codeValue>InternationalBankAccountNumber</codeValue>
+  </arrangementIdentifier>
+  <requestIds>
+    <transactionId>ESP-TXN-123</transactionId>
+    <systemId>ESP</systemId>
+  </requestIds>
+</validateArrangementForPayment>
+
+
+Technologies Used
+	•	Java 17
+	•	Spring Boot 3.x
+	•	Spring WS
+	•	JAXB (XML binding)
+	•	XPath / DOM
+	•	PostgreSQL
+	•	JUnit 5
+	•	Mockito
+	•	Maven
+
+⸻
+
+📌 Contributor Notes
+	•	✏️ Extend enums ValidationErrorType, ErrorConstants to define more rules.
+	•	✏️ Modify /static-response/error-response.xml for new error messages.
+	•	✏️ Update repository queries to map new customer data.
+	•	✏️ Reuse ValidationUtils.validateAccount() for both services.
+	•	✏️ Add custom logic in AccountValidationService and CustomerRetrievalService.
+
+
