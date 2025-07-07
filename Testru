@@ -1,143 +1,31 @@
-package com.rbs.bdd.infrastructure.soap.interceptor;
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bdd-ms-esp-simulation-service
+  namespace: bdd-sandbox
+data:
+  spring.application.name: "bdd-sandbox-cpo-payment-router"
+  #Aurora and Liquibase Properties
+  spring.datasource.base.url=jdbc:postgresql://bdd-global.global-gltoyhswruzl.global.rds.amazonaws.com:5432/
+  spring.datasource.username=*****
+  spring.datasource.password=*****
+  secret.datasource.name=bdd_bdd-primary_esp_simulator_admin
 
-import jakarta.xml.soap.MessageFactory;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.saaj.SaajSoapMessage;
-import org.xml.sax.SAXParseException;
-import java.io.ByteArrayInputStream;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-class AccountSchemaValidationInterceptorTest {
-
-    private AccountSchemaValidationInterceptor interceptor;
-
-    @BeforeEach
-    void setUp() {
-        interceptor = new AccountSchemaValidationInterceptor();
-    }
-
-    @Test
-    void testHandleSchemaValidationFailure_customResponse() throws Exception {
-        String dummyXml = """
-            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-              <soapenv:Body>
-                <testRequest></testRequest>
-              </soapenv:Body>
-            </soapenv:Envelope>
-            """;
-
-        WebServiceMessage request = new SaajSoapMessage(
-                MessageFactory.newInstance().createMessage(null,
-                        new ByteArrayInputStream(dummyXml.getBytes()))
-        );
-
-        MessageContext messageContext = mock(MessageContext.class);
-        when(messageContext.getRequest()).thenReturn(request);
-
-        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
-        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest, servletResponse));
-
-        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[] {});
-        assertFalse(result);
-
-        String response = servletResponse.getContentAsString();
-        assertTrue(response.contains("transactionId"));
-        assertEquals(500, servletResponse.getStatus());
-    }
-}
+  spring.liquibase.default-schema=*****
+  secret.manager.enabled=true
+  aws.region=eu-west-1
+  spring.liquibase.enabled=true
+  spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
+  logging.level.liquibase=DEBUG
 
 
-------------------
-package com.rbs.bdd.infrastructure.soap.interceptor;
-
-
-import com.rbs.bdd.application.exception.SchemaValidationException;
-import com.rbs.bdd.util.SoapInterceptorUtils;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor; import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
-
-import static com.rbs.bdd.domain.enums.ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.ERROR_XML_PATH;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.SCHEMA_VALIDATION_ERROR_XML;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.SYSTEM_ID;
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.TAG_TRANSACTION_ID;
-
-
-/**
- * Intercepts schema validation errors in SOAP requests and returns a custom SOAP fault response.
- * The response is based on a static XML file, with dynamic fields replaced using request data.
- */
-@Slf4j
-public class AccountSchemaValidationInterceptor extends PayloadValidatingInterceptor {
-
-
-
-
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) throws IOException, TransformerException, SAXException {
-        if (SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext, NAMESPACE_URI_FOR_ACCOUNT_VALIDATION)) {
-            return true;
-        }
-        return super.handleRequest(messageContext, endpoint);
-    }
-
-
-    /**
-     * Handles schema validation failures by generating a custom SOAP fault response.
-     * Modifies a static error XML template based on the request content and sends it with HTTP 500.
-     *
-     * @param messageContext the message context
-     * @param errors         the validation errors
-     * @return false to prevent Spring WS from overriding with default fault
-     */
-    @Override
-    public boolean handleRequestValidationErrors(MessageContext messageContext, SAXParseException[] errors) {
-        log.error("Schema validation failed. Returning custom schemaValidationError.xml");
-        return SoapInterceptorUtils.handleSchemaValidationErrors(messageContext
-                ,ERROR_XML_PATH,"accountValidation");
-    }
-
-
-
-    /**
-     * Retrieves static XML file from classpath. Can be overridden in tests.
-     *
-     * @param path the classpath location of the file
-     * @return input stream for the XML file
-     */
-    protected InputStream getClassLoaderResource(String path) {
-        return getClass().getClassLoader().getResourceAsStream(path);
-    }
-
-}
+  # JPA/Hibernate Configuration
+  spring.jpa.hibernate.ddl-auto=validate
+  spring.jpa.show-sql=false
+  spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+  spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true
+  # Enable JPA repositories
+  spring.jpa.repositories.enabled=true
+  logging.level.org.springframework.jdbc.datasource=DEBUG
+  logging.level.org.postgresql=DEBUG
+  
