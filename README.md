@@ -1,3 +1,25 @@
+
+In the SIT ENv :-
+
+1. For Account Validation :-
+https://bdd-ms-esp-simulation-service.dcp.sit.euw1.shared.banksvcs.net/ws/ArrValidationForPaymentParameters.wsdl
+https://bdd-ms-esp-simulation-service.dcp.sit.euw1.shared.banksvcs.net/ws/ArrValidationForPaymentParameters
+
+
+2.
+1. For Customor Retrieval :-
+https://bdd-ms-esp-simulation-service.dcp.sit.euw1.shared.banksvcs.net/ws/CustomerRetrievalForPayment.wsdl
+https://bdd-ms-esp-simulation-service.dcp.sit.euw1.shared.banksvcs.net/ws/CustomerRetrievalForPayment
+
+
+
+3. Local
+
+   http://localhost:8080/ws/ArrValidationForPaymentParameters.wsdl
+   http://localhost:8080/ws/CustomerRetrievalForPayment.wsdl
+
+
+
 package com.rbs.bdd.application.awsconfig;
 
 import lombok.extern.slf4j.Slf4j;
