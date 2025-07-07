@@ -5,27 +5,25 @@ metadata:
   namespace: bdd-sandbox
 data:
   spring.application.name: "bdd-sandbox-cpo-payment-router"
-  #Aurora and Liquibase Properties
-  spring.datasource.base.url=jdbc:postgresql://bdd-global.global-gltoyhswruzl.global.rds.amazonaws.com:5432/
-  spring.datasource.username=*****
-  spring.datasource.password=*****
-  secret.datasource.name=bdd_bdd-primary_esp_simulator_admin
 
-  spring.liquibase.default-schema=*****
-  secret.manager.enabled=true
-  aws.region=eu-west-1
-  spring.liquibase.enabled=true
-  spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
-  logging.level.liquibase=DEBUG
+  # Aurora and Liquibase Properties
+  spring.datasource.base.url: "jdbc:postgresql://bdd-global.global-gltoyhswruzl.global.rds.amazonaws.com:5432/"
+  spring.datasource.username: "*****"
+  spring.datasource.password: "*****"
+  secret.datasource.name: "bdd_bdd-primary_esp_simulator_admin"
 
+  spring.liquibase.default-schema: "*****"
+  secret.manager.enabled: "true"
+  aws.region: "eu-west-1"
+  spring.liquibase.enabled: "true"
+  spring.liquibase.change-log: "classpath:/db/changelog/db.changelog-master.yaml"
+  logging.level.liquibase: "DEBUG"
 
   # JPA/Hibernate Configuration
-  spring.jpa.hibernate.ddl-auto=validate
-  spring.jpa.show-sql=false
-  spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
-  spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true
-  # Enable JPA repositories
-  spring.jpa.repositories.enabled=true
-  logging.level.org.springframework.jdbc.datasource=DEBUG
-  logging.level.org.postgresql=DEBUG
-  
+  spring.jpa.hibernate.ddl-auto: "validate"
+  spring.jpa.show-sql: "false"
+  spring.jpa.database-platform: "org.hibernate.dialect.PostgreSQLDialect"
+  spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: "true"
+  spring.jpa.repositories.enabled: "true"
+  logging.level.org.springframework.jdbc.datasource: "DEBUG"
+  logging.level.org.postgresql: "DEBUG"
