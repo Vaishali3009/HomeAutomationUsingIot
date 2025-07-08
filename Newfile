@@ -1,50 +1,61 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration scan="true">
+@Component
+public class TransactionIdInterceptor implements EndpointInterceptor {
 
-    <!-- Define log pattern -->
-    <property name="LOG_PATTERN"
-              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+    @Override
+    public boolean handleRequest(MessageContext messageContext, Object endpoint) {
+        try {
+            WebServiceMessage request = messageContext.getRequest();
 
-    <!-- Console appender -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>${LOG_PATTERN}</pattern>
-            <charset>UTF-8</charset>
-        </encoder>
-    </appender>
+            // Extract transactionId from request XML if present
+            String transactionId = extractTransactionId(request);
 
-    <!-- Rolling file appender -->
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/esp-simulation-service.log</file>
+            if (transactionId == null || transactionId.isEmpty()) {
+                transactionId = UUID.randomUUID().toString();
+            }
 
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- daily rollover -->
-            <fileNamePattern>logs/esp-simulation-service.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>30</maxHistory> <!-- Keep last 30 days -->
-        </rollingPolicy>
+            TransactionIdContext.set(transactionId);
 
-        <encoder>
-            <pattern>${LOG_PATTERN}</pattern>
-            <charset>UTF-8</charset>
-        </encoder>
-    </appender>
+            // Add to logs
+            MDC.put("transactionId", transactionId);  // If using Logback/SLF4J MDC
 
-    <!-- Root logger -->
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-    </root>
+        } catch (Exception e) {
+            // Fallback in case of error
+            TransactionIdContext.set(UUID.randomUUID().toString());
+        }
+        return true;
+    }
 
-    <!-- Application logs -->
-    <logger name="com.rbs.bdd" level="DEBUG"/>
+    @Override
+    public boolean handleResponse(MessageContext messageContext, Object endpoint) {
+        TransactionIdContext.clear();
+        MDC.remove("transactionId");
+        return true;
+    }
 
-    <!-- Enable Spring Web Services internal logging -->
-    <logger name="org.springframework.ws.server.endpoint" level="DEBUG"/>
-    <logger name="org.springframework.ws.soap.server.endpoint.interceptor" level="DEBUG"/>
-    <logger name="org.springframework.ws.transport" level="INFO"/>
+    @Override
+    public boolean handleFault(MessageContext messageContext, Object endpoint) {
+        TransactionIdContext.clear();
+        MDC.remove("transactionId");
+        return true;
+    }
 
-    <!-- Reduce noise -->
-    <logger name="org.springframework" level="WARN"/>
-    <logger name="org.hibernate" level="WARN"/>
+    @Override
+    public void afterCompletion(MessageContext messageContext, Object endpoint, Exception ex) {
+        TransactionIdContext.clear();
+        MDC.remove("transactionId");
+    }
 
-</configuration>
+    private String extractTransactionId(WebServiceMessage message) {
+        try {
+            Source source = message.getPayloadSource();
+            Document document = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder().parse(new InputSource(new StringReader(source.toString())));
+
+            NodeList nodes = document.getElementsByTagName("transactionId");
+            if (nodes.getLength() > 0) {
+                return nodes.item(0).getTextContent();
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+}
