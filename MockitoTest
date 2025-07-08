@@ -1,189 +1,25 @@
-+---------------------------------------------+
-|         SOAP Request (WSDL/XSD)             |
-+---------------------------------------------+
-                     |
-              [Soap Adapter]
-                     |
-                     v
-        +-----------------------------+
-        | PaymentValidationPort       |<--------------------+
-        +-----------------------------+                     |
-                     |                                      |
-        +-----------------------------+                     |
-        | PaymentOrchestrator         |                     |
-        +-----------------------------+                     |
-                     |                                      |
-        +-----------------------------+                     |
-        | AccountValidationPort       |                     |
-        +-----------------------------+                     |
-                                                            |
-        +-----------------------------+                     |
-        | CustomerRetrievalPort       |<------------------+ |
-        +-----------------------------+                   | |
-                     |                                    | |
-        +-----------------------------+                   | |
-        | CustomerRetrievalOrchestrator|                  | |
-        +-----------------------------+                   | |
-                     |                                    | |
-        +-----------------------------+                   | |
-        | CustomerRetrievalService     |                  | |
-        +-----------------------------+                   | |
-                                                          | |
-        +-------------------------------------------------+ |
-        |     All logic flows through Soap Adapter →      | |
-        |     appropriate Port → Orchestrator → Service    |<+
-        +--------------------------------------------------+
+private String extractTransactionId(WebServiceMessage message) {
+    try {
+        // Convert Source to String
+        Source source = message.getPayloadSource();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.transform(source, new StreamResult(out));
+        String xmlString = out.toString(); // Converts bytes to string
 
+        // Parse XML
+        Document document = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(new InputSource(new StringReader(xmlString)));
 
-ESP Simulation Service – Spring Boot SOAP Microservice
+        NodeList nodes = document.getElementsByTagName("transactionId");
+        if (nodes.getLength() > 0) {
+            log.info("transactionId found in request");
+            return nodes.item(0).getTextContent();
+        }
 
-📘 Overview
-
-This project simulates an ESP (Electronic Service Provider) backend using Spring Boot, Spring WS, and SOAP Web Services. It supports two key operations:
-	•	Account Validation
-	•	Customer Retrieval
-
-Each operation is implemented using SOAP with schema validation (XSD), static response XML transformation, and dynamic field updates using DOM/XPath.
-
-⸻
-
-📦 Modules & Structure
-
-com.rbs.bdd
-├── application
-│   ├── exception                 # Custom exception classes
-│   ├── port.in                  # Interfaces for input (SOAP Adapter)
-│   ├── port.out                 # Interfaces for output (Service layer)
-│   └── service                  # Business logic for account validation and customer retrieval
-├── domain
-│   └── enums                    # Enums and constants (e.g., namespaces, paths, error codes)
-├── infrastructure
-│   ├── config                   # Spring WS configuration
-│   ├── entity                   # JPA Entity classes
-│   ├── repository               # Spring Data JPA repositories
-│   └── soap
-│       ├── adapter              # SOAP endpoint adapter
-│       └── interceptor          # Interceptors for schema validation and custom SOAP faults
-├── util                         # Utility classes for DOM manipulation, XPath, validation
-├── static-response              # Contains static success and error SOAP XML responses
-└── static-request               # Contains sample SOAP request XMLs for testing
-
-Features
-	•	✅ SOAP Operations
-	•	/validateArrangementForPayment for account validation
-	•	/retrievePrimaryCustomerForArr for customer retrieval
-	•	🧪 Schema Validation
-	•	Custom PayloadValidatingInterceptor per namespace
-	•	Handles schema errors and malformed XML
-	•	🧠 Business Rule Engine
-	•	Validates IBAN and UBAN formats, lengths, MOD97 checksum
-	•	Returns static success or error responses based on request content
-	•	🔄 Static XML Response Handling
-	•	Reads response templates from /static-response/
-	•	Modifies transactionId, timestamp, description, etc. using DOM/XPath
-	•	🧪 JUnit Test Coverage
-	•	Full test coverage for:
-	•	Account validation logic
-	•	Customer retrieval logic
-	•	Interceptors
-	•	SOAP adapter routing
-
-⸻
-
-🔧 Technologies Used
-	•	Java 17+
-	•	Spring Boot 3
-	•	Spring WS
-	•	SOAP (WSDL/XSD)
-	•	JAXB
-	•	XPath / DOM Parser
-	•	JUnit 5 & Mockito
-	•	PostgreSQL (for customer data persistence)
-	•	Maven
-
-⸻
-
-🧬 Schema and WSDL
-
-Schemas are located under:
-
-src/main/resources/xsd/
-├── account-validation/
-│   └── ArrValidationForPaymentParameters.xsd
-├── customer-retrieval/
-│   └── CustomerRetrievalForPaymentParameters.xsd
-└── shared/
-    ├── PrimitiveDatatypes.xsd
-    └── ServiceDefinitions.xsd
-
-WSDLs are dynamically published at:
-	•	/ws/ArrValidationForPaymentParameters.wsdl
-	•	/ws/CustomerRetrievalForPayment.wsdl
-
-⸻
-
-🧪 Running Tests
-
-Test classes are located under src/test/java:
-	•	AccountValidationServiceTest
-	•	CustomerRetrievalServiceTest
-	•	PaymentValidationSoapAdapterTest
-	•	AccountSchemaValidationInterceptorTest
-	•	CustomerRetrievalSchemaValidationInterceptorTest
-
-
-
-Run
-mvn clean test
-
-
-To generate test coverage (Jacoco integrated):
-mvn clean verify
-
-
-Static Files
-	•	static-request/*.xml – Sample SOAP request payloads
-	•	static-response/*.xml – Response templates
-	•	Responses are updated dynamically using DOM and XPath before being returned.
-
-
-Notable Design Highlights
-	•	✅ Hexagonal Architecture for clean separation of adapters, ports, and core logic
-	•	✅ Dynamic field injection in static SOAP responses
-	•	✅ Multiple interceptors registered via Spring WS WsConfigurerAdapter
-	•	✅ JAXB + DOM Parser for robust XML handling
-	•	✅ Graceful fallback logic for unmatched accounts using static error templates
-	•	✅ UUID-based transaction ID generation
-	•	✅ Selective tag removal (<systemId>, <transactionId>, <refRequestIds>) based on request
-
-Test Scenarios Covered
-	•	✔ Valid IBAN returns expected customer data
-	•	✔ GB-prefixed UBAN returns ERR_UBAN_GB
-	•	✔ UBAN length < 14 triggers error
-	•	✔ Unmatched UBAN/IBAN results in “Unable to Complete Request”
-	•	✔ Schema validation failure returns custom SOAP error
-	•	✔ Malformed XML returns Spring WS fault (500)
-	•	✔ Interceptors dynamically inject transactionId, timestamp
-
-⸻
-
-🧠 Contributors Notes
-	•	Modify enum values in ValidationErrorType, ErrorConstants to extend rules.
-	•	Update error templates in /static-response/error-response.xml to reflect additional metadata.
-	•	DB lookup for customer data is done via CustomerRepository.findByAccountNo(...).
-	•	Add new business logic under AccountValidationService or CustomerRetrievalService.
-
-⸻
-
-🏁 Sample Request Payload (Account Validation)
-
-<validateArrangementForPayment xmlns="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/">
-  <arrangementIdentifier>
-    <identifier>GB29NWBK60161331926801</identifier>
-    <codeValue>InternationalBankAccountNumber</codeValue>
-  </arrangementIdentifier>
-  <requestIds>
-    <transactionId>ESP-TXN-123</transactionId>
-    <systemId>ESP</systemId>
-  </requestIds>
-</validateArrangementForPayment>
+    } catch (Exception e) {
+        log.warn("Failed to extract transactionId", e);
+    }
+    return null;
+}
