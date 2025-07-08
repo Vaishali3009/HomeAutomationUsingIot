@@ -1,61 +1,15 @@
-@Component
-public class TransactionIdInterceptor implements EndpointInterceptor {
+public class TransactionIdContext {
+    private static final ThreadLocal<String> transactionIdHolder = new ThreadLocal<>();
 
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) {
-        try {
-            WebServiceMessage request = messageContext.getRequest();
-
-            // Extract transactionId from request XML if present
-            String transactionId = extractTransactionId(request);
-
-            if (transactionId == null || transactionId.isEmpty()) {
-                transactionId = UUID.randomUUID().toString();
-            }
-
-            TransactionIdContext.set(transactionId);
-
-            // Add to logs
-            MDC.put("transactionId", transactionId);  // If using Logback/SLF4J MDC
-
-        } catch (Exception e) {
-            // Fallback in case of error
-            TransactionIdContext.set(UUID.randomUUID().toString());
-        }
-        return true;
+    public static void set(String transactionId) {
+        transactionIdHolder.set(transactionId);
     }
 
-    @Override
-    public boolean handleResponse(MessageContext messageContext, Object endpoint) {
-        TransactionIdContext.clear();
-        MDC.remove("transactionId");
-        return true;
+    public static String get() {
+        return transactionIdHolder.get();
     }
 
-    @Override
-    public boolean handleFault(MessageContext messageContext, Object endpoint) {
-        TransactionIdContext.clear();
-        MDC.remove("transactionId");
-        return true;
-    }
-
-    @Override
-    public void afterCompletion(MessageContext messageContext, Object endpoint, Exception ex) {
-        TransactionIdContext.clear();
-        MDC.remove("transactionId");
-    }
-
-    private String extractTransactionId(WebServiceMessage message) {
-        try {
-            Source source = message.getPayloadSource();
-            Document document = DocumentBuilderFactory.newInstance()
-                .newDocumentBuilder().parse(new InputSource(new StringReader(source.toString())));
-
-            NodeList nodes = document.getElementsByTagName("transactionId");
-            if (nodes.getLength() > 0) {
-                return nodes.item(0).getTextContent();
-            }
-        } catch (Exception ignored) {}
-        return null;
+    public static void clear() {
+        transactionIdHolder.remove();
     }
 }
