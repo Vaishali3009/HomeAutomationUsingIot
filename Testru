@@ -1,3 +1,35 @@
+The below URL is opening the wsdl file 
+http://localhost:8080/ALL/ARRVALPYMT040.wsdl
+
+
+but I want the below endpoint to open wsdl 
+
+http://localhost:8080/ALL/ARRVALPYMT040/01.wsdl
+
+
+code :-
+
+package com.rbs.bdd.infrastructure.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WsRedirectConfig implements WebMvcConfigurer {
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addViewController("/ALL/ARRVALPYMT040/01.wsdl")
+                .setViewName("forward:/ARRVALPYMT040.wsdl");
+        registry.addViewController("/ALL/CUSTFORPAYMT040/01.wsdl")
+                .setViewName("forward:/ws/CUSTFORPAYMT040.wsdl");
+
+    }
+}
+
+
+
+------------
 package com.rbs.bdd.infrastructure.config;
 
 import com.rbs.bdd.application.exception.SchemaValidationException;
@@ -152,23 +184,5 @@ public class SoapWebServiceConfig extends WsConfigurerAdapter {
 
 
 
-------------------------
-
-package com.rbs.bdd.infrastructure.config;
-
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-@Configuration
-public class WsRedirectConfig implements WebMvcConfigurer {
-    @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/ALL/ARRVALPYMT040/01")
-                .setViewName("forward:/ALL/ARRVALPYMT040.wsdl");
-        registry.addViewController("/ALL/CUSTFORPAYMT040/01.wsdl")
-                .setViewName("forward:/ws/CUSTFORPAYMT040.wsdl");
-
-    }
-}
-
+Note :
+ There is nothing in application.properties
