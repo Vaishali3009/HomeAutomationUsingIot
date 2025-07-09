@@ -1,89 +1,247 @@
-package com.rbs.bdd.infrastructure.soap.interceptor;
-import com.rbs.bdd.common.context.TransactionIdContext;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import org.springframework.stereotype.Component;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.context.MessageContext;
-import org.springframework.ws.server.EndpointInterceptor;
-import org.springframework.ws.soap.SoapMessage;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
+package com.rbs.bdd.application.exception;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.StringReader;
-import java.util.UUID;
 
-@Component
-@Slf4j
-public class TransactionIdInterceptor implements EndpointInterceptor {
 
-    @Override
-    public boolean handleRequest(MessageContext messageContext, Object endpoint) {
-        try {
-            WebServiceMessage request = messageContext.getRequest();
+/**
+ * Exception thrown when  the account validation fails during SOAP request processing.
+ */
+public class AccountValidationException extends RuntimeException {
 
-            // Extract transactionId from request XML if present
-            String transactionId = extractTransactionId(request);
-
-            if (transactionId == null || transactionId.isEmpty()) {
-                transactionId = UUID.randomUUID().toString();
-            }
-
-            TransactionIdContext.set(transactionId);
-
-            // Add to logs
-            MDC.put("transactionId", transactionId);  // If using Logback/SLF4J MDC
-
-        } catch (Exception e) {
-            // Fallback in case of error
-            TransactionIdContext.set(UUID.randomUUID().toString());
-        }
-        return true;
+    /**
+     * Constructs a new AccountValidationException with a specific message.
+     *
+     * @param message the detail message
+     */
+    public AccountValidationException(String message) {
+        super(message);
     }
 
-    @Override
-    public boolean handleResponse(MessageContext messageContext, Object endpoint) {
-        TransactionIdContext.clear();
-        MDC.remove("transactionId");
-        return true;
-    }
-
-    @Override
-    public boolean handleFault(MessageContext messageContext, Object endpoint) {
-        TransactionIdContext.clear();
-        MDC.remove("transactionId");
-        return true;
-    }
-
-    @Override
-    public void afterCompletion(MessageContext messageContext, Object endpoint, Exception ex) {
-        TransactionIdContext.clear();
-        MDC.remove("transactionId");
-    }
-
-    private String extractTransactionId(WebServiceMessage message) {
-        try {
-            Source source = message.getPayloadSource();
-            Document document = DocumentBuilderFactory.newInstance()
-                    .newDocumentBuilder().parse(new InputSource(new StringReader(source.toString())));
-            log.info("document "+document);
-            NodeList nodes = document.getElementsByTagName("transactionId");
-            if (nodes.getLength() > 0) {
-                log.info("Entered here");
-                return nodes.item(0).getTextContent();
-            }
-        } catch (Exception ignored) {}
-        return null;
+    /**
+     * Constructs a new AccountValidationException with a message and cause.
+     *
+     * @param message the detail message
+     * @param cause the cause of the exception
+     */
+    public AccountValidationException(String message, Throwable cause) {
+        super(message, cause);
     }
 }
+
+
+------------------
+package com.rbs.bdd.application.exception;
+
+/**
+ * Exception thrown when  the customer Retrieval fails during SOAP request processing.
+ */
+public class CustomerRetrievalException extends RuntimeException {
+
+    /**
+     * Constructs a new CustomerRetrievalException with a specific message.
+     *
+     * @param message the detail message
+     */
+    public CustomerRetrievalException(String message) {
+        super(message);
+    }
+
+    /**
+     * Constructs a new CustomerRetrievalException with a message and cause.
+     *
+     * @param message the detail message
+     * @param cause the cause of the exception
+     */
+    public CustomerRetrievalException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+
+
+------------------
+package com.rbs.bdd.application.exception;
+
+/**
+ * Exception thrown when  the schema validation fails during SOAP request processing.
+ */
+public class SchemaValidationException extends RuntimeException {
+
+    /**
+     * Constructs a new SchemaValidationException with a specific message.
+     *
+     * @param message the detail message
+     */
+    public SchemaValidationException(String message) {
+        super(message);
+    }
+
+    /**
+     * Constructs a new SchemaValidationException with a message and cause.
+     *
+     * @param message the detail message
+     * @param cause the cause of the exception
+     */
+    public SchemaValidationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+
+------------------
+package com.rbs.bdd.application.exception;
+
+public class SecretsNotFoundException extends RuntimeException{
+    public SecretsNotFoundException(String message){
+        super(message);
+    }
+
+}
+
+
+---------------
+package com.rbs.bdd.application.exception;
+
+
+
+/**
+ * Exception thrown when schema Loading fails during SOAP request processing.
+ */
+public class XsdSchemaLoadingException extends RuntimeException{
+
+    /**
+     * Constructs a new XsdSchemaLoadingException with a specific message.
+     *
+     * @param message the detail message
+     */
+    public XsdSchemaLoadingException(String message) {
+        super(message);
+    }
+
+    /**
+     * Constructs a new XsdSchemaLoadingException with a message and cause.
+     *
+     * @param message the detail message
+     * @param cause the cause of the exception
+     */
+    public XsdSchemaLoadingException(String message,Throwable cause) {
+        super(message, cause);
+    }
+}
+
+
+---------------
+package com.rbs.bdd.application.port.in;
+
+import org.springframework.ws.WebServiceMessage;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+
+/**
+ * Entry port for handling SOAP requests related to customer retrieval.
+ * Follows hexagonal architecture's `port in` pattern.
+ */
+public interface CustomerRetrievalPort {
+        /**
+         * Validates a customer retrieval request by delegating to the underlying orchestrator/service.
+         *
+         * @param request The SOAP request payload.
+         * @param message The outgoing WebServiceMessage to be modified and returned.
+         */
+        void validateCustomerRetrieval(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message);
+
+
+    }
+
+
+----
+package com.rbs.bdd.application.port.in;
+
+
+import org.springframework.ws.WebServiceMessage;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+/**
+ * Entry port for handling SOAP requests related to payment validation.
+ * Follows hexagonal architecture's `port in` pattern.
+ */
+public interface PaymentValidationPort {
+
+
+    /**
+     * Validates a payment arrangement request by delegating to the underlying orchestrator/service.
+     *
+     * @param request The SOAP request payload.
+     * @param message The outgoing WebServiceMessage to be modified and returned.
+     */
+    void validateArrangementForPayment(ValidateArrangementForPaymentRequest request,WebServiceMessage message);
+
+
+
+}
+
+
+-----
+package com.rbs.bdd.application.port.out;
+
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+
+import org.springframework.ws.WebServiceMessage;
+
+/**
+ * Defines the business contract for validating payment accounts.
+ * Used by the orchestrator to call schema and business rule validators.
+ */
+public interface AccountValidationPort {
+    /**
+     * Performs XSD schema validation of the request. (Currently delegated to Spring WS config.)
+     *
+     * @param request The SOAP request payload.
+     */
+    void validateSchema(ValidateArrangementForPaymentRequest request);
+
+
+    /**
+     * Applies business rules on the static response XML based on request content,
+     * and writes the final SOAP response directly to the output message.
+     *
+     * @param request The incoming SOAP request.
+     * @param message The WebServiceMessage to write the modified response to.
+     */
+    void validateBusinessRules(ValidateArrangementForPaymentRequest request,WebServiceMessage message);
+
+     }
+
+
+
+------------
+package com.rbs.bdd.application.port.out;
+
+
+
+import org.springframework.ws.WebServiceMessage;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+
+
+/**
+ * Defines the business contract for validating customer  accounts.
+ * Used by the orchestrator to call schema and business rule validators.
+ */
+public interface RetrieveCustomerPort {
+    /**
+     * Performs XSD schema validation of the request. (Currently delegated to Spring WS config.)
+     *
+     * @param request The SOAP request payload.
+     */
+    void validateSchema(RetrievePrimaryCustomerForArrRequest request);
+
+
+    /**
+     * Applies business rules on the  response XML based on request content,
+     * and writes the final SOAP response directly to the output message.
+     *
+     * @param request The incoming SOAP request.
+     * @param message The WebServiceMessage to write the modified response to.
+     */
+    void retrieveCustomer(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message);
+
+}
+
+
+
+----
