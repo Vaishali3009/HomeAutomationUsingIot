@@ -1,68 +1,649 @@
-org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'configurationPropertiesBeans' defined in class path resource [org/springframework/cl
-oud/autoconfigure/ConfigurationPropertiesRebinderAutoConfiguration.class]: Post-processing of merged bean definition failed
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:584) ~[spring-beans-6.2.6.jar:6
-.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.6.jar:6.2
-.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:207) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.context.support.PostProcessorRegistrationDelegate.registerBeanPostProcessors(PostProcessorRegistrationDelegate.java:277) ~[spring-context-6.2
-.6.jar:6.2.6]
-        at org.springframework.context.support.AbstractApplicationContext.registerBeanPostProcessors(AbstractApplicationContext.java:808) ~[spring-context-6.2.6.jar:6.2.6]
-        at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:611) ~[spring-context-6.2.6.jar:6.2.6]
-        at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:753) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.builder.SpringApplicationBuilder.run(SpringApplicationBuilder.java:149) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.cloud.bootstrap.BootstrapApplicationListener.bootstrapServiceContext(BootstrapApplicationListener.java:212) ~[spring-cloud-context-2.2.9.RELE
-ASE.jar:2.2.9.RELEASE]
-        at org.springframework.cloud.bootstrap.BootstrapApplicationListener.onApplicationEvent(BootstrapApplicationListener.java:117) ~[spring-cloud-context-2.2.9.RELEASE.j
-ar:2.2.9.RELEASE]
-        at org.springframework.cloud.bootstrap.BootstrapApplicationListener.onApplicationEvent(BootstrapApplicationListener.java:74) ~[spring-cloud-context-2.2.9.RELEASE.ja
-r:2.2.9.RELEASE]
-        at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:185) ~[spring-context-6.2.6.jar:6.2.6
-]
-        at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:178) ~[spring-context-6.2.6.jar:6.2.6]
-        at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:156) ~[spring-context-6.2.6.jar:6.2.6]
-        at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:138) ~[spring-context-6.2.6.jar:6.2.6]
-        at org.springframework.boot.context.event.EventPublishingRunListener.multicastInitialEvent(EventPublishingRunListener.java:136) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.context.event.EventPublishingRunListener.environmentPrepared(EventPublishingRunListener.java:81) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplicationRunListeners.lambda$environmentPrepared$2(SpringApplicationRunListeners.java:64) ~[spring-boot-3.4.5.jar:3.4.5]
-        at java.base/java.lang.Iterable.forEach(Iterable.java:75) ~[na:na]
-        at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:118) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:112) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplicationRunListeners.environmentPrepared(SpringApplicationRunListeners.java:63) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.prepareEnvironment(SpringApplication.java:353) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.run(SpringApplication.java:313) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.run(SpringApplication.java:1362) ~[spring-boot-3.4.5.jar:3.4.5]
-        at org.springframework.boot.SpringApplication.run(SpringApplication.java:1351) ~[spring-boot-3.4.5.jar:3.4.5]
-        at com.rbs.bdd.EspSimulatorEngine.main(EspSimulatorEngine.java:22) ~[classes/:na]
-        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
-        at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
-        at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:50) ~[spring-boot-devtools-3.4.5.jar:3.4.5]
-Caused by: java.lang.IllegalStateException: Failed to introspect Class [org.springframework.cloud.context.properties.ConfigurationPropertiesBeans] from ClassLoader [jdk.int
-ernal.loader.ClassLoaders$AppClassLoader@33909752]
-        at org.springframework.util.ReflectionUtils.getDeclaredMethods(ReflectionUtils.java:483) ~[spring-core-6.2.6.jar:6.2.6]
-        at org.springframework.util.ReflectionUtils.doWithLocalMethods(ReflectionUtils.java:320) ~[spring-core-6.2.6.jar:6.2.6]
-        at org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor.buildPersistenceMetadata(PersistenceAnnotationBeanPostProcessor.java:447) ~[spring-orm
--6.2.6.jar:6.2.6]
-        at org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor.findPersistenceMetadata(PersistenceAnnotationBeanPostProcessor.java:418) ~[spring-orm-
-6.2.6.jar:6.2.6]
-        at org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor.findInjectionMetadata(PersistenceAnnotationBeanPostProcessor.java:377) ~[spring-orm-6.
-2.6.jar:6.2.6]
-        at org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor.postProcessMergedBeanDefinition(PersistenceAnnotationBeanPostProcessor.java:353) ~[spr
-ing-orm-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyMergedBeanDefinitionPostProcessors(AbstractAutowireCapableBeanFactory.java:1115
-) ~[spring-beans-6.2.6.jar:6.2.6]
-        at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:581) ~[spring-beans-6.2.6.jar:6
-.2.6]
-        ... 34 common frames omitted
-Caused by: java.lang.NoClassDefFoundError: org/springframework/boot/context/properties/ConfigurationBeanFactoryMetadata
-        at java.base/java.lang.Class.getDeclaredMethods0(Native Method) ~[na:na]
-        at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3578) ~[na:na]
-        at java.base/java.lang.Class.getDeclaredMethods(Class.java:2676) ~[na:na]
-        at org.springframework.util.ReflectionUtils.getDeclaredMethods(ReflectionUtils.java:465) ~[spring-core-6.2.6.jar:6.2.6]
-        ... 41 common frames omitted
-Caused by: java.lang.ClassNotFoundException: org.springframework.boot.context.properties.ConfigurationBeanFactoryMetadata
+package com.rbs.bdd.common.constants;
+
+/**
+ *
+ * Error Codes definitions used accross validation logic.
+ */
+public class ErrorCodeConstants {
+
+    /*Added a private constructor to hide the implicit public one.*/
+    private ErrorCodeConstants(){};
+    /*
+   Generic error code used for business validations failures.
+    */
+    public static final String ERR_006="ERR006";
+    public static final String ERR_10="0010";
+    public static final String UNABLE_TO_COMPLETE_REQUEST="Unable to Complete Request";
+}
+
+
+---
+package com.rbs.bdd.common.context;
+
+public class TransactionIdContext  {
+    private static final ThreadLocal<String> transactionIdHolder = new ThreadLocal<>();
+
+    public static void set(String transactionId) {
+        transactionIdHolder.set(transactionId);
+    }
+
+    public static String get() {
+        return transactionIdHolder.get();
+    }
+
+    public static void clear() {
+        transactionIdHolder.remove();
+    }
+}
+
+
+package com.rbs.bdd.domain.enums;
+
+
+/**
+ * Enum representing the status of the accounting unit.
+ */
+public enum AccountStatus {
+    DOMESTIC_RESTRICTED("Domestic - Restricted"),
+    DOMESTIC_UNRESTRICTED("Domestic - Unrestricted");
+
+    private final String value;
+
+    AccountStatus(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+}
+
+
+
+package com.rbs.bdd.domain.enums;
+
+
+/**
+ * Enum representing the Customer Name.
+ */
+public enum CustomerName {
+
+    FIRST_NAME("ModifiedFirst"),
+    LAST_NAME("ModifiedLast");
+
+    private final String value;
+
+    CustomerName(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+}
+
+
+
+
+package com.rbs.bdd.domain.enums;
+
+/**
+ * Enum to map known IBANs to first and last customer names.
+ */
+public enum CustomerNameMapping {
+
+    IBAN_1("GB29NWBK60161331926801", "Alice", "Johnson","MR"),
+    IBAN_2("GB82WEST12345698765437", "Bob", "Williams","MR"),
+    IBAN_3("GB94BARC10201530093422", "Jenifer", "Brown","MRS"),
+    IBAN_4("GB33BUKB20201555555567", "Jenny", "Smith","MRS");
+
+    private final String iban;
+    private final String firstName;
+    private final String lastName;
+
+    private final String prefixType;
+
+    CustomerNameMapping(String iban, String firstName, String lastName,String prefixType) {
+        this.iban = iban;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.prefixType=prefixType;
+    }
+
+    public String getIban() {
+        return iban;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+    public String getPrefixType() {
+        return prefixType;
+    }
+
+    public static CustomerNameMapping fromIdentifier(String identifier) {
+        for (CustomerNameMapping mapping : values()) {
+            if (mapping.iban.equals(identifier) ||
+                    mapping.iban.endsWith(identifier)) {
+                return mapping;
+            }
+        }
+        return null;
+    }
+}
+
+
+
+package com.rbs.bdd.domain.enums;
+import com.rbs.bdd.domain.model.ErrorDetail;
+
+import static com.rbs.bdd.common.constants.ErrorCodeConstants.*;
+
+/**
+ * Enum representing predefined error types for validation responses.
+ * Each constant wraps an {@link ErrorDetail} object with metadata used for SOAP fault construction.
+ */
+public enum ErrorConstants {
+
+
+    ERR_INVALID_IBAN_LENGTH(new ErrorDetail("ERR006", UNABLE_TO_COMPLETE_REQUEST, "0013", "Length of IBAN is Invalid")),
+
+
+    ERR_DB2_SQL(new ErrorDetail(ERR_006, "Service operation validateArrangementForPayment failed due to an error in the ESP. Contact systems management to resolve the problem.", null, null)),
+    ERR_UBAN_GB(new ErrorDetail(ERR_006, "Service operation retrievePrimaryCustomerForArr failed due to an error in the ESP. Contact systems management to resolve the problem.", null, null)),
+
+    ERR_WRONG_COUNTRY_CODE(new ErrorDetail(ERR_006, UNABLE_TO_COMPLETE_REQUEST, "0050", "SYSTEM_ERROR,incidentID=1f2ff299-9d93-41a5-9119-b4a552f0191e")),
+
+    ERR_MOD97_IBAN(new ErrorDetail(ERR_006, UNABLE_TO_COMPLETE_REQUEST, "0020", "MOD97 failure for the IBAN")),
+
+    ERR_INVALID_UBAN_LENGTH(new ErrorDetail(ERR_006, UNABLE_TO_COMPLETE_REQUEST, "0013", "100||INVALID SORT CODE OR ISSUING AUTH ID PASSED||Execution Successful")),
+
+    ERR_CUSTOMER_NOT_FOUND(new ErrorDetail(ERR_006, UNABLE_TO_COMPLETE_REQUEST, "4", "Customer Not Found")),
+
+    ERR_MOD97_UBAN(new ErrorDetail(ERR_006, "MOD97 failure for the UBAN", "0020", "MOD97 failure for the UBAN"));
+
+    private final ErrorDetail detail;
+
+    ErrorConstants(ErrorDetail detail) {
+        this.detail = detail;
+    }
+
+    /**
+     * Returns the {@link ErrorDetail} wrapped in this constant.
+     */
+    public ErrorDetail detail() {
+        return detail;
+    }
+
+}
+
+
+
+package com.rbs.bdd.domain.enums;
+
+/**
+ * Enum representing the result of modulus check validation.
+ */
+public enum ModulusCheckStatus {
+    PASSED("Passed"),
+    FAILED("Failed");
+
+    private final String value;
+
+    ModulusCheckStatus(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+}
+
+
+
+
+package com.rbs.bdd.domain.enums;
+
+import java.util.List;
+
+/**
+ * Enum container for grouping constants related to service configuration, IBAN validation, file paths, and XPath expressions.
+ * Constants are organized as nested interfaces for better readability and modular access.
+ */
+public enum ServiceConstants {
+    // Empty enum just to hold grouped constants via nested interfaces
+    ;
+
+    /**
+     * File paths for static response and error XMLs.
+     */
+    public final class  Paths {
+        private Paths() {}
+       public static final  String  ACCOUNT_VALIDATION_REQUEST="src/test/resources/static-request/account-validation-request.xml";
+        public static final String  CUSTOMER_RETRIEVAL_REQUEST="src/test/resources/static-request/customer-retrieval-request.xml";
+
+        public static final String ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL= "error-response/error-response-customer-retrieval.xml";
+        public static final String ACCOUNT_VALIDATION_SCHEMA_VALIDATION_ERROR_XML = "error-response/account-validation-schema-error.xml";
+        public static final String CUSTOMER_SCHEMA_VALIDATION_ERROR_XML = "error-response/customer-retrieval-schema-error.xml";
+        public static final String RESPONSE_XML_PATH = "static-response/account-validation/success-response.xml";
+        public static final String ACCOUNT_VALIDATION_ERROR_XML = "error-response/account-validation-error.xml";
+
+        public static final String STATIC_RESPONSE_PATH="static-response/customer-retrieval/success-response.xml";
+    }
+
+    /**
+     * Namespace URIs used in Spring WS handler for request mapping.
+     */
+    public final class  Namespaces {
+        private Namespaces() {}
+        public static final String NAMESPACE_URI_FOR_ACCOUNT_VALIDATION = "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/";
+        public static final String NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL = "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/";
+    }
+
+    /**
+     * Static IBANs used for known test scenarios.
+     */
+    public final class IBANs {
+        private IBANs(){}
+        public static final  String IBAN_1 = "GB29NWBK60161331926801";
+        public static final String IBAN_2 = "GB82RBST12345698765437";
+        public static final String IBAN_3 = "GB94UBNC10201530093422";
+        public static final String IBAN_4 = "GB33RBSB20201555555567";
+
+
+
+        public static final  List<String> ALL_IBANS = List.of(
+                IBAN_1, IBAN_2, IBAN_3, IBAN_4
+        );
+    }
+
+    /**
+     * Code values used to distinguish between IBAN and UBAN.
+     */
+    public final class  AccountTypes {
+        private AccountTypes(){}
+        public static final String INTL_BANK_ACCOUNT = "InternationalBankAccountNumber";
+        public static final String UK_BASIC_BANK_ACCOUNT = "UKBasicBankAccountNumber";
+    }
+
+    /**
+     * XPath expressions for extracting and updating SOAP request/response values.
+     */
+    public final class  XPath {
+        private XPath(){}
+        public static final String XPATH_TRANSACTION_ID = "//*[local-name()='transactionId']";
+        public static final String XPATH_HAS_PARTY_ASSOC="//*[local-name()='hasInvolvedPartyAssociation']";
+        public static final  String XPATH_ASSOCIATED_PARTY=XPATH_HAS_PARTY_ASSOC+ "/*[local-name()='associatedInvolvedParty']";
+        public static final String XPATH_FIRST_NAME =XPATH_ASSOCIATED_PARTY +
+                "/*[local-name()='hasForName']/*[local-name()='firstName']";
+        public static final String XPATH_PREFIX_TYPE = XPATH_ASSOCIATED_PARTY +
+                "/*[local-name()='hasForName']/*[local-name()='prefixTitle']/*[local-name()='codeValue']";
+        public static final  String XPATH_LAST_NAME = XPATH_ASSOCIATED_PARTY +
+                "/*[local-name()='hasForName']/*[local-name()='lastName']";
+        public static final String XPATH_ACCOUNT_STATUS = "//*[local-name()='accountingUnits']/*[local-name()='status']/*[local-name()='codeValue']";
+        public static final String XPATH_SWITCHING_STATUS = "//*[local-name()='switchingStatus']/*[local-name()='codeValue']";
+        public static final String XPATH_MODULUS_STATUS = "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']";
+
+        // Fault-specific
+        public static final String XPATH_FAULT_TRANSACTION_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
+        public static final String XPATH_FAULT_RESPONSE_ID = "//*[local-name()='responseId']";
+        public static final String XPATH_FAULT_TIMESTAMP = "//*[local-name()='timestamp']";
+
+        /**
+         * XPath to locate transactionId under responseId node.
+         */
+        public static final String XPATH_RESPONSE_ID_TXN_ID = "//*[local-name()='responseId']/*[local-name()='transactionId']";
+
+        /**
+         * XPath to locate transactionId under refRequestIds node.
+         */
+        public static final String XPATH_REF_REQUEST_TXN_ID = "//*[local-name()='refRequestIds']/*[local-name()='transactionId']";
+
+        /**
+         * XPath to locate cmdStatus node for command result status.
+         */
+        public static final String XPATH_CMD_STATUS = "//*[local-name()='cmdStatus']";
+
+        /**
+         * XPath to locate description node inside cmdNotifications block.
+         */
+        public static final String XPATH_CMD_DESCRIPTION = "//*[local-name()='cmdNotifications']/*[local-name()='description']";
+
+        /**
+         * XPath to locate timestamp node inside cmdNotifications block.
+         */
+        public static final String XPATH_TIMESTAMP = "//*[local-name()='cmdNotifications']/*[local-name()='timestamp']";
+
+        /**
+         * XPath to locate returnCode node inside cmdNotifications block.
+         */
+        public static final String XPATH_RETURN_CODE = "//*[local-name()='cmdNotifications']/*[local-name()='returnCode']";
+
+        /**
+         * XPath to locate description inside systemNotifications block.
+         */
+        public static final  String XPATH_SYS_NOTIFICATION_DESC = "//*[local-name()='systemNotifications']/*[local-name()='description']";
+
+        /**
+         * XPath to locate returnCode inside systemNotifications block.
+         */
+        public static final String XPATH_SYS_NOTIFICATION_CODE = "//*[local-name()='systemNotifications']/*[local-name()='returnCode']";
+
+        /**
+         * XPath to locate the entire systemNotifications block node.
+         */
+        public static final String XPATH_SYS_NOTIFICATION_BLOCK = "//*[local-name()='systemNotifications']";
+
+    }
+
+    /**
+     * Common tag names.
+     */
+    public final class  Tags {
+        private Tags(){}
+        public static final String TAG_TRANSACTION_ID = "transactionId";
+        public static final String SYSTEM_ID="systemId";
+    }
+}
+
+
+
+package com.rbs.bdd.domain.enums;
+
+
+/**
+ * Enum representing switching status of the arrangement.
+ */
+public enum SwitchingStatus {
+    SWITCHED("Switched"),
+    NOT_SWITCHING("Not Switching");
+
+    private final String value;
+
+    SwitchingStatus(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+}
+
+
+package com.rbs.bdd.domain.enums;
+
+public enum ValidationErrorType {
+    INVALID_PREFIX,
+
+    INVALID_IBAN_LENGTH, INVALID_UBAN_LENGTH, INVALID_COUNTRY_CODE, INVALID_LENGTH, INVALID_MODULUS
+}
+
+package com.rbs.bdd.domain.model;
+
+
+
+/**
+ * Represents a structured error detail used for SOAP fault responses.
+ * This record encapsulates:
+ * <ul>
+ *     <li>Error return code</li>
+ *     <li>Human-readable description</li>
+ *     <li>System notification code</li>
+ *     <li>System notification description</li>
+ * </ul>
+ *
+ * @param returnCode Unique identifier for the error
+ * @param description User-friendly description of the error
+ * @param systemNotificationCode Optional system-level notification code
+ * @param systemNotificationDesc Optional system-level notification description
+ */
+public record ErrorDetail(
+        String returnCode,
+        String description,
+        String systemNotificationCode,
+        String systemNotificationDesc
+) {}
+
+package com.rbs.bdd.infrastructure.config;
+
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.server.EndpointInterceptor;
+
+import java.io.ByteArrayOutputStream;
+/**
+ * Interceptor to log incoming and outgoing SOAP messages for debugging and monitoring.
+ * This class logs the full request, response, and fault messages.
+ */
+@Slf4j
+public class SoapLoggingInterceptor implements EndpointInterceptor {
+
+
+    /**
+     * Logs the incoming SOAP request before it reaches the endpoint.
+     *
+     * @param messageContext the message context containing the request
+     * @param endpoint        the targeted endpoint
+     * @return true to continue processing the request
+     */
+    @Override
+    public boolean handleRequest(MessageContext messageContext, Object endpoint) {
+        logMessage("SOAP Request", messageContext.getRequest());
+        return true;
+    }
+
+    /**
+     * Logs the outgoing SOAP response after the endpoint returns a result.
+     *
+     * @param messageContext the message context containing the response
+     * @param endpoint        the targeted endpoint
+     * @return true to continue processing the response
+     */
+    @Override
+    public boolean handleResponse(MessageContext messageContext, Object endpoint) {
+        logMessage("SOAP Response", messageContext.getResponse());
+        return true;
+    }
+
+    /**
+     * Logs the SOAP fault message if an exception occurs during processing.
+     *
+     * @param messageContext the message context containing the fault
+     * @param endpoint        the targeted endpoint
+     * @return true to continue processing the fault
+     */
+    @Override
+    public boolean handleFault(MessageContext messageContext, Object endpoint) {
+        logMessage("SOAP Fault", messageContext.getResponse());
+        return true;
+    }
+
+    /**
+     * Called after the completion of the message exchange.
+     * No action is needed here, but method must be implemented.
+     */
+    @Override
+    public void afterCompletion(MessageContext messageContext, Object endpoint, Exception ex) {
+        // No action needed after completion
+    }
+
+    /**
+     * Helper method to log the SOAP message by writing it to a byte array output stream.
+     *
+     * @param type    the type of SOAP message (Request, Response, Fault)
+     * @param message the WebServiceMessage to be logged
+     */
+    private void logMessage(String type, org.springframework.ws.WebServiceMessage message) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            message.writeTo(out);  // Serialize the message to an output stream
+            log.info("{}:\n{}", type, out.toString());  // Log the message content
+        } catch (Exception e) {
+            log.error("Error logging {} message: {}", type, e.getMessage());
+        }
+    }
+}
+
+package com.rbs.bdd.infrastructure.config;
+
+import com.rbs.bdd.application.exception.SchemaValidationException;
+import com.rbs.bdd.application.exception.XsdSchemaLoadingException;
+import com.rbs.bdd.infrastructure.soap.interceptor.AccountSchemaValidationInterceptor;
+import com.rbs.bdd.infrastructure.soap.interceptor.CustomerSchemaValidationInterceptor;
+import com.rbs.bdd.infrastructure.soap.interceptor.TransactionIdInterceptor;
+import com.rbs.bdd.util.SoapInterceptorUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.ws.config.annotation.EnableWs;
+import org.springframework.ws.config.annotation.WsConfigurerAdapter;
+import org.springframework.ws.server.EndpointInterceptor;
+import org.springframework.ws.transport.http.MessageDispatcherServlet;
+import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
+import org.springframework.xml.xsd.XsdSchemaCollection;
+
+import java.util.List;
+
+/**
+ * Configures Spring Web Services (Spring WS) for the application.
+ * <p>
+ * This configuration includes:
+ * <ul>
+ *     <li>Publishing WSDL endpoints for SOAP web services</li>
+ *     <li>Enabling automatic XML Schema (XSD) validation of incoming SOAP requests</li>
+ *     <li>Registering interceptors for request validation</li>
+ * </ul>
+ */
+@Configuration
+@EnableWs
+@Slf4j
+public class SoapWebServiceConfig extends WsConfigurerAdapter {
+    @Autowired
+    private TransactionIdInterceptor transactionIdInterceptor;
+
+
+    /**
+     * Registers the {@link MessageDispatcherServlet} which is the main dispatcher for Spring WS.
+     * It handles SOAP messages and dispatches them to appropriate endpoints.
+     *
+     * @param context the Spring application context
+     * @return servlet registration bean mapped to the /ws/* URI
+     */
+    @Bean
+    public ServletRegistrationBean<MessageDispatcherServlet> messageDispatcherServlet(ApplicationContext context) {
+        MessageDispatcherServlet servlet = new MessageDispatcherServlet();
+        servlet.setApplicationContext(context);
+        servlet.setTransformWsdlLocations(true);
+        return new ServletRegistrationBean<>(servlet, "/ALL/*");
+    }
+
+    /**
+     * Adds a custom interceptor for schema validation. This interceptor validates incoming SOAP
+     * messages against the configured XSD schema.
+     *
+     * @param interceptors list of interceptors to which this validation interceptor is added
+     */
+    @Override
+    public void addInterceptors(List<EndpointInterceptor> interceptors) {
+
+        log.info(" Adding Interceptors");
+
+        CustomerSchemaValidationInterceptor customerRetrievalInterceptor = new CustomerSchemaValidationInterceptor();
+        customerRetrievalInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
+        customerRetrievalInterceptor.setValidateResponse(false); // Do not validate outgoing responses
+        try {
+            customerRetrievalInterceptor.setXsdSchemaCollection(updateCustomerRetrievalXsd());
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
+        }
+        interceptors.add(customerRetrievalInterceptor);
+
+        AccountSchemaValidationInterceptor validatingInterceptor = new AccountSchemaValidationInterceptor();
+        validatingInterceptor.setValidateRequest(true);   // Validate incoming SOAP requests
+        validatingInterceptor.setValidateResponse(false); // Do not validate outgoing responses
+        try {
+            validatingInterceptor.setXsdSchemaCollection(updateContactXsd());
+        } catch (Exception e) {
+            throw new XsdSchemaLoadingException("Request XML Schema Validation failed", e);
+        }
+        interceptors.add(validatingInterceptor);
+        interceptors.add(transactionIdInterceptor);
+
+
+    }
+
+    /**
+     * Publishes a WSDL endpoint based on the `ArrValidationForPaymentParameters.xsd` file.
+     * This exposes the WSDL dynamically under /ws/ArrValidationForPaymentParameters.wsdl
+     *
+     * @return a configured WSDL definition bean
+     * @throws SchemaValidationException if XSD loading fails
+     */
+    @Bean(name = "ARRVALPYMT040")
+    public DefaultWsdl11Definition accountValidationWSDL() throws SchemaValidationException {
+        log.info("Account Validation Endpoint is invoked");
+         return  SoapInterceptorUtils.buildWsdlDefinition(
+                "IArrValidationForPayment",
+                "http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/",
+                "/ALL/ARRVALPYMT040/01",
+                updateContactXsd()
+        );
+    }
+
+    /**
+     * Loads the primary XSD schema (`ArrValidationForPaymentParameters.xsd`) from the classpath
+     * and enables inlining for WSDL generation and schema validation.
+     *
+     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
+     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     */
+    @Bean
+    public XsdSchemaCollection updateContactXsd() {
+        return SoapInterceptorUtils.loadSchema("xsd/account-validation/ArrValidationForPaymentParameters.xsd");
+
+    }
+
+
+    /**
+     * Publishes a WSDL endpoint based on the `CustomerRetrievalForPaymentParameters.xsd` file.
+     * This exposes the WSDL dynamically under /ws/CustomerRetrievalForPaymentParameters.wsdl
+     *
+     * @return a configured WSDL definition bean
+     * @throws SchemaValidationException if XSD loading fails
+     */
+    @Bean(name = "CUSTFORPAYMT040")
+    public DefaultWsdl11Definition customerRetrievalWSDL() throws SchemaValidationException {
+        log.info("Customer Retrieval Endpoint is invoked");
+        return  SoapInterceptorUtils.buildWsdlDefinition(
+                "ICustomerRetrievalForPayment",
+                "http://com/rbsg/soa/C040PaymentManagement/CustomerRetrievalForPayment/V01/",
+                "/ALL/CUSTFORPAYMT040/01",
+                updateCustomerRetrievalXsd()
+        );
+    }
+
+
+    /**
+     * Loads the primary XSD schema (`CustomerRetrievalForPaymentParameters.xsd`) from the classpath
+     * and enables inlining for WSDL generation and schema validation.
+     *
+     * @return an XsdSchemaCollection used for both WSDL publishing and request validation
+     * @throws XsdSchemaLoadingException if schema loading fails due to I/O or classpath errors
+     */
+    @Bean
+    public XsdSchemaCollection updateCustomerRetrievalXsd() {
+        return SoapInterceptorUtils.loadSchema("xsd/customer-retrieval/CustomerRetrievalForPaymentParameters.xsd");
+    }
+
+
+}
