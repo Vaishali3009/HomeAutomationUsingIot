@@ -1,0 +1,1219 @@
+
+# These properties can be passed via system property or env variable.
+
+# In spring cloud you can add your app properties in the bootstrap.properties file.
+# Any config var specified in bootstrap.properties will be inherited by the application
+
+# App configs in bootstrap.properties can be overridden in application.properties
+spring.main.banner-mode=console
+server.port=8080
+
+
+# downstream endpoint
+user.data.service=http://localhost:8085
+
+spring.web.resources.static-locations=classpath:/wsdl/
+
+logging.level.org.apache.http=DEBUG
+logging.level.org.springframework.ws=DEBUG
+logging.level.org.springframework.xml=DEBUG
+spring.main.allow-bean-definition-overriding=true
+
+
+user-service-list.restclient.max-connections=6
+user-service-list.restclient.max-total-connections=6
+user-service-list.restclient.connection-request-timeout.seconds=6
+user-service-list.restclient.connect-timeout.seconds=6
+user-service-list.restclient.socket-timeout.seconds=6
+
+logging.level.org.springframework.ws.server.MessageTracing.sent= DEBUG
+# -----------------
+# actuator settings
+# -----------------
+management.endpoints.web.exposure.include=health,info
+management.endpoints.enabled-by-default=true
+management.endpoint.info.enabled=true
+management.endpoint.health.enabled=true
+
+info.app.version=@project.version@
+management.info.defaults.enabled=true
+management.info.git.mode=full
+
+# Toggle whether the fail fast on missing inbound jwt, inbound jwt might be required for service if it
+# is going to make a request east/west within EKS
+failFastInboundJwt=false
+
+
+
+
+#spring.datasource.password=******
+secret.manager.enabled=false
+spring.liquibase.enabled=false
+
+
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.hibernate.ddl-auto=none
+
+
+#spring.application.name=payment-service
+#logging.pattern.level= "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+# Log
+logging.pattern.level= %5p [traceId=%X{traceId}, spanId=%X{spanId}]
+
+
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.rbs.bdd</groupId>
+    <artifactId>bdd-ms-esp-simulation-service-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <groupId>com.rbs.bdd</groupId>
+  <artifactId>bdd-ms-esp-simulation-service</artifactId>
+  <name>bdd-ms-esp-simulation-service</name>
+  <description>BDD ESP Simulator microservice - This is an example of a BDD ESP Simulator Service.</description>
+
+  <properties>
+    <validation-api.version>1.1.0.Final</validation-api.version>
+    <liquibase.maven.plugin.version>4.5.0</liquibase.maven.plugin.version>
+    <software.amazon.awssdk.secretsmanager>2.21.30</software.amazon.awssdk.secretsmanager>
+
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.ws.commons.schema</groupId>
+        <artifactId>XmlSchema</artifactId>
+        <version>1.4.3</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <!-- enabling actuator to expose management endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <!-- Used to add hyperlinks to the actuator's endpoints -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-hateoas</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ws.xmlschema</groupId>
+      <artifactId>xmlschema-core</artifactId>
+      <version>2.2.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>secretsmanager</artifactId>
+      <version>${software.amazon.awssdk.secretsmanager}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>auth</artifactId>
+      <version>${software.amazon.awssdk.secretsmanager}</version>
+    </dependency>
+    <dependency>
+      <artifactId>postgresql</artifactId>
+      <groupId>org.postgresql</groupId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sts</artifactId>
+      <version>${software.amazon.awssdk.secretsmanager}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.ws.commons.schema</groupId>
+      <artifactId>XmlSchema</artifactId>
+      <version>1.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-xml</artifactId>
+      <version>4.0.12</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.ws.commons.schema</groupId>
+          <artifactId>XmlSchema</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Dependency added to do bean validation in spring boot app as it's packaged with jakarta.validation-api.jar -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>software.amazon.awssdk</groupId>-->
+<!--      <artifactId>apache-client</artifactId>-->
+<!--    </dependency>-->
+    <!-- Required for UserIdentityFilter -->
+<!--    <dependency>-->
+<!--      <groupId>org.json</groupId>-->
+<!--      <artifactId>json</artifactId>-->
+<!--      <version>20240303</version>-->
+<!--    </dependency>-->
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>${httpcore.version}</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-tracing</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-tracing-bridge-brave</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.zipkin.reporter2</groupId>
+      <artifactId>zipkin-reporter-brave</artifactId>
+    </dependency>
+
+
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>4.0.2</version>
+    </dependency>
+
+    <!--    JAXB API-->
+
+    <!-- SOAP Dependencies Start-->
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-core</artifactId>
+      <version>4.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.messaging.saaj</groupId>
+      <artifactId>saaj-impl</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.ws</groupId>
+      <artifactId>spring-ws-test</artifactId>
+      <version>4.0.10</version>
+      <scope>test</scope>
+    </dependency
+
+
+
+
+
+    >
+    <dependency>
+      <groupId>jakarta.xml.ws</groupId>
+      <artifactId>jakarta.xml.ws-api</artifactId>
+      <version>4.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.ws</groupId>
+      <artifactId>jaxws-ri</artifactId>
+      <version>4.0.1</version>
+      <type>pom</type>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.woodstox</groupId>
+          <artifactId>woodstox-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Dependency to convert xml to json -->
+    <dependency>
+      <groupId>com.github.javadev</groupId>
+      <artifactId>underscore</artifactId>
+      <version>1.89</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>xml-resolver</groupId>
+      <artifactId>xml-resolver</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <!-- Dependency for caching -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>wsdl4j</groupId>
+      <artifactId>wsdl4j</artifactId>
+      <version>1.6.3</version>
+    </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.vaadin.external.google</groupId>
+          <artifactId>android-json</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.7.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>**/*.xsd</include>
+          <include>**/*.xml</include>
+          <include>**/*.xjb</include>
+          <include>*.properties</include>
+          <include>*.yml</include>
+          <include>**/*.yml</include>
+          <include>**/*.yaml</include>
+        </includes>
+      </resource>
+    </resources>
+    <plugins>
+<!--     Adding JAXB2 Maven Plugin     -->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.10.1</version>
+        <configuration>
+          <excludePackageNames>com.rbs.bdd.generated.*</excludePackageNames>
+        </configuration>
+      </plugin>
+      <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.13</version>
+          <configuration>
+            <excludes>
+              <exclude>com/rbs/bdd/generated/**</exclude>
+              <exclude>com/rbsg/soa/c040paymentmanagement/**</exclude>
+              <exclude>com/rbs/bdd/application/exception/**</exclude>
+              <exclude>com/rbs/bdd/application/port/in/**</exclude>
+              <exclude>com/rbs/bdd/application/port/out/**</exclude>
+              <exclude>com/rbs/bdd/infrastructure/entity/**</exclude>
+              <exclude>com/rbs/bdd/infrastructure/repository/**</exclude>
+              <exclude>com/rbs/bdd/common/**</exclude>
+              <exclude>com/rbs/bdd/infrastructure/config/**</exclude>
+              <exclude>com/rbs/bdd/util/**</exclude>
+              <exclude>**/ESPSimulatorEngine*</exclude>
+              <exclude>com/rbs/bdd/domain/enums/**</exclude>
+            </excludes>
+          </configuration>
+
+      </plugin>
+      <!-- JAXB Code Generation -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>jaxb2-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>xjc</id>
+            <goals>
+              <goal>xjc</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <arguments>
+                <argument>-b</argument>
+                <argument>${project.basedir}/src/main/resources/jaxb-bindings/bindings.xjb</argument>
+              </arguments>
+              <sources>
+                <source>${project.basedir}/src/main/resources/xsd/account-validation</source>
+                <source>${project.basedir}/src/main/resources/xsd/customer-retrieval</source>
+                <source>${project.basedir}/src/main/resources/xsd/shared</source>
+              </sources>
+              <outputDirectory>${project.build.directory}/generated-sources/jaxb</outputDirectory>
+              <clearOutputDir>false</clearOutputDir>
+              <verbose>true</verbose>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Add generated source to compilation -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/jaxb</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <!--to be imported on other projects-->
+              <classifier>original</classifier>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <scm>
+    <connection>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</connection>
+    <url>scm:git:${stash.http.url}/CPBD/${project.artifactId}-archetype-template.git</url>
+    <developerConnection>scm:git:${stash.ssh.url}/CPBD/${project.artifactId}-archetype-template.git
+    </developerConnection>
+  </scm>
+
+</project>
+
+
+
+package com.rbs.bdd.application.awsconfig;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.SdkHttpResponse;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClientBuilder;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+
+@ExtendWith(MockitoExtension.class)
+public class AwsSecretManagerConfigTest {
+    @InjectMocks
+    private AwsSecretManagerConfig awsSecretManagerConfig;
+    @Mock
+    private SecretsManagerClient mockSecretsManagerClient;
+
+    @Mock
+    private GetSecretValueResponse mockResponse;
+
+
+
+    private static final String TEST_USER = "test_user";
+    private static final String TEST_PASS = "test_password";
+    private static final String TEST_DBNAME = "test_dbname";
+    private static final String USERNAME = "username";
+    private static final String PASSWORD = "password";
+    private static final String DBNAME = "dbname";
+
+    public final String mockSecretJson = "{\n" +
+            "\""+USERNAME+"\": \""+TEST_USER+"\",\n" +
+            "\""+PASSWORD+"\": \""+TEST_PASS+"\",\n" +
+            "\""+DBNAME+"\": \""+TEST_DBNAME+"\" \n" +
+            "}";
+
+     @Test
+    public void testSecretsManagerClientBean(){
+
+        SecretsManagerClient mockSecretsManagerClient = mock(SecretsManagerClient.class);
+
+        GetSecretValueRequest request = GetSecretValueRequest.builder().secretId("my-secret").build();
+        GetSecretValueResponse  mockResponse = Mockito.mock(GetSecretValueResponse.class);
+        Mockito.when(mockSecretsManagerClient.getSecretValue(Mockito.eq(request))).thenReturn(mockResponse);
+
+         SdkHttpResponse sdkHttpResponseMock = Mockito.mock(SdkHttpResponse.class);
+         Mockito.when(sdkHttpResponseMock.isSuccessful()).thenReturn(true);
+         Mockito.when(mockResponse.sdkHttpResponse()).thenReturn(sdkHttpResponseMock);
+         Mockito.when(mockResponse.secretString()).thenReturn(mockSecretJson);
+
+        try(MockedStatic<SecretsManagerClient> mockedStatic = mockStatic(SecretsManagerClient.class)){
+            SecretsManagerClientBuilder builderMock = mock(SecretsManagerClientBuilder.class);
+
+
+            mockedStatic.when(SecretsManagerClient::builder).thenReturn(builderMock);
+            Mockito.when(builderMock.region(Region.of("us-east-1"))).thenReturn(builderMock);
+            Mockito.when(builderMock.credentialsProvider(Mockito.any())).thenReturn(builderMock);
+            Mockito.when(builderMock.build()).thenReturn(mockSecretsManagerClient);
+
+            SecretsManagerClient client = awsSecretManagerConfig.secretsManagerClient("us-east-1","my-secret");
+            assertNotNull(client);
+            Mockito.verify(mockSecretsManagerClient).getSecretValue(request);
+        }
+    }
+
+    @Test
+    public void testSecretsManagerClientBeanWhenUnableToGetSecret(){
+
+        SecretsManagerClient mockSecretsManagerClient = mock(SecretsManagerClient.class);
+
+        GetSecretValueRequest request = GetSecretValueRequest.builder().secretId("my-secret").build();
+        GetSecretValueResponse  mockResponse = Mockito.mock(GetSecretValueResponse.class);
+
+        Mockito.when(mockSecretsManagerClient.getSecretValue(Mockito.eq(request))).thenReturn(mockResponse);
+        Mockito.when(mockResponse.secretString()).thenReturn(mockSecretJson);
+
+        SdkHttpResponse sdkHttpResponseMock = Mockito.mock(SdkHttpResponse.class);
+        Mockito.when(sdkHttpResponseMock.isSuccessful()).thenReturn(true);
+        Mockito.when(mockResponse.sdkHttpResponse()).thenReturn(sdkHttpResponseMock);
+
+        try(MockedStatic<SecretsManagerClient> mockedStatic = mockStatic(SecretsManagerClient.class)){
+            SecretsManagerClientBuilder builderMock = mock(SecretsManagerClientBuilder.class);
+
+            mockedStatic.when(SecretsManagerClient::builder).thenReturn(builderMock);
+            Mockito.when(builderMock.region(Region.of("us-east-1"))).thenReturn(builderMock);
+            Mockito.when(builderMock.credentialsProvider(Mockito.any())).thenReturn(builderMock);
+            Mockito.when(builderMock.build()).thenReturn(mockSecretsManagerClient);
+
+            AwsSecretManagerConfig awsSecretManagerConfig = new AwsSecretManagerConfig();
+            SecretsManagerClient client = awsSecretManagerConfig.secretsManagerClient("us-east-1","my-secret");
+
+            assertNotNull(client);
+            Mockito.verify(mockSecretsManagerClient).getSecretValue(request);
+
+        }
+    }
+
+
+
+
+
+}
+package com.rbs.bdd.application.awsconfig;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import liquibase.integration.spring.SpringLiquibase;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.SdkHttpResponse;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+
+import javax.sql.DataSource;
+
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class DatabaseConfigTest {
+    @Mock
+    private SecretsManagerClient secretsManagerClient;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private DatabaseConfig databaseConfig;
+
+    @BeforeEach
+    void setup(){
+        MockitoAnnotations.openMocks(this);
+    }
+
+@Test
+    public void testDataSourceIsCreatedFromSecrets() throws Exception{
+
+        String mockSecretJson = """
+            {
+            "username":"test_username",
+            "password":"test_password",
+            "dbname":"test_dbname"
+            }
+            """;
+        SdkHttpResponse httpResponse = mock(SdkHttpResponse.class);
+        when(httpResponse.isSuccessful()).thenReturn(true);
+
+        GetSecretValueResponse secretValueResponse = mock(GetSecretValueResponse.class);
+        when(secretValueResponse.secretString()).thenReturn(mockSecretJson);
+        when(secretValueResponse.sdkHttpResponse()).thenReturn(httpResponse);
+
+        when(secretsManagerClient.getSecretValue(any(GetSecretValueRequest.class))).thenReturn(secretValueResponse);
+
+        DataSource datasource = databaseConfig.dataSource();
+
+        assertNotNull(datasource);
+        SpringLiquibase springLiquibase = databaseConfig.SpringLiquibase();
+        assertNotNull(springLiquibase);
+
+    }
+
+
+    @Test
+    public void testDataSourceProperties(){
+        assertNotNull(databaseConfig.dataSourceProperties());
+    }
+
+
+
+
+
+}
+
+package com.rbs.bdd.application.service;
+
+import com.rbs.bdd.application.exception.AccountValidationException;
+import com.rbs.bdd.domain.enums.ServiceConstants;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.Unmarshaller;
+import jakarta.xml.soap.MessageFactory;
+import jakarta.xml.soap.SOAPBody;
+import jakarta.xml.soap.SOAPMessage;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.ACCOUNT_VALIDATION_REQUEST;
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Unit test suite for {@link AccountValidationService} which validates both successful
+ * and error response scenarios based on incoming SOAP request data.
+ *
+ * This test uses a static SOAP XML template loaded and modified at runtime,
+ * and verifies the final response structure using DOM + XPath assertions.
+ */
+@Slf4j
+
+class AccountValidationServiceTest {
+
+    private AccountValidationService accountValidationService;
+
+    /**
+     * Initializes the test with a fresh instance of {@link AccountValidationService}.
+     */
+    @BeforeEach
+    void setup() {
+        accountValidationService = new AccountValidationService();
+    }
+
+    /**
+     * Loads the SOAP request XML from a template file, replaces placeholder variables,
+     * and unmarshals only the payload into a {@link ValidateArrangementForPaymentRequest} object.
+     *
+     * @param identifier the IBAN or UBAN
+     * @param codeValue the account code value type
+     * @return deserialized Java request object
+     * @throws Exception in case of JAXB or file issues
+     */
+    private ValidateArrangementForPaymentRequest loadRequest(String identifier, String codeValue) throws Exception {
+        String template = Files.readString(Path.of(ACCOUNT_VALIDATION_REQUEST));
+        String finalXml = template
+                .replace("${IDENTIFIER}", identifier)
+                .replace("${CODEVALUE}", codeValue);
+
+        SOAPMessage soapMessage = MessageFactory.newInstance()
+                .createMessage(null, new ByteArrayInputStream(finalXml.getBytes(StandardCharsets.UTF_8)));
+        SOAPBody body = soapMessage.getSOAPBody();
+
+        JAXBContext jaxbContext = JAXBContext.newInstance(ValidateArrangementForPaymentRequest.class);
+        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+        JAXBElement<ValidateArrangementForPaymentRequest> jaxbElement =
+                unmarshaller.unmarshal(body.getElementsByTagNameNS("*", "validateArrangementForPayment").item(0),
+                        ValidateArrangementForPaymentRequest.class);
+
+        return jaxbElement.getValue();
+    }
+
+    /**
+     * Invokes the SOAP validation service with the given request and returns the
+     * transformed SOAP response as a DOM document.
+     *
+     * @param request validated SOAP request
+     * @return DOM document of modified response
+     * @throws Exception in case of failure
+     */
+    private Document invokeServiceAndGetModifiedDoc(ValidateArrangementForPaymentRequest request) throws Exception {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        WebServiceMessage message = new SaajSoapMessage(MessageFactory.newInstance().createMessage());
+        accountValidationService.validateSchema(request);
+        accountValidationService.validateBusinessRules(request, message);
+        message.writeTo(outputStream);
+
+        return DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                .parse(new ByteArrayInputStream(outputStream.toByteArray()));
+    }
+
+    /**
+     * Evaluates and returns the XPath value from the given DOM document.
+     *
+     * @param doc the DOM document
+     * @param expression the XPath expression
+     * @return extracted value
+     * @throws Exception if XPath fails
+     */
+    private String getXpathValue(Document doc, String expression) throws Exception {
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        return xpath.evaluate(expression, doc);
+    }
+
+    /**
+     * Validates success response for IBAN_1 with expected values:
+     * Restricted status, Switched, Modulus Passed.
+     */
+    @Test
+    @DisplayName("Success Response for IBAN_1 - Domestic Restricted, Switched, Modulus Passed")
+    void testIBAN1_SuccessResponse() throws Exception {
+        ValidateArrangementForPaymentRequest req = loadRequest("60161331926801", "UKBasicBankAccountNumber");
+        Document doc = invokeServiceAndGetModifiedDoc(req);
+
+        log.debug("=== Full SOAP Response ===");
+        log.debug("Success Response for IBAN_1 - Domestic Restricted, Switched, Modulus Passed");
+        StringWriter writer= new StringWriter();
+        javax.xml.transform.TransformerFactory.newInstance()
+                .newTransformer()
+                .transform(new javax.xml.transform.dom.DOMSource(doc),
+                        new javax.xml.transform.stream.StreamResult(writer));
+        log.debug("Response is :  "+writer.toString());
+        log.debug("===========================");
+
+        String XPATH_ACCOUNT_STATUS = "//*[local-name()='accountingUnits']/*[local-name()='status']/*[local-name()='codeValue']";
+        String XPATH_SWITCHING_STATUS = "//*[local-name()='switchingStatus']/*[local-name()='codeValue']";
+        String XPATH_MODULUS_STATUS = "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']";
+
+
+        assertEquals("Domestic - Restricted", getXpathValue(doc, "//*[local-name()='accountingUnits']/*[local-name()='status']"));
+        assertEquals("Switched", getXpathValue(doc, "//*[local-name()='switchingStatus']"));
+        assertEquals("Passed", getXpathValue(doc, "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']"));
+
+    }
+
+    /**
+     * Validates success response for IBAN_2 with expected values:
+     * Restricted status, Not Switching, Modulus Passed.
+     */
+    @Test
+    @DisplayName("Success Response for IBAN_2 - Domestic Restricted, Not Switching, Modulus Passed")
+    void testIBAN2_SuccessResponse() throws Exception {
+        ValidateArrangementForPaymentRequest req = loadRequest("12345698765437", "UKBasicBankAccountNumber");
+        Document doc = invokeServiceAndGetModifiedDoc(req);
+        log.debug("=== Full SOAP Response ===");
+        log.debug("Success Response for IBAN_2 - Domestic Restricted, Not Switching, Modulus Passed");
+        StringWriter writer= new StringWriter();
+        javax.xml.transform.TransformerFactory.newInstance()
+                .newTransformer()
+                .transform(new javax.xml.transform.dom.DOMSource(doc),
+                        new javax.xml.transform.stream.StreamResult(writer));
+        log.debug("Response is :  "+writer.toString());
+        log.debug("===========================");
+        assertEquals("Domestic - Restricted", getXpathValue(doc, "//*[local-name()='accountingUnits']/*[local-name()='status']"));
+        assertEquals("Not Switching", getXpathValue(doc, "//*[local-name()='switchingStatus']"));
+        assertEquals("Passed", getXpathValue(doc, "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']"));
+    }
+
+    /**
+     * Validates success response for IBAN_3 with expected values:
+     * Unrestricted status, Switched, Modulus Passed.
+     */
+    @Test
+    @DisplayName("Success Response for IBAN_3 - Domestic Unrestricted, Switched, Modulus Passed")
+    void testIBAN3_SuccessResponse() throws Exception {
+        ValidateArrangementForPaymentRequest req = loadRequest("10201530093422", "UKBasicBankAccountNumber");
+        Document doc = invokeServiceAndGetModifiedDoc(req);
+        log.debug("=== Full SOAP Response ===");
+        log.debug("Success Response for IBAN_3 - Domestic Unrestricted, Switched, Modulus Passed");
+        StringWriter writer= new StringWriter();
+        javax.xml.transform.TransformerFactory.newInstance()
+                .newTransformer()
+                .transform(new javax.xml.transform.dom.DOMSource(doc),
+                        new javax.xml.transform.stream.StreamResult(writer));
+        log.debug("Response is :  "+writer.toString());
+        log.debug("===========================");
+        assertEquals("Domestic - Unrestricted",getXpathValue(doc, "//*[local-name()='accountingUnits']/*[local-name()='status']"));
+        assertEquals("Switched", getXpathValue(doc, "//*[local-name()='switchingStatus']"));
+        assertEquals("Passed", getXpathValue(doc, "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']"));
+    }
+
+    /**
+     * Validates success response for IBAN_4 with expected values:
+     * Unrestricted status, Not Switching, Modulus Failed.
+     */
+    @Test
+    @DisplayName("Success Response for IBAN_4 - Domestic Unrestricted, Not Switching, Modulus Failed")
+    void testIBAN4_SuccessResponse() throws Exception {
+        ValidateArrangementForPaymentRequest req = loadRequest("20201555555567", "UKBasicBankAccountNumber");
+        Document doc = invokeServiceAndGetModifiedDoc(req);
+        log.debug("=== Full SOAP Response ===");
+        log.debug("Return Success Response for IBAN_4 - Domestic Unrestricted, Not Switching, Modulus Failed");
+        StringWriter writer= new StringWriter();
+        javax.xml.transform.TransformerFactory.newInstance()
+                .newTransformer()
+                .transform(new javax.xml.transform.dom.DOMSource(doc),
+                        new javax.xml.transform.stream.StreamResult(writer));
+        log.debug("Response is :  "+writer.toString());
+        log.debug("===========================");
+        assertEquals("Domestic - Unrestricted", getXpathValue(doc, "//*[local-name()='accountingUnits']/*[local-name()='status']"));
+        assertEquals("Not Switching", getXpathValue(doc, "//*[local-name()='switchingStatus']"));
+        assertEquals("Failed", getXpathValue(doc, "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']"));
+    }
+
+    /**
+     * Validates error response for unmatched IBAN.
+     */
+    @Test
+    @DisplayName("Should return error when IBAN does not match any account")
+    void testNoMatch_MOD97Failure() throws Exception {
+        ValidateArrangementForPaymentRequest req = loadRequest("GB94BARC10201530093420", "InternationalBankAccountNumber");
+        Document doc = invokeServiceAndGetModifiedDoc(req);
+        log.debug("Return error when IBAN does not match any account");
+        log.debug("=== Full SOAP Response ===");
+        StringWriter writer= new StringWriter();
+        javax.xml.transform.TransformerFactory.newInstance()
+                .newTransformer()
+                .transform(new javax.xml.transform.dom.DOMSource(doc),
+                        new javax.xml.transform.stream.StreamResult(writer));
+        log.debug("Response is :  "+writer.toString());
+        log.debug("===========================");
+        assertEquals("MOD97 failure for the IBAN", getXpathValue(doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC));
+        assertEquals("Failed", getXpathValue(doc, "//*[local-name()='cmdStatus']"));
+    }
+
+    /**
+     * Validates error response for IBAN with invalid length.
+     */
+    @Test
+    @DisplayName("Should return error for invalid IBAN length")
+    void testInvalidIbanLength() throws Exception {
+        ValidateArrangementForPaymentRequest req = loadRequest("GB123", "InternationalBankAccountNumber");
+        Document doc = invokeServiceAndGetModifiedDoc(req);
+        log.debug("Return error for invalid IBAN length");
+        log.debug("=== Full SOAP Response ===");
+        StringWriter writer= new StringWriter();
+        javax.xml.transform.TransformerFactory.newInstance()
+                .newTransformer()
+                .transform(new javax.xml.transform.dom.DOMSource(doc),
+                        new javax.xml.transform.stream.StreamResult(writer));
+        log.debug("Response is :  "+writer.toString());
+        log.debug("===========================");
+        assertEquals("Length of IBAN is Invalid", getXpathValue(doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC));
+    }
+
+    /**
+     * Validates error response for UBAN with invalid length.
+     */
+    @Test
+    @DisplayName("Should return error for invalid UBAN length")
+    void testInvalidUbanLength() throws Exception {
+        ValidateArrangementForPaymentRequest req = loadRequest("123456", "UKBasicBankAccountNumber");
+        Document doc = invokeServiceAndGetModifiedDoc(req);
+
+        log.debug("Return error for invalid UBAN length:- ");
+        log.debug("=== Full SOAP Response ===");
+        StringWriter writer= new StringWriter();
+        javax.xml.transform.TransformerFactory.newInstance()
+                .newTransformer()
+                .transform(new javax.xml.transform.dom.DOMSource(doc),
+                        new javax.xml.transform.stream.StreamResult(writer));
+        log.debug("Response is :  "+writer.toString());
+        log.debug("===========================");
+        assertEquals("100||INVALID SORT CODE OR ISSUING AUTH ID PASSED||Execution Successful", getXpathValue(doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC));
+    }
+
+    /**
+     * Validates DB2 SQL error response when GB-prefixed UBAN is used.
+     */
+    @Test
+    @DisplayName("Should return DB2 SQL error for GB UBAN")
+    void testDb2ErrorForGBUban() throws Exception {
+        String error="Service operation validateArrangementForPayment failed due to an error in the ESP. Contact systems management to resolve the problem";
+        ValidateArrangementForPaymentRequest req = loadRequest("GB12345678901234", "UKBasicBankAccountNumber");
+        Document doc = invokeServiceAndGetModifiedDoc(req);
+        log.debug("Return DB2 SQL error for GB UBAN");
+        log.debug("=== Full SOAP Response ===");
+        StringWriter writer= new StringWriter();
+        javax.xml.transform.TransformerFactory.newInstance()
+                .newTransformer()
+                .transform(new javax.xml.transform.dom.DOMSource(doc),
+                        new javax.xml.transform.stream.StreamResult(writer));
+        log.debug("Response is :  "+writer.toString());
+        log.debug("===========================");
+        assertTrue(getXpathValue(doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION).contains(error));
+    }
+
+    /**
+     * Validates country code error when IBAN does not start with GB.
+     */
+    @Test
+    @DisplayName("Should return country code error when IBAN does not start with GB")
+    void testWrongCountryCode() throws Exception {
+        ValidateArrangementForPaymentRequest req = loadRequest("FR1234567890123456789012", "InternationalBankAccountNumber");
+        Document doc = invokeServiceAndGetModifiedDoc(req);
+        log.debug("Return country code error when IBAN does not start with GB ");
+        log.debug("=== Full SOAP Response ===");
+        StringWriter writer= new StringWriter();
+        javax.xml.transform.TransformerFactory.newInstance()
+                .newTransformer()
+                .transform(new javax.xml.transform.dom.DOMSource(doc),
+                        new javax.xml.transform.stream.StreamResult(writer));
+        log.debug("Response is :  "+writer.toString());
+        log.debug("===========================");
+        assertEquals("SYSTEM_ERROR,incidentID=1f2ff299-9d93-41a5-9119-b4a552f0191e", getXpathValue(doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC));
+    }
+}
+
+package com.rbs.bdd.application.service;
+
+import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.ws.WebServiceMessage;
+
+import static org.mockito.Mockito.*;
+
+class CustomerRetrievalOrchestratorTest {
+
+    private RetrieveCustomerPort retrieveCustomerPort;
+    private CustomerRetrievalOrchestrator orchestrator;
+    private RetrievePrimaryCustomerForArrRequest mockRequest;
+    private WebServiceMessage mockMessage;
+
+    @BeforeEach
+    void setUp() {
+        retrieveCustomerPort = mock(RetrieveCustomerPort.class);
+        orchestrator = new CustomerRetrievalOrchestrator(retrieveCustomerPort);
+        mockRequest = mock(RetrievePrimaryCustomerForArrRequest.class);
+        mockMessage = mock(WebServiceMessage.class);
+    }
+
+    @Test
+    void validateCustomerRetrieval_shouldDelegateToPorts() {
+        // Act
+        orchestrator.validateCustomerRetrieval(mockRequest, mockMessage);
+
+        // Assert
+        verify(retrieveCustomerPort).validateSchema(mockRequest);
+        verify(retrieveCustomerPort).retrieveCustomer(mockRequest, mockMessage);
+    }
+}
+
+
+package com.rbs.bdd.application.service;
+import com.rbs.bdd.domain.enums.ErrorConstants;
+import com.rbs.bdd.infrastructure.repository.CustomerRepository;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.Unmarshaller;
+import jakarta.xml.soap.MessageFactory;
+import jakarta.xml.soap.SOAPBody;
+import jakarta.xml.soap.SOAPMessage;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.w3c.dom.Document;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.CUSTOMER_RETRIEVAL_REQUEST;
+import static com.rbs.bdd.domain.enums.ServiceConstants.XPath.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+@Slf4j
+
+class CustomerRetrievalServiceTest {
+
+    private CustomerRetrievalService service;
+    private CustomerRepository mockRepository;
+
+    @BeforeEach
+    void setup() {
+        mockRepository= Mockito.mock(CustomerRepository.class);
+        service = new CustomerRetrievalService(mockRepository);
+    }
+
+    private RetrievePrimaryCustomerForArrRequest loadRequest(String identifier, String codeValue) throws Exception {
+        String template = Files.readString(Path.of(CUSTOMER_RETRIEVAL_REQUEST));
+        String finalXml = template.replace("${IDENTIFIER}", identifier).replace("${CODEVALUE}", codeValue);
+
+        SOAPMessage soapMessage = MessageFactory.newInstance()
+                .createMessage(null, new ByteArrayInputStream(finalXml.getBytes(StandardCharsets.UTF_8)));
+        SOAPBody body = soapMessage.getSOAPBody();
+
+        JAXBContext context = JAXBContext.newInstance(RetrievePrimaryCustomerForArrRequest.class);
+        Unmarshaller unmarshaller = context.createUnmarshaller();
+        JAXBElement<RetrievePrimaryCustomerForArrRequest> root =
+                unmarshaller.unmarshal(body.getElementsByTagNameNS("*", "retrievePrimaryCustomerForArr").item(0),
+                        RetrievePrimaryCustomerForArrRequest.class);
+
+        return root.getValue();
+    }
+
+    private Document invokeAndGetResponse(RetrievePrimaryCustomerForArrRequest request) throws Exception {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        WebServiceMessage message = new SaajSoapMessage(MessageFactory.newInstance().createMessage());
+
+        service.validateSchema(request);
+        service.retrieveCustomer(request, message);
+        message.writeTo(outputStream);
+
+        return DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                .parse(new ByteArrayInputStream(outputStream.toByteArray()));
+    }
+
+    private String getXpath(Document doc, String expression) throws Exception {
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        return xpath.evaluate(expression, doc);
+    }
+
+    @Test
+    @DisplayName("Success: Valid customer IBAN should populate name fields")
+    void testValidCustomerResponse() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("GB29NWBK60161331926801", "InternationalBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+        assertEquals("Alice", getXpath(doc, XPATH_FIRST_NAME));
+        assertEquals("Johnson", getXpath(doc, XPATH_LAST_NAME));
+        assertEquals("MR", getXpath(doc, XPATH_PREFIX_TYPE));
+    }
+
+    @Test
+    @DisplayName("Error: UBAN with GB prefix returns ERR_UBAN_GB")
+    void testGbPrefixedUban() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("GB12345678901234", "UKBasicBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+        assertEquals(ErrorConstants.ERR_UBAN_GB.detail().description(), getXpath(doc, XPATH_CMD_DESCRIPTION));
+    }
+
+    @Test
+    @DisplayName("Error: UBAN with invalid length returns Customer Not Found")
+    void testInvalidUbanLength() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("123456", "UKBasicBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+        assertEquals("Unable to Complete Request", getXpath(doc, XPATH_CMD_DESCRIPTION));
+    }
+
+    @Test
+    @DisplayName("Error: Unmatched UBAN triggers Customer Not Found")
+    void testUbanMod97Failure() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("99999999999999", "UKBasicBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+        assertEquals("Unable to Complete Request", getXpath(doc, XPATH_CMD_DESCRIPTION));
+    }
+
+
+    @Test
+    @DisplayName("Error: IBAN does not match any customer")
+    void testUnmatchedIban() throws Exception {
+        RetrievePrimaryCustomerForArrRequest request = loadRequest("GB29NWBK60161300000000", "InternationalBankAccountNumber");
+        Document doc = invokeAndGetResponse(request);
+        assertEquals("Unable to Complete Request", getXpath(doc, XPATH_CMD_DESCRIPTION));
+
+    }
+}
+
+
+package com.rbs.bdd.application.service;
+
+import com.rbs.bdd.application.port.out.AccountValidationPort;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.ws.WebServiceMessage;
+
+import static org.mockito.Mockito.*;
+
+class PaymentOrchestratorTest {
+
+    private AccountValidationPort accountValidationPort;
+    private AccountValidationOrchestrator orchestrator;
+    private ValidateArrangementForPaymentRequest mockRequest;
+    private WebServiceMessage mockMessage;
+
+    @BeforeEach
+    void setUp() {
+        accountValidationPort = mock(AccountValidationPort.class);
+        orchestrator = new AccountValidationOrchestrator(accountValidationPort);
+        mockRequest = mock(ValidateArrangementForPaymentRequest.class);
+        mockMessage = mock(WebServiceMessage.class);
+    }
+
+    @Test
+    void validateArrangementForPayment_shouldDelegateToPorts() {
+        // Act
+        orchestrator.validateArrangementForPayment(mockRequest, mockMessage);
+
+        // Assert
+        verify(accountValidationPort).validateSchema(mockRequest);
+        verify(accountValidationPort).validateBusinessRules(mockRequest, mockMessage);
+    }
+}
