@@ -1,326 +1,182 @@
-package com.rbs.bdd.application.service;
+package com.rbs.bdd.application.awsconfig;
 
-
-import com.rbs.bdd.application.exception.AccountValidationException;
-import com.rbs.bdd.application.port.out.AccountValidationPort;
-import com.rbs.bdd.common.context.TransactionIdContext;
-import com.rbs.bdd.domain.enums.*;
-import com.rbs.bdd.domain.model.ErrorDetail;
-import com.rbs.bdd.util.ValidationUtils;
-import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.ws.WebServiceMessage;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
-import com.rbs.bdd.util.ValidationUtils.RequestParams;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.ZonedDateTime;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import static com.rbs.bdd.domain.enums.AccountStatus.DOMESTIC_RESTRICTED;
-import static com.rbs.bdd.domain.enums.AccountStatus.DOMESTIC_UNRESTRICTED;
-import static com.rbs.bdd.domain.enums.ModulusCheckStatus.FAILED;
-import static com.rbs.bdd.domain.enums.ModulusCheckStatus.PASSED;
-import static com.rbs.bdd.domain.enums.ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT;
-import static com.rbs.bdd.domain.enums.ServiceConstants.IBANs.*;
-import static com.rbs.bdd.domain.enums.SwitchingStatus.NOT_SWITCHING;
-import static com.rbs.bdd.domain.enums.SwitchingStatus.SWITCHED;
-import static com.rbs.bdd.util.ValidationUtils.generateTxnId;
-import static com.rbs.bdd.util.ValidationUtils.writeResponseToSoapMessage;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 
-/**
- * Service responsible for validating SOAP requests for account validation and returning
- * static success or error responses based on configured rules.
- */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class AccountValidationService implements AccountValidationPort {
+@Configuration
+public class AwsSecretManagerConfig {
 
+    @Bean
+    @ConditionalOnProperty(name = "secret.manager.enabled", havingValue = "true")
+    public SecretsManagerClient secretsManagerClient(@Value("${aws.region}") String region,
+                                                     @Value("${secret.datasource.name}") String secretDatasourceName) {
+        log.info("AWS-AWS_REGION {}", region);
+        SecretsManagerClient client = SecretsManagerClient.builder()
+                .region(Region.of(region))
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
+        log.info("Verify access");
+        log.info("Secret DatasourceName "+secretDatasourceName);
 
-    /**
-     * Logs the fact that schema validation is already handled by Spring WS.
-     */
-    @Override
-    public void validateSchema(ValidateArrangementForPaymentRequest request) {
-        log.info("Schema validation completed by Spring WS");
-    }
+        GetSecretValueRequest request = GetSecretValueRequest.builder()
+                .secretId(secretDatasourceName)
+                .build();
 
+        log.info("Trying to establish"+secretDatasourceName);
 
-
-    /**
-     * Applies business rule validation based on account identifiers, code values, and IBAN/UBAN checks.
-     * Depending on the logic, either a static success or error response is returned.
-     *
-     * @param request the incoming SOAP request
-     * @param message the SOAP response message to be modified
-     */
-    @Override
-    public void validateBusinessRules(ValidateArrangementForPaymentRequest request, WebServiceMessage message) {
         try {
-            log.info("Starting business rule validation for request." + TransactionIdContext.get());
-            RequestParams params = extractParams(request);
-            XPath xpath = XPathFactory.newInstance().newXPath();
-            Document responseDoc = handleBusinessValidation(params, xpath);
-
-            writeResponseToSoapMessage(message,responseDoc);
-            log.info("Response sent Successfully");
-
-        } catch (Exception ex) {
-            log.error("Business rule validation failed", ex);
-            throw new AccountValidationException("Validation failed", ex);
-        }
-    }
-
-
-
-    private Document handleBusinessValidation(RequestParams params, XPath xpath) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException { log.debug("Checking for the error in the request");
-        log.info("Entered in handleBusinessValidation");
-        Optional<ErrorDetail> error = determineError(params);
-        if (error.isPresent()) {
-            return buildErrorResponse(error.get(), params.originalTxnId(), xpath);
-        }
-
-        Optional<ResponseConfig> config = determineMatchingConfig(params);
-        if (config.isPresent()) {
-            return buildSuccessResponse(params, config.get(), xpath);
-        }
-
-        return buildErrorResponse(ErrorConstants.ERR_MOD97_IBAN.detail(), params.originalTxnId(), xpath);
-    }
-    private Document buildErrorResponse(ErrorDetail detail, String txnId, XPath xpath)
-            throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
-        log.info("Building the error response");
-        Document errorDoc = loadAndParseXml(ServiceConstants.Paths.ACCOUNT_VALIDATION_ERROR_XML);
-        applyErrorResponse(errorDoc, xpath, detail, txnId);
-        return errorDoc;
-    }
-
-    private Document buildSuccessResponse(RequestParams params, ResponseConfig config, XPath xpath)
-            throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
-        log.info(" Building the response");
-
-        Document successDoc = loadAndParseXml("static-response/account-validation/success-response.xml");
-
-        if (INTL_BANK_ACCOUNT.equals(params.codeValue()) && config.bankIdentifier() == null) {
-            log.error("Wrong BankCode is there in the request ");
-            return buildErrorResponse(ErrorConstants.ERR_MOD97_IBAN.detail(), params.originalTxnId(), xpath);
-        }
-        log.info("Successfully creating the response  ");
-        updateSuccessResponse(successDoc, xpath, config, params);
-        return successDoc;
-    }
-
-    private String resolveBankIdentifier(String iban) {
-        log.info("Checking the Bank Identifier");
-
-        Map<String, String> BANK_CODES = Map.of(
-                "NWB", "278",
-                "RBS", "365",
-                "UBN", "391"
-        );
-        if (iban == null || iban.isEmpty()) return null;
-        return BANK_CODES.entrySet()
-                .stream()
-                .filter(entry -> iban.contains(entry.getKey()))
-                .map(Map.Entry::getValue)
-                .findFirst()
-                .orElse(null);
-    }
-
-
-    /**
-     * Extracts key fields like identifier, codeValue, transactionId, and systemId from the SOAP request.
-     */
-    private RequestParams extractParams(ValidateArrangementForPaymentRequest request) {
-        log.info("Fetching the account number ,transactionId and other information from request ");
-        String identifier = request.getArrangementIdentifier().getIdentifier();
-        String codeValue = request.getArrangementIdentifier().getContext().getCodeValue();
-        String txnId = request.getRequestHeader().getRequestIds().get(0).getTransactionId();
-        String systemId = request.getRequestHeader().getRequestIds().get(0).getSystemId();
-        log.debug("Extracted request parameters: identifier={}, codeValue={}, txnId={}, systemId={}",
-                identifier, codeValue, txnId, systemId);
-        return new RequestParams(identifier, codeValue, txnId, systemId);
-    }
-
-    /**
-     * Validates error conditions such as invalid IBAN/UBAN format or mismatched values.
-     */
-    private Optional<ErrorDetail> determineError(RequestParams p) {
-        log.info("Entered in determineError");
-        Map<ValidationErrorType, ErrorDetail> errorMap = Map.of(
-                ValidationErrorType.INVALID_PREFIX, ErrorConstants.ERR_DB2_SQL.detail(),
-                ValidationErrorType.INVALID_IBAN_LENGTH, ErrorConstants.ERR_INVALID_IBAN_LENGTH.detail(),
-                ValidationErrorType.INVALID_UBAN_LENGTH, ErrorConstants.ERR_INVALID_UBAN_LENGTH.detail(),
-                ValidationErrorType.INVALID_MODULUS, ErrorConstants.ERR_MOD97_UBAN.detail(),
-                ValidationErrorType.INVALID_COUNTRY_CODE , ErrorConstants.ERR_WRONG_COUNTRY_CODE.detail()
-        );
-
-        return ValidationUtils.validateAccount(p, errorMap, this::isUbanValid, "AccountValidation");
-    }
-
-    /**
-     * Matches the request against known account types and configurations.
-     */
-    private Optional<ResponseConfig> determineMatchingConfig(RequestParams p) {
-        log.info("Entering in determineMatchingConfig ");
-        log.debug("Entering in determineMatchingConfig "+p.codeValue());
-        String bankIdentifier = INTL_BANK_ACCOUNT.equals(p.codeValue()) ? resolveBankIdentifier(p.identifier()) : null;
-        log.info("The Bank identifier is "+bankIdentifier);
-        Map<String, ResponseConfig> ruleMap = Map.of(
-        IBAN_1, new ResponseConfig(DOMESTIC_RESTRICTED, SWITCHED, PASSED,bankIdentifier),
-        IBAN_2, new ResponseConfig(DOMESTIC_RESTRICTED, NOT_SWITCHING, PASSED,bankIdentifier),
-        IBAN_3, new ResponseConfig(DOMESTIC_UNRESTRICTED, SWITCHED, PASSED,bankIdentifier),
-        IBAN_4, new ResponseConfig(DOMESTIC_UNRESTRICTED, NOT_SWITCHING, FAILED,bankIdentifier)
-
-    );
-
-    return ruleMap.entrySet().stream()
-        .filter(e -> isMatch(p, e.getKey()))
-        .findFirst()
-        .map(Map.Entry::getValue)
-        .map(Optional::of)
-        .orElse(Optional.empty());
-
-    }
-
-    /**
-     * Checks if the request identifier matches exactly or by suffix.
-     */
-    private boolean isMatch(RequestParams p, String account) {
-        return p.identifier().equals(account) || extractLast14Digits(account).equals(p.identifier());
-    }
-
-    /**
-     * Verifies if the given UBAN matches the suffix of known IBANs.
-     */
-    private boolean isUbanValid(String identifier) {
-        log.info("Checking if the UBAN is valid ");
-        return ServiceConstants.IBANs.ALL_IBANS.stream()
-                .map(this::extractLast14Digits)
-                .anyMatch(ibanSuffix -> ibanSuffix.equals(identifier));
-    }
-
-    /**
-     * Extracts last 14 digits from a given IBAN string.
-     */
-    private String extractLast14Digits(String iban) {
-        log.debug("Extract the last 14 digits from IBAN number");
-        return iban.length() >= 14 ? iban.substring(iban.length() - 14) : "";
-    }
-
-    /**
-     * Reads and parses a static XML file from the classpath.
-     */
-    private Document loadAndParseXml(String path) throws ParserConfigurationException, IOException, SAXException {
-        log.debug("Loading XML from path: {}", path);
-        InputStream xml = getClass().getClassLoader().getResourceAsStream(path);
-        if (Objects.isNull(xml)) {
-            log.error("XML file not found at path: {}", path);
-            throw new AccountValidationException("XML not found: " + path);
-        }
-
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-        factory.setXIncludeAware(false);
-        factory.setExpandEntityReferences(false);
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        return builder.parse(xml);
-    }
-
-    /**
-     * Populates values in the success response based on matched config.
-     */
-    private void updateSuccessResponse(Document doc, XPath xpath, ResponseConfig config, RequestParams p) throws XPathExpressionException {
-        log.info("Started Updating the response XML with success values");
-        updateText(xpath, doc, "//responseId/systemId", p.systemId());
-        updateText(xpath, doc, "//responseId/transactionId", generateTxnId());
-        updateText(xpath, doc, "//status", config.accountStatus.getValue());
-        updateText(xpath, doc, "//switchingStatus", config.switchingStatus.getValue());
-        updateText(xpath, doc, "//modulusCheckStatus/codeValue", config.modulusCheckStatus.getValue());
-        if(config.bankIdentifier()!=null)
-        {
-            updateText(xpath, doc, "//parentOrganization/alternativeIdentifier/identifier",config.bankIdentifier());
-
-        }
-        log.info("Updated response XML with success values");
-    }
-
-    /**
-     * Populates values in the static error response XML.
-     */
-    private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail errorDetail, String txnId) throws XPathExpressionException {
-        log.info("Entered in applyErrorResponse");
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_REF_REQUEST_TXN_ID, txnId);
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_STATUS, "Failed");
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION, errorDetail.description());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RETURN_CODE, errorDetail.returnCode());
-        if (Objects.nonNull(errorDetail.systemNotificationDesc())) {
-
-            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC, errorDetail.systemNotificationDesc());
-            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_CODE, errorDetail.systemNotificationCode());
-        } else {
-
-            Node node = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
-            if (node != null && node.getParentNode() != null) {
-                node.getParentNode().removeChild(node);
-                log.debug("Removed systemNotification block as it was not applicable.");
+            log.error("Request"+request);
+            GetSecretValueResponse response = client.getSecretValue(request);
+            log.error("Trying to establish");
+            if (response.sdkHttpResponse().isSuccessful()) {
+                log.info("aws secret retrieved [{}] successfully [{}]", secretDatasourceName,
+                        response.secretString());
             }
+        } catch (Exception u) {
+            log.error("Unable to get the secret", u);
         }
-        log.error("Updated response XML with error values: {}", errorDetail.description());
+        return client;
     }
-
-    /**
-     * Utility method to update a specific XML node’s text content.
-     */
-    private void updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
-        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
-        if (node != null && value != null) {
-            node.setTextContent(value);
-            log.debug("Updated XML node {} with value {}", path, value);
-        }
-    }
-
-
-
-    /**
-     * Immutable container representing a valid account configuration.
-     * this record is left without methods or additional logic,as it is only
-     * used to group and transport validation results such as
-     * <ul>
-     *     <li>{@code accountStatus} - the classification of the account(eg , restricted,unrestricted)</li>
-     *      <li>{@code switchingStatus} - whether the account has been switched or not switching </li>
-     *       <li>{@code modulusStatus} - result of modulus check </li>
-     *       <li>{@code bankIdentifier} - result of bankIdentifier </li>
-     * </ul>
-     */
-     @SuppressWarnings("unused")
-    public record ResponseConfig(AccountStatus accountStatus, SwitchingStatus switchingStatus,ModulusCheckStatus modulusCheckStatus,String bankIdentifier ) {
-     // this record is left without methods or additional logic,as it is only used to group and transport validation results
-     }
-
-
-
 }
 
 
+
+-------------------------------
+package com.rbs.bdd.application.awsconfig;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rbs.bdd.application.exception.SecretsNotFoundException;
+import com.zaxxer.hikari.HikariDataSource;
+import liquibase.integration.spring.SpringLiquibase;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
+
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
+@Configuration
+@ConditionalOnProperty(name = "secret.manager.enabled", havingValue = "true")
+
+public class DatabaseConfig {
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    @Value("${spring.datasource.base.url}")
+    private String springDatasourceBaseUrl;
+
+    @Value("${spring.datasource.username}")
+    private String springDatasourceUsername;
+
+    @Value("${spring.datasource.password}")
+    private String springDatasourcePassword;
+
+    @Value("${spring.liquibase.default-schema}")
+    private String springLiquibaseDefaultSchema;
+
+    @Value("${secret.datasource.name}")
+    private String secretDatasourceName;
+
+    @Autowired(required = false)
+    private SecretsManagerClient secretsManagerClient;
+
+
+    private static final String USERNAME = "username";
+    private static final String PASSWORD = "password";
+    private static final String DBNAME = "dbname";
+
+    //Fetch kubernetes secrets from the aws server
+    private Map<String, String> fetchSecrets(final SecretsManagerClient secretsManagerClient, final String secretName) {
+
+        log.debug("Request received to retrieve secrets for  : {}", secretName);
+        Map<String, String> secretMap = new HashMap<>();
+        GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(secretName).build();
+
+        GetSecretValueResponse response = secretsManagerClient.getSecretValue(request);
+        if (response.sdkHttpResponse().isSuccessful()) {
+            log.info("Secret retrieved for [{}] ", secretName);
+            try {
+                secretMap = mapper.readValue(response.secretString(), Map.class);
+                log.info("SecretMap: Username: {}", secretMap.get(USERNAME));
+            } catch (Exception e) {
+                log.error("unable to retrieve data from secret");
+                throw new SecretsNotFoundException("Unable to retrieve data from secrets!");
+            }
+        }
+        return secretMap;
+    }
+
+    @ConfigurationProperties(prefix = "spring.datasource")
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+
+    @Bean
+    public DataSourceProperties dataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Primary
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+    @Bean
+    public DataSource dataSource() {
+        Map<String, String> secrets = fetchSecrets(secretsManagerClient, secretDatasourceName);
+        HikariDataSource hikariDataSource = new HikariDataSource();
+        log.debug("Using aws secretDatasource : {} and  secretsManagerClient: {}", secretDatasourceName, secretsManagerClient);
+
+        hikariDataSource.setJdbcUrl(springDatasourceBaseUrl + secrets.get(DBNAME));
+        log.debug("Connecting to Datasource : {} ", hikariDataSource.getJdbcUrl());
+        log.debug("Secrets are available for user : {} ", secrets.get(USERNAME));
+
+        hikariDataSource.setUsername(secrets.get(USERNAME));
+        hikariDataSource.setPassword(secrets.get(PASSWORD));
+        return hikariDataSource;
+    }
+
+    @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true")
+    @Bean
+
+    public SpringLiquibase SpringLiquibase() {
+        SpringLiquibase springLiquibase=null;
+        try {
+            Map<String, String> secrets = fetchSecrets(secretsManagerClient, secretDatasourceName);
+             springLiquibase = new SpringLiquibase();
+            springLiquibase.setDataSource(dataSource());
+            log.info("DBNAME :" + DBNAME);
+            log.info("secretsManagerClient : " + secretsManagerClient);
+            log.info("secretDatasourceName :" + secretDatasourceName);
+            springLiquibase.setDefaultSchema(secrets.get(DBNAME));
+            log.info("Default Scehma :" + springLiquibase.getDefaultSchema());
+
+            springLiquibase.setChangeLog("classpath:/db/changelog/db.changelog-master.yaml");
+            springLiquibase.setContexts("");
+            return springLiquibase;
+        }
+        catch(Exception ex)
+        {
+            log.error("error occured : "+ex);
+        }
+        return springLiquibase;
+    }
+
+}
+--------------------
