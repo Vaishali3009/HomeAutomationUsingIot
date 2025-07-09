@@ -1,0 +1,344 @@
+package com.rbs.bdd.infrastructure.soap.api;
+
+import com.rbs.bdd.application.port.in.CustomerRetrievalPort;
+import com.rbs.bdd.application.port.in.PaymentValidationPort;
+import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.context.MessageContext;
+
+import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for {@link PaymentValidationSoapAdapter}, which handles SOAP requests
+ * for account validation and customer retrieval.
+ */
+class PaymentValidationSoapAdapterTest {
+
+    private PaymentValidationPort paymentValidationPort;
+    private CustomerRetrievalPort customerRetrievalPort;
+    private PaymentValidationSoapAdapter adapter;
+    private MessageContext mockContext;
+    private WebServiceMessage mockResponse;
+
+    /**
+     * Sets up the required mocks before each test.
+     */
+    @BeforeEach
+    void setUp() {
+        paymentValidationPort = mock(PaymentValidationPort.class);
+        customerRetrievalPort = mock(CustomerRetrievalPort.class);
+        adapter = new PaymentValidationSoapAdapter(paymentValidationPort, customerRetrievalPort);
+
+        mockContext = mock(MessageContext.class);
+        mockResponse = mock(WebServiceMessage.class);
+
+        when(mockContext.getResponse()).thenReturn(mockResponse);
+    }
+
+    /**
+     * Tests that the `validateArrangementForPayment` method delegates the request
+     * to the paymentValidationPort with the correct arguments.
+     */
+    @Test
+    void testValidateArrangementForPaymentDelegatesToPort() {
+        ValidateArrangementForPaymentRequest request = new ValidateArrangementForPaymentRequest();
+
+        adapter.validateArrangementForPayment(request, mockContext);
+
+        verify(paymentValidationPort, times(1)).validateArrangementForPayment(eq(request), eq(mockResponse));
+    }
+
+    /**
+     * Tests that the `validateCustomerRetrieval` method delegates the request
+     * to the customerRetrievalPort with the correct arguments.
+     */
+    @Test
+    void testValidateCustomerRetrievalDelegatesToPort() {
+        RetrievePrimaryCustomerForArrRequest request = new RetrievePrimaryCustomerForArrRequest();
+
+        adapter.validateCustomerRetrieval(request, mockContext);
+
+        verify(customerRetrievalPort, times(1)).validateCustomerRetrieval(eq(request), eq(mockResponse));
+    }
+}
+
+
+package com.rbs.bdd.infrastructure.soap.interceptor;
+
+import com.rbs.bdd.domain.enums.ServiceConstants;
+import com.rbs.bdd.util.SoapInterceptorUtils;
+import jakarta.xml.soap.MessageFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor;
+import org.xml.sax.SAXParseException;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+class AccountSchemaValidationInterceptorTest {
+
+    private AccountSchemaValidationInterceptor interceptor;
+
+    @BeforeEach
+    void setUp() {
+        interceptor = new AccountSchemaValidationInterceptor();
+    }
+
+    /**
+     * Test custom schema validation error handling response.
+     */
+    @Test
+    void testHandleSchemaValidationFailure_customResponse() throws Exception {
+        String dummyXml = """
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+              <soapenv:Body>
+                <testRequest></testRequest>
+              </soapenv:Body>
+            </soapenv:Envelope>
+            """;
+
+        WebServiceMessage request = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(dummyXml.getBytes()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(request);
+
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest, servletResponse));
+
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[] {});
+        assertFalse(result);
+
+        String response = servletResponse.getContentAsString();
+        assertTrue(response.contains("transactionId")); // ensure transformation
+        assertEquals(500, servletResponse.getStatus());
+    }
+
+    /**
+     * Test interceptor skips request if namespace doesn't match.
+     */
+    @Test
+    void testHandleRequest_skipsInterceptorIfNamespaceMismatch() throws Exception {
+        MessageContext messageContext = mock(MessageContext.class);
+
+        try (MockedStatic<SoapInterceptorUtils> mockedUtils = mockStatic(SoapInterceptorUtils.class)) {
+            mockedUtils.when(() ->
+                            SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(any(), any()))
+                    .thenReturn(true);
+
+            boolean result = interceptor.handleRequest(messageContext, new Object());
+
+            assertTrue(result);
+            mockedUtils.verify(() ->
+                    SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext,
+                            ServiceConstants.Namespaces.NAMESPACE_URI_FOR_ACCOUNT_VALIDATION));
+        }
+    }
+
+
+
+    /**
+     * Tests the protected method for loading a resource stream.
+     */
+    @Test
+    void testGetClassLoaderResource_shouldReturnStream() {
+        InputStream stream = interceptor.getClassLoaderResource("static-request/account-validation-request.xml"); // Any known file on classpath
+        assertNotNull(stream);
+    }
+}
+
+
+
+package com.rbs.bdd.infrastructure.soap.interceptor;
+
+
+        import com.rbs.bdd.application.exception.SchemaValidationException;
+        import com.rbs.bdd.domain.enums.ServiceConstants;
+        import com.rbs.bdd.util.SoapInterceptorUtils;
+        import jakarta.xml.soap.MessageFactory;
+        import lombok.extern.slf4j.Slf4j;
+        import org.junit.jupiter.api.BeforeEach;
+        import org.junit.jupiter.api.DisplayName;
+        import org.junit.jupiter.api.Test;
+        import org.mockito.MockedStatic;
+        import org.springframework.mock.web.MockHttpServletRequest;
+        import org.springframework.mock.web.MockHttpServletResponse;
+        import org.springframework.web.context.request.RequestContextHolder;
+        import org.springframework.web.context.request.ServletRequestAttributes;
+        import org.springframework.ws.WebServiceMessage;
+        import org.springframework.ws.context.MessageContext;
+        import org.springframework.ws.soap.saaj.SaajSoapMessage;
+        import org.w3c.dom.Document;
+        import org.w3c.dom.NodeList;
+        import org.xml.sax.SAXParseException;
+
+        import javax.xml.parsers.DocumentBuilderFactory;
+        import java.io.ByteArrayInputStream;
+        import java.io.ByteArrayOutputStream;
+        import java.io.InputStream;
+
+        import static org.junit.jupiter.api.Assertions.*;
+        import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for {@link CustomerRetrievalSchemaValidationInterceptorTest}, ensuring schema validation errors
+ * are intercepted and custom static error SOAP responses are returned with dynamic field replacements.
+ */
+
+@Slf4j
+class CustomerRetrievalSchemaValidationInterceptorTest {
+
+    private CustomerSchemaValidationInterceptor interceptor;
+
+    @BeforeEach
+    void setup() {
+        interceptor = new CustomerSchemaValidationInterceptor();
+    }
+
+    /**
+     * Tests that a custom SOAP fault is returned with HTTP 500 when schema validation fails.
+     */
+    @Test
+    @DisplayName("Should return custom error XML response with replaced transactionId and timestamp")
+    void testHandleRequestValidationErrors_customFaultReturned() throws Exception {
+        // Arrange: Load request XML that includes transactionId and systemId
+        InputStream requestXml = getClass().getClassLoader().getResourceAsStream("static-request/customer-retrieval-request.xml");
+        assertNotNull(requestXml);
+
+        ByteArrayOutputStream requestOut = new ByteArrayOutputStream();
+        requestXml.transferTo(requestOut);
+
+        WebServiceMessage webServiceMessage = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(requestOut.toByteArray()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(webServiceMessage);
+
+        // Mock HTTP response and Spring context
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest,servletResponse));
+
+        // Act
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{});
+
+        // Assert
+        assertFalse(result); // false = custom SOAP sent successfully
+
+        String responseContent = servletResponse.getContentAsString();
+        log.debug("Actual response"+responseContent);
+        assertTrue(responseContent.contains("<transactionId>"), "transactionId should be injected");
+        assertTrue(responseContent.contains("<systemId>ESP</systemId>")); // use actual expected value from request
+        assertEquals(500, servletResponse.getStatus());
+    }
+
+    /**
+     * Tests that a SchemaValidationException is thrown when static XML is missing.
+     */
+    @Test
+    @DisplayName("Should throw SchemaValidationException when error XML is not found")
+    void testHandleRequestValidationErrors_missingStaticXml() {
+        // Use subclass to override file loading behavior to simulate missing file
+        AccountSchemaValidationInterceptor customInterceptor = new AccountSchemaValidationInterceptor() {
+            @Override
+            protected InputStream getClassLoaderResource(String path) {
+                return null; // simulate missing file
+            }
+        };
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(mock(WebServiceMessage.class));
+
+        assertThrows(SchemaValidationException.class,
+                () -> customInterceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{}));
+    }
+
+    /**
+     * Tests that <refRequestIds> is removed if request doesn't contain requestIds.
+     */
+    @Test
+    @DisplayName("Should remove <refRequestIds> if <requestIds> missing in request")
+    void testRemoveRefRequestIds_whenRequestIdsMissing() throws Exception {
+        // Arrange: request XML without transactionId/systemId
+        String malformedXml = """
+                <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+                    <soapenv:Body>
+                        <testRequest></testRequest>
+                    </soapenv:Body>
+                </soapenv:Envelope>
+                """;
+
+        WebServiceMessage message = new SaajSoapMessage(
+                MessageFactory.newInstance().createMessage(null,
+                        new ByteArrayInputStream(malformedXml.getBytes()))
+        );
+
+        MessageContext messageContext = mock(MessageContext.class);
+        when(messageContext.getRequest()).thenReturn(message);
+
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest,servletResponse));
+
+        // Act
+        boolean result = interceptor.handleRequestValidationErrors(messageContext, new SAXParseException[]{});
+
+        // Assert
+        assertFalse(result);
+        Document responseDoc = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(new ByteArrayInputStream(servletResponse.getContentAsByteArray()));
+        log.debug("Should remove <refRequestIds> if <requestIds> missing in request");
+        NodeList refRequestIds = responseDoc.getElementsByTagNameNS("*", "refRequestIds");
+        assertEquals(0, refRequestIds.getLength(), "refRequestIds should be removed");
+    }
+
+    /**
+     * Test interceptor skips request if namespace doesn't match.
+     */
+    @Test
+    void testHandleRequest_skipsInterceptorIfNamespaceMismatch() throws Exception {
+        MessageContext messageContext = mock(MessageContext.class);
+
+        try (MockedStatic<SoapInterceptorUtils> mockedUtils = mockStatic(SoapInterceptorUtils.class)) {
+            mockedUtils.when(() ->
+                            SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(any(), any()))
+                    .thenReturn(true);
+
+            boolean result = interceptor.handleRequest(messageContext, new Object());
+
+            assertTrue(result);
+            mockedUtils.verify(() ->
+                    SoapInterceptorUtils.skipInterceptorIfNamespaceNotMatched(messageContext,
+                            ServiceConstants.Namespaces.NAMESPACE_URI_FOR_CUSTOMER_RETRIEVAL));
+        }
+    }
+
+
+    /**
+     * Tests the protected method for loading a resource stream.
+     */
+    @Test
+    void testGetClassLoaderResource_shouldReturnStream() {
+        InputStream stream = interceptor.getClassLoaderResource("static-request/customer-retrieval-request.xml"); // Any known file on classpath
+        assertNotNull(stream);
+    }
+}
