@@ -1,454 +1,105 @@
-package com.rbs.bdd.application.service;
+@Test
+void shouldLoadXmlSuccessfully_whenFileExists() throws Exception {
+    // Arrange
+    String path = "static-response/account-validation/success-response.xml";
 
-import com.rbs.bdd.application.exception.AccountValidationException;
-import com.rbs.bdd.domain.enums.ServiceConstants;
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBElement;
-import jakarta.xml.bind.Unmarshaller;
-import jakarta.xml.soap.MessageFactory;
-import jakarta.xml.soap.SOAPBody;
-import jakarta.xml.soap.SOAPMessage;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.soap.saaj.SaajSoapMessage;
-import org.w3c.dom.Document;
-import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
+    // Act
+    Document doc = service.loadAndParseXml(path);
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+    // Assert
+    assertNotNull(doc);
+}
 
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.ACCOUNT_VALIDATION_REQUEST;
-import static org.junit.jupiter.api.Assertions.*;
+@Test
+void shouldThrowException_whenXmlFileIsMissing() {
+    // Arrange
+    String invalidPath = "non-existent.xml";
 
-/**
- * Unit test suite for {@link AccountValidationService} which validates both successful
- * and error response scenarios based on incoming SOAP request data.
- *
- * This test uses a static SOAP XML template loaded and modified at runtime,
- * and verifies the final response structure using DOM + XPath assertions.
- */
-@Slf4j
-
-class AccountValidationServiceTest {
-
-    private AccountValidationService accountValidationService;
-
-    /**
-     * Initializes the test with a fresh instance of {@link AccountValidationService}.
-     */
-    @BeforeEach
-    void setup() {
-        accountValidationService = new AccountValidationService();
-    }
-
-    /**
-     * Loads the SOAP request XML from a template file, replaces placeholder variables,
-     * and unmarshals only the payload into a {@link ValidateArrangementForPaymentRequest} object.
-     *
-     * @param identifier the IBAN or UBAN
-     * @param codeValue the account code value type
-     * @return deserialized Java request object
-     * @throws Exception in case of JAXB or file issues
-     */
-    private ValidateArrangementForPaymentRequest loadRequest(String identifier, String codeValue) throws Exception {
-        String template = Files.readString(Path.of(ACCOUNT_VALIDATION_REQUEST));
-        String finalXml = template
-                .replace("${IDENTIFIER}", identifier)
-                .replace("${CODEVALUE}", codeValue);
-
-        SOAPMessage soapMessage = MessageFactory.newInstance()
-                .createMessage(null, new ByteArrayInputStream(finalXml.getBytes(StandardCharsets.UTF_8)));
-        SOAPBody body = soapMessage.getSOAPBody();
-
-        JAXBContext jaxbContext = JAXBContext.newInstance(ValidateArrangementForPaymentRequest.class);
-        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-        JAXBElement<ValidateArrangementForPaymentRequest> jaxbElement =
-                unmarshaller.unmarshal(body.getElementsByTagNameNS("*", "validateArrangementForPayment").item(0),
-                        ValidateArrangementForPaymentRequest.class);
-
-        return jaxbElement.getValue();
-    }
-
-    /**
-     * Invokes the SOAP validation service with the given request and returns the
-     * transformed SOAP response as a DOM document.
-     *
-     * @param request validated SOAP request
-     * @return DOM document of modified response
-     * @throws Exception in case of failure
-     */
-    private Document invokeServiceAndGetModifiedDoc(ValidateArrangementForPaymentRequest request) throws Exception {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        WebServiceMessage message = new SaajSoapMessage(MessageFactory.newInstance().createMessage());
-        accountValidationService.validateSchema(request);
-        accountValidationService.validateBusinessRules(request, message);
-        message.writeTo(outputStream);
-
-        return DocumentBuilderFactory.newInstance().newDocumentBuilder()
-                .parse(new ByteArrayInputStream(outputStream.toByteArray()));
-    }
-
-    /**
-     * Evaluates and returns the XPath value from the given DOM document.
-     *
-     * @param doc the DOM document
-     * @param expression the XPath expression
-     * @return extracted value
-     * @throws Exception if XPath fails
-     */
-    private String getXpathValue(Document doc, String expression) throws Exception {
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        return xpath.evaluate(expression, doc);
-    }
-
-    /**
-     * Validates success response for IBAN_1 with expected values:
-     * Restricted status, Switched, Modulus Passed.
-     */
-    @Test
-    @DisplayName("Success Response for IBAN_1 - Domestic Restricted, Switched, Modulus Passed")
-    void testIBAN1_SuccessResponse() throws Exception {
-        ValidateArrangementForPaymentRequest req = loadRequest("60161331926801", "UKBasicBankAccountNumber");
-        Document doc = invokeServiceAndGetModifiedDoc(req);
-
-        log.debug("=== Full SOAP Response ===");
-        log.debug("Success Response for IBAN_1 - Domestic Restricted, Switched, Modulus Passed");
-        StringWriter writer= new StringWriter();
-        javax.xml.transform.TransformerFactory.newInstance()
-                .newTransformer()
-                .transform(new javax.xml.transform.dom.DOMSource(doc),
-                        new javax.xml.transform.stream.StreamResult(writer));
-        log.debug("Response is :  "+writer.toString());
-        log.debug("===========================");
-
-        String XPATH_ACCOUNT_STATUS = "//*[local-name()='accountingUnits']/*[local-name()='status']/*[local-name()='codeValue']";
-        String XPATH_SWITCHING_STATUS = "//*[local-name()='switchingStatus']/*[local-name()='codeValue']";
-        String XPATH_MODULUS_STATUS = "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']";
-
-
-        assertEquals("Domestic - Restricted", getXpathValue(doc, "//*[local-name()='accountingUnits']/*[local-name()='status']"));
-        assertEquals("Switched", getXpathValue(doc, "//*[local-name()='switchingStatus']"));
-        assertEquals("Passed", getXpathValue(doc, "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']"));
-
-    }
-
-    /**
-     * Validates success response for IBAN_2 with expected values:
-     * Restricted status, Not Switching, Modulus Passed.
-     */
-    @Test
-    @DisplayName("Success Response for IBAN_2 - Domestic Restricted, Not Switching, Modulus Passed")
-    void testIBAN2_SuccessResponse() throws Exception {
-        ValidateArrangementForPaymentRequest req = loadRequest("12345698765437", "UKBasicBankAccountNumber");
-        Document doc = invokeServiceAndGetModifiedDoc(req);
-        log.debug("=== Full SOAP Response ===");
-        log.debug("Success Response for IBAN_2 - Domestic Restricted, Not Switching, Modulus Passed");
-        StringWriter writer= new StringWriter();
-        javax.xml.transform.TransformerFactory.newInstance()
-                .newTransformer()
-                .transform(new javax.xml.transform.dom.DOMSource(doc),
-                        new javax.xml.transform.stream.StreamResult(writer));
-        log.debug("Response is :  "+writer.toString());
-        log.debug("===========================");
-        assertEquals("Domestic - Restricted", getXpathValue(doc, "//*[local-name()='accountingUnits']/*[local-name()='status']"));
-        assertEquals("Not Switching", getXpathValue(doc, "//*[local-name()='switchingStatus']"));
-        assertEquals("Passed", getXpathValue(doc, "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']"));
-    }
-
-    /**
-     * Validates success response for IBAN_3 with expected values:
-     * Unrestricted status, Switched, Modulus Passed.
-     */
-    @Test
-    @DisplayName("Success Response for IBAN_3 - Domestic Unrestricted, Switched, Modulus Passed")
-    void testIBAN3_SuccessResponse() throws Exception {
-        ValidateArrangementForPaymentRequest req = loadRequest("10201530093422", "UKBasicBankAccountNumber");
-        Document doc = invokeServiceAndGetModifiedDoc(req);
-        log.debug("=== Full SOAP Response ===");
-        log.debug("Success Response for IBAN_3 - Domestic Unrestricted, Switched, Modulus Passed");
-        StringWriter writer= new StringWriter();
-        javax.xml.transform.TransformerFactory.newInstance()
-                .newTransformer()
-                .transform(new javax.xml.transform.dom.DOMSource(doc),
-                        new javax.xml.transform.stream.StreamResult(writer));
-        log.debug("Response is :  "+writer.toString());
-        log.debug("===========================");
-        assertEquals("Domestic - Unrestricted",getXpathValue(doc, "//*[local-name()='accountingUnits']/*[local-name()='status']"));
-        assertEquals("Switched", getXpathValue(doc, "//*[local-name()='switchingStatus']"));
-        assertEquals("Passed", getXpathValue(doc, "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']"));
-    }
-
-    /**
-     * Validates success response for IBAN_4 with expected values:
-     * Unrestricted status, Not Switching, Modulus Failed.
-     */
-    @Test
-    @DisplayName("Success Response for IBAN_4 - Domestic Unrestricted, Not Switching, Modulus Failed")
-    void testIBAN4_SuccessResponse() throws Exception {
-        ValidateArrangementForPaymentRequest req = loadRequest("20201555555567", "UKBasicBankAccountNumber");
-        Document doc = invokeServiceAndGetModifiedDoc(req);
-        log.debug("=== Full SOAP Response ===");
-        log.debug("Return Success Response for IBAN_4 - Domestic Unrestricted, Not Switching, Modulus Failed");
-        StringWriter writer= new StringWriter();
-        javax.xml.transform.TransformerFactory.newInstance()
-                .newTransformer()
-                .transform(new javax.xml.transform.dom.DOMSource(doc),
-                        new javax.xml.transform.stream.StreamResult(writer));
-        log.debug("Response is :  "+writer.toString());
-        log.debug("===========================");
-        assertEquals("Domestic - Unrestricted", getXpathValue(doc, "//*[local-name()='accountingUnits']/*[local-name()='status']"));
-        assertEquals("Not Switching", getXpathValue(doc, "//*[local-name()='switchingStatus']"));
-        assertEquals("Failed", getXpathValue(doc, "//*[local-name()='modulusCheckStatus']/*[local-name()='codeValue']"));
-    }
-
-    /**
-     * Validates error response for unmatched IBAN.
-     */
-    @Test
-    @DisplayName("Should return error when IBAN does not match any account")
-    void testNoMatch_MOD97Failure() throws Exception {
-        ValidateArrangementForPaymentRequest req = loadRequest("GB94BARC10201530093420", "InternationalBankAccountNumber");
-        Document doc = invokeServiceAndGetModifiedDoc(req);
-        log.debug("Return error when IBAN does not match any account");
-        log.debug("=== Full SOAP Response ===");
-        StringWriter writer= new StringWriter();
-        javax.xml.transform.TransformerFactory.newInstance()
-                .newTransformer()
-                .transform(new javax.xml.transform.dom.DOMSource(doc),
-                        new javax.xml.transform.stream.StreamResult(writer));
-        log.debug("Response is :  "+writer.toString());
-        log.debug("===========================");
-        assertEquals("MOD97 failure for the IBAN", getXpathValue(doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC));
-        assertEquals("Failed", getXpathValue(doc, "//*[local-name()='cmdStatus']"));
-    }
-
-    /**
-     * Validates error response for IBAN with invalid length.
-     */
-    @Test
-    @DisplayName("Should return error for invalid IBAN length")
-    void testInvalidIbanLength() throws Exception {
-        ValidateArrangementForPaymentRequest req = loadRequest("GB123", "InternationalBankAccountNumber");
-        Document doc = invokeServiceAndGetModifiedDoc(req);
-        log.debug("Return error for invalid IBAN length");
-        log.debug("=== Full SOAP Response ===");
-        StringWriter writer= new StringWriter();
-        javax.xml.transform.TransformerFactory.newInstance()
-                .newTransformer()
-                .transform(new javax.xml.transform.dom.DOMSource(doc),
-                        new javax.xml.transform.stream.StreamResult(writer));
-        log.debug("Response is :  "+writer.toString());
-        log.debug("===========================");
-        assertEquals("Length of IBAN is Invalid", getXpathValue(doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC));
-    }
-
-    /**
-     * Validates error response for UBAN with invalid length.
-     */
-    @Test
-    @DisplayName("Should return error for invalid UBAN length")
-    void testInvalidUbanLength() throws Exception {
-        ValidateArrangementForPaymentRequest req = loadRequest("123456", "UKBasicBankAccountNumber");
-        Document doc = invokeServiceAndGetModifiedDoc(req);
-
-        log.debug("Return error for invalid UBAN length:- ");
-        log.debug("=== Full SOAP Response ===");
-        StringWriter writer= new StringWriter();
-        javax.xml.transform.TransformerFactory.newInstance()
-                .newTransformer()
-                .transform(new javax.xml.transform.dom.DOMSource(doc),
-                        new javax.xml.transform.stream.StreamResult(writer));
-        log.debug("Response is :  "+writer.toString());
-        log.debug("===========================");
-        assertEquals("100||INVALID SORT CODE OR ISSUING AUTH ID PASSED||Execution Successful", getXpathValue(doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC));
-    }
-
-    /**
-     * Validates DB2 SQL error response when GB-prefixed UBAN is used.
-     */
-    @Test
-    @DisplayName("Should return DB2 SQL error for GB UBAN")
-    void testDb2ErrorForGBUban() throws Exception {
-        String error="Service operation validateArrangementForPayment failed due to an error in the ESP. Contact systems management to resolve the problem";
-        ValidateArrangementForPaymentRequest req = loadRequest("GB12345678901234", "UKBasicBankAccountNumber");
-        Document doc = invokeServiceAndGetModifiedDoc(req);
-        log.debug("Return DB2 SQL error for GB UBAN");
-        log.debug("=== Full SOAP Response ===");
-        StringWriter writer= new StringWriter();
-        javax.xml.transform.TransformerFactory.newInstance()
-                .newTransformer()
-                .transform(new javax.xml.transform.dom.DOMSource(doc),
-                        new javax.xml.transform.stream.StreamResult(writer));
-        log.debug("Response is :  "+writer.toString());
-        log.debug("===========================");
-        assertTrue(getXpathValue(doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION).contains(error));
-    }
-
-    /**
-     * Validates country code error when IBAN does not start with GB.
-     */
-    @Test
-    @DisplayName("Should return country code error when IBAN does not start with GB")
-    void testWrongCountryCode() throws Exception {
-        ValidateArrangementForPaymentRequest req = loadRequest("FR1234567890123456789012", "InternationalBankAccountNumber");
-        Document doc = invokeServiceAndGetModifiedDoc(req);
-        log.debug("Return country code error when IBAN does not start with GB ");
-        log.debug("=== Full SOAP Response ===");
-        StringWriter writer= new StringWriter();
-        javax.xml.transform.TransformerFactory.newInstance()
-                .newTransformer()
-                .transform(new javax.xml.transform.dom.DOMSource(doc),
-                        new javax.xml.transform.stream.StreamResult(writer));
-        log.debug("Response is :  "+writer.toString());
-        log.debug("===========================");
-        assertEquals("SYSTEM_ERROR,incidentID=1f2ff299-9d93-41a5-9119-b4a552f0191e", getXpathValue(doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC));
-    }
+    // Act & Assert
+    assertThrows(AccountValidationException.class, () -> service.loadAndParseXml(invalidPath));
 }
 
 
--------------
-package com.rbs.bdd.application.service;
-import com.rbs.bdd.domain.enums.ErrorConstants;
-import com.rbs.bdd.infrastructure.repository.CustomerRepository;
-import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBElement;
-import jakarta.xml.bind.Unmarshaller;
-import jakarta.xml.soap.MessageFactory;
-import jakarta.xml.soap.SOAPBody;
-import jakarta.xml.soap.SOAPMessage;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.Environment;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.soap.saaj.SaajSoapMessage;
-import org.w3c.dom.Document;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.CUSTOMER_RETRIEVAL_REQUEST;
-import static com.rbs.bdd.domain.enums.ServiceConstants.XPath.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
-
-@Slf4j
-@ExtendWith(MockitoExtension.class)
-class CustomerRetrievalServiceTest {
-
-    private CustomerRetrievalService service;
-    @Mock
-    private CustomerRepository mockRepository;
-    @Mock
-    private Environment environment;
-
-    @BeforeEach
-    void setup() {
-        lenient().when(environment.getActiveProfiles()).thenReturn(new String[]{"local"});
-        service = new CustomerRetrievalService(mockRepository,environment);
-    }
-
-    private RetrievePrimaryCustomerForArrRequest loadRequest(String identifier, String codeValue) throws Exception {
-        String template = Files.readString(Path.of(CUSTOMER_RETRIEVAL_REQUEST));
-        String finalXml = template.replace("${IDENTIFIER}", identifier).replace("${CODEVALUE}", codeValue);
-
-        SOAPMessage soapMessage = MessageFactory.newInstance()
-                .createMessage(null, new ByteArrayInputStream(finalXml.getBytes(StandardCharsets.UTF_8)));
-        SOAPBody body = soapMessage.getSOAPBody();
-
-        JAXBContext context = JAXBContext.newInstance(RetrievePrimaryCustomerForArrRequest.class);
-        Unmarshaller unmarshaller = context.createUnmarshaller();
-        JAXBElement<RetrievePrimaryCustomerForArrRequest> root =
-                unmarshaller.unmarshal(body.getElementsByTagNameNS("*", "retrievePrimaryCustomerForArr").item(0),
-                        RetrievePrimaryCustomerForArrRequest.class);
-
-        return root.getValue();
-    }
-
-    private Document invokeAndGetResponse(RetrievePrimaryCustomerForArrRequest request) throws Exception {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        WebServiceMessage message = new SaajSoapMessage(MessageFactory.newInstance().createMessage());
-
-        service.validateSchema(request);
-        service.retrieveCustomer(request, message);
-        message.writeTo(outputStream);
-
-        return DocumentBuilderFactory.newInstance().newDocumentBuilder()
-                .parse(new ByteArrayInputStream(outputStream.toByteArray()));
-    }
-
-    private String getXpath(Document doc, String expression) throws Exception {
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        return xpath.evaluate(expression, doc);
-    }
-
-    @Test
-    @DisplayName("Success: Valid customer IBAN should populate name fields")
-    void testValidCustomerResponse() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = loadRequest("GB29NWBK60161331926801", "InternationalBankAccountNumber");
-        Document doc = invokeAndGetResponse(request);
-        assertEquals("Alice", getXpath(doc, XPATH_FIRST_NAME));
-        assertEquals("Johnson", getXpath(doc, XPATH_LAST_NAME));
-        assertEquals("MR", getXpath(doc, XPATH_PREFIX_TYPE));
-    }
-
-    @Test
-    @DisplayName("Error: UBAN with GB prefix returns ERR_UBAN_GB")
-    void testGbPrefixedUban() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = loadRequest("GB12345678901234", "UKBasicBankAccountNumber");
-        Document doc = invokeAndGetResponse(request);
-        assertEquals(ErrorConstants.ERR_UBAN_GB.detail().description(), getXpath(doc, XPATH_CMD_DESCRIPTION));
-    }
-
-    @Test
-    @DisplayName("Error: UBAN with invalid length returns Customer Not Found")
-    void testInvalidUbanLength() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = loadRequest("123456", "UKBasicBankAccountNumber");
-        Document doc = invokeAndGetResponse(request);
-        assertEquals("Unable to Complete Request", getXpath(doc, XPATH_CMD_DESCRIPTION));
-    }
-
-    @Test
-    @DisplayName("Error: Unmatched UBAN triggers Customer Not Found")
-    void testUbanMod97Failure() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = loadRequest("99999999999999", "UKBasicBankAccountNumber");
-        Document doc = invokeAndGetResponse(request);
-        assertEquals("Unable to Complete Request", getXpath(doc, XPATH_CMD_DESCRIPTION));
-    }
 
 
-    @Test
-    @DisplayName("Error: IBAN does not match any customer")
-    void testUnmatchedIban() throws Exception {
-        RetrievePrimaryCustomerForArrRequest request = loadRequest("GB29NWBK60161300000000", "InternationalBankAccountNumber");
-        Document doc = invokeAndGetResponse(request);
-        assertEquals("Unable to Complete Request", getXpath(doc, XPATH_CMD_DESCRIPTION));
+@Test
+void shouldUpdateSuccessResponseWithoutBankIdentifier() throws Exception {
+    // Arrange
+    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+        getClass().getClassLoader().getResourceAsStream("static-response/account-validation/success-response.xml"));
+    XPath xpath = XPathFactory.newInstance().newXPath();
+    ResponseConfig config = new ResponseConfig(DOMESTIC_RESTRICTED, SWITCHED, PASSED, null);
+    RequestParams params = new RequestParams("12345678901234", "UKBasicBankAccountNumber", "TXN-001", "SYS-1");
 
-    }
+    // Act
+    service.updateSuccessResponse(doc, xpath, config, params);
+
+    // Assert
+    String updatedStatus = xpath.evaluate("//status", doc);
+    assertEquals("DomesticRestricted", updatedStatus); // replace with expected value from config
+}
+
+
+@Test
+void shouldRemoveSystemNotificationBlockWhenNotApplicable() throws Exception {
+    // Arrange
+    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+        getClass().getClassLoader().getResourceAsStream("static-response/account-validation/error-response.xml"));
+    XPath xpath = XPathFactory.newInstance().newXPath();
+    ErrorDetail detail = new ErrorDetail("ERR001", "Some error", null, null);
+
+    // Act
+    service.applyErrorResponse(doc, xpath, detail, "TXN-123");
+
+    // Assert
+    Node block = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
+    assertNull(block);  // Block should be removed
+}
+
+
+
+@Test
+void shouldReturnStaticMatchWhenCustomerIdentifierMatches() throws Exception {
+    // Arrange
+    RetrievePrimaryCustomerForArrRequest request = ... // mock with valid known static IBAN
+    WebServiceMessage message = mock(WebServiceMessage.class);
+    // Act
+    service.retrieveCustomer(request, message);
+    // Assert – verify SOAP response or success log
+}
+@Test
+void shouldParseXmlSuccessfully() throws Exception {
+    Document doc = service.loadAndParseXml("static-response/customer-retrieval/success-response.xml");
+    assertNotNull(doc);
+}
+
+@Test
+void shouldThrowExceptionIfXmlFileNotFound() {
+    assertThrows(CustomerRetrievalException.class, () -> {
+        service.loadAndParseXml("non-existent.xml");
+    });
+}
+@Test
+void shouldExtractLast14Digits() {
+    String iban = "GB29NWBK60161331926501";
+    assertEquals("60161331926501", service.extractLast14Digits(iban));
+}
+
+@Test
+void shouldReturnEmptyWhenIbanIsTooShort() {
+    assertEquals("", service.extractLast14Digits("123"));
+}
+@Test
+void shouldReturnTrueForValidUbanSuffix() {
+    // Arrange
+    String validUban = "31926501"; // match last 14 digits from known IBAN
+    // Act
+    boolean result = service.isUbanValid(validUban);
+    // Assert
+    assertTrue(result);
+}
+
+@Test
+void shouldReturnFalseForInvalidUbanSuffix() {
+    assertFalse(service.isUbanValid("INVALID12345678"));
 }
