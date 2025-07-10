@@ -1,3 +1,47 @@
+@Override
+public void validateBusinessRules(ValidateArrangementForPaymentRequest request, WebServiceMessage message) {
+    try {
+        log.info("TransactionID: {},Message: Starting business rule validation for request.", getTransactionId());
+
+        // 🔍 Check if transactionId is missing
+        if (request.getRequestHeader() == null ||
+            request.getRequestHeader().getRequestIds() == null ||
+            request.getRequestHeader().getRequestIds().isEmpty() ||
+            request.getRequestHeader().getRequestIds().get(0).getTransactionId() == null ||
+            request.getRequestHeader().getRequestIds().get(0).getTransactionId().isBlank()) {
+
+            log.warn("TransactionID: N/A, Message: Missing Transaction ID in the request. Returning custom error response.");
+
+            ErrorDetail invalidTxnIdError = new ErrorDetail(
+                    "ERR006",
+                    "Unable to Complete Request",
+                    "0060",
+                    "Invalid Transaction Id"
+            );
+
+            Document errorDoc = buildErrorResponse(
+                    invalidTxnIdError,
+                    "", // Empty original txnId
+                    XPathFactory.newInstance().newXPath()
+            );
+
+            writeResponseToSoapMessage(message, errorDoc);
+            return; // 🛑 Stop further processing
+        }
+
+        // ✅ Proceed with business logic
+        RequestParams params = extractParams(request);
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        Document responseDoc = handleBusinessValidation(params, xpath);
+        writeResponseToSoapMessage(message, responseDoc);
+        log.info("TransactionID: {},Message: Response sent Successfully", getTransactionId());
+
+    } catch (Exception ex) {
+        log.error("TransactionID: {},Message: Business rule validation failed", getTransactionId(), ex);
+        throw new AccountValidationException("Validation failed", ex);
+    }
+}
+
 package com.rbs.bdd.application.service;
 
 
