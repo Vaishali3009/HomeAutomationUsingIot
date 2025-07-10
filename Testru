@@ -73,8 +73,27 @@ public class AccountValidationService implements AccountValidationPort {
         try {
             log.info("TransactionID: {},Message: Starting business rule validation for request.",getTransactionId());
             RequestParams params = extractParams(request);
+            Document responseDoc;
             XPath xpath = XPathFactory.newInstance().newXPath();
-            Document responseDoc = handleBusinessValidation(params, xpath);
+            //Check if transactionID is missing
+            if (request.getRequestHeader() == null ||
+                    request.getRequestHeader().getRequestIds() == null ||
+                    request.getRequestHeader().getRequestIds().isEmpty() ||
+                    request.getRequestHeader().getRequestIds().get(0).getTransactionId() == null ||
+                    request.getRequestHeader().getRequestIds().get(0).getTransactionId().isBlank())
+            {
+                log.error("TransactionID: N/A, Message: Missing Transaction ID in the request.");
+                ErrorDetail error = new ErrorDetail(
+                        "ERR006",
+                        "Unable to Complete Request",
+                        "0060",
+                        "Invalid Transaction Id"
+                );
+                 responseDoc =buildErrorResponse(error, params.originalTxnId(), xpath);
+            }
+            else {
+                responseDoc = handleBusinessValidation(params, xpath);
+            }
 
             writeResponseToSoapMessage(message,responseDoc);
             log.info("TransactionID: {},Message: Response sent Successfully",getTransactionId());
@@ -91,6 +110,9 @@ public class AccountValidationService implements AccountValidationPort {
     }
     private Document handleBusinessValidation(RequestParams params, XPath xpath) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException { log.debug("Checking for the error in the request");
         log.info("TransactionID: {},Message: Entered in handleBusinessValidation",getTransactionId());
+
+
+
         Optional<ErrorDetail> error = determineError(params);
         if (error.isPresent()) {
             return buildErrorResponse(error.get(), params.originalTxnId(), xpath);
@@ -326,65 +348,258 @@ public class AccountValidationService implements AccountValidationPort {
 }
 
 
-------------------
-Add scenario :
-1. Firstly check if transactionId is not present in request  like the below 
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v01="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/">
-   <soapenv:Header/>
-   <soapenv:Body>
-      <v01:validateArrangementForPayment>
-         <requestHeader>
-            <operatingBrand>ALL</operatingBrand>
-            <!--Zero or more repetitions:-->
-            <requestIds>
-               <systemId>RequestID</systemId>
-              
-            </requestIds>
-            <cmdType>Request</cmdType>
-         </requestHeader>
-         <arrangementIdentifier>
-            <identifier>GB29NWBK60161331926801</identifier>
-            <context>
-               <schemeName>ArrangementEnterpriseIdType</schemeName>
-               <codeValue>InternationalBankAccountNumber</codeValue>
-            </context>
-         </arrangementIdentifier>
-      </v01:validateArrangementForPayment>
-   </soapenv:Body>
-</soapenv:Envelope>
+---------------------
+package com.rbs.bdd.application.service;
 
-then return the below error msg
 
-<soapenv:Envelope xmlns:nsVer="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-   <soapenv:Body>
-      <nsVer:validateArrangementForPaymentResponse>
-         <exception>
-            <responseId>
-               <systemId>ESP</systemId>
-               <transactionId>1nlS31206b53d686f841b03e31c1320250710101259813h</transactionId>
-            </responseId>
-            <refRequestIds>
-               <systemId>RequestID</systemId>
-            </refRequestIds>
-            <operatingBrand>ALL</operatingBrand>
-            <serviceName>ArrValidationForPayment</serviceName>
-            <operationName>validateArrangementForPayment</operationName>
-            <cmdStatus>Failed</cmdStatus>
-            <cmdNotifications>
-               <returnCode>ERR006</returnCode>
-               <category>Error</category>
-               <description>Unable to Complete Request</description>
-               <timestamp>2025-07-10T10:12:59.910989+01:00</timestamp>
-               <systemNotifications>
-                  <returnCode>0060</returnCode>
-                  <category>Error</category>
-                  <description>Invalid Transaction Id</description>
-                  <processingId>
-                     <systemId>PMP</systemId>
-                  </processingId>
-               </systemNotifications>
-            </cmdNotifications>
-         </exception>
-      </nsVer:validateArrangementForPaymentResponse>
-   </soapenv:Body>
-</soapenv:Envelope>
+
+
+import com.rbs.bdd.application.exception.AccountValidationException;
+import com.rbs.bdd.application.exception.CustomerRetrievalException;
+import com.rbs.bdd.application.port.out.RetrieveCustomerPort;
+import com.rbs.bdd.common.context.TransactionIdContext;
+import com.rbs.bdd.domain.enums.CustomerNameMapping;
+import com.rbs.bdd.domain.enums.ErrorConstants;
+import com.rbs.bdd.domain.enums.ServiceConstants;
+import com.rbs.bdd.domain.enums.ValidationErrorType;
+import com.rbs.bdd.domain.model.ErrorDetail;
+import com.rbs.bdd.infrastructure.entity.CustomerData;
+import com.rbs.bdd.infrastructure.repository.CustomerRepository;
+import com.rbs.bdd.util.ValidationUtils.RequestParams;
+import com.rbs.bdd.util.ValidationUtils;
+import com.rbsg.soa.c040paymentmanagement.customerretrievalforpayment.v01.RetrievePrimaryCustomerForArrRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+import org.springframework.ws.WebServiceMessage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.ZonedDateTime;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import static com.rbs.bdd.domain.enums.ServiceConstants.Paths.STATIC_RESPONSE_PATH;
+import static com.rbs.bdd.domain.enums.ServiceConstants.XPath.*;
+import static com.rbs.bdd.util.ValidationUtils.generateTxnId;
+import static com.rbs.bdd.util.ValidationUtils.writeResponseToSoapMessage;
+
+/**
+ * Service to handle logic for retrieving customer details based on account number.
+ * Matches specific identifiers and dynamically updates SOAP XML response.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CustomerRetrievalService implements RetrieveCustomerPort {
+
+    private final CustomerRepository repository;
+    private final Environment environment;
+
+    private static final Logger logger = LoggerFactory.getLogger(CustomerRetrievalService.class);
+
+    @Override
+    public void validateSchema(RetrievePrimaryCustomerForArrRequest request) {
+        logger.info("TransactionID: {},Message: Schema validated successfully by Spring WS.",getTransactionId());
+    }
+
+    @Override
+    public void retrieveCustomer(RetrievePrimaryCustomerForArrRequest request, WebServiceMessage message) {
+        try {
+            logger.info("TransactionID: {},Message: Entered in retrieveCustomer.",getTransactionId());
+            RequestParams params = extractParams(request);
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            Document responseDoc = handleCustomerRetrieval(params, xpath);
+
+            writeResponseToSoapMessage(message, responseDoc);
+        } catch (Exception e) {
+            logger.error("TransactionID: {},Message: Customer retrieval failed",getTransactionId(), e);
+            throw new CustomerRetrievalException("Customer retrieval failed", e);
+        }
+    }
+
+    private boolean isLocalEnvironment() {
+        try {
+            for (String profile : environment.getActiveProfiles()) {
+                if ("local".equalsIgnoreCase(profile)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        catch(Exception ex)
+        {
+            log.debug("Exception with the Envrionment");
+            return false;
+        }
+    }
+
+
+    private String getTransactionId(){
+        return TransactionIdContext.get();
+    }
+
+    private Document handleCustomerRetrieval(RequestParams params, XPath xpath) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+        logger.debug("TransactionID: {},Message: Handle Customer Retrieval",getTransactionId());
+        Optional<ErrorDetail> error = determineCustomerRetrievalError(params);
+        if (error.isPresent()) {
+            return buildErrorResponse(error.get(), xpath, params.originalTxnId(),
+                    ServiceConstants.Paths.ERROR_XML_PATH_FOR_CUSTOMER_RETRIEVAL);}
+        // 1. Try DB match
+        if (!isLocalEnvironment()){
+            Optional<CustomerData> dbResult = repository.findByAccountNo(params.identifier());
+        if (dbResult.isPresent() && dbResult.get().getAccountType().equals(params.codeValue())) {
+            logger.info("TransactionID: {},Message: Account matched in DB for IBAN: {}",getTransactionId(), params.identifier());
+            CustomerInfo customer = new CustomerInfo(dbResult.get().getPrefixType(),
+                    dbResult.get().getFirstName(),
+                    dbResult.get().getLastName());
+            return buildSuccessResponse(xpath, customer);}}
+        // 2. Try hardcoded account match
+        CustomerNameMapping matched = CustomerNameMapping.fromIdentifier(params.identifier());
+        if (matched != null) {
+            logger.info("TransactionID: {},Message: Account matched in config list for IBAN: {}",getTransactionId(), params.identifier());
+            CustomerInfo customer = new CustomerInfo(
+                    matched.getPrefixType(),
+                    matched.getFirstName(),
+                    matched.getLastName());
+            return buildSuccessResponse(xpath, customer);}
+        // 3. Nothing matched
+        logger.error("TransactionID: {},Message: Customer Not Found for IBAN: {}",getTransactionId(), params.identifier());
+        return buildErrorResponse(ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail(), xpath, params.originalTxnId(),
+                ServiceConstants.Paths.ACCOUNT_VALIDATION_ERROR_XML);}
+
+    private Document buildSuccessResponse(XPath xpath, CustomerInfo customer) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+        log.info("TransactionID: {},Message: Entered in buildSuccessResponse",getTransactionId());
+        Document responseDoc = loadAndParseXml(STATIC_RESPONSE_PATH);
+        updateName(responseDoc, xpath, customer);
+        return responseDoc;
+    }
+
+    private Document buildErrorResponse(ErrorDetail errorDetail, XPath xpath, String txnId, String errorXmlPath) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+        log.info("Building the Error Response ",getTransactionId());
+        Document errorDoc = loadAndParseXml(errorXmlPath);
+        applyErrorResponse(errorDoc, xpath, errorDetail, txnId);
+        return errorDoc;
+    }
+
+    private void updateName(Document doc, XPath xpath, CustomerInfo customerData) throws XPathExpressionException {
+        log.info("TransactionID: {},Message: Setting the Customer Name information in the response",getTransactionId());
+        updateText(xpath, doc, XPATH_PREFIX_TYPE, customerData.prefixType());
+        updateText(xpath, doc, XPATH_FIRST_NAME, customerData.firstName);
+        updateText(xpath, doc, XPATH_LAST_NAME, customerData.lastName());
+    }
+
+    private Optional<ErrorDetail> determineCustomerRetrievalError(RequestParams param) {
+        log.info("TransactionID: {},Message: Entered in determineCustomerRetrievalError",getTransactionId());
+        Map<ValidationErrorType, ErrorDetail> errorMap = Map.of(
+                ValidationErrorType.INVALID_PREFIX, ErrorConstants.ERR_UBAN_GB.detail(),
+                ValidationErrorType.INVALID_LENGTH, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail(),
+                ValidationErrorType.INVALID_MODULUS, ErrorConstants.ERR_CUSTOMER_NOT_FOUND.detail()
+        );
+
+        return ValidationUtils.validateAccount(param, errorMap, this::isUbanValid, "CustomerRetrieval");
+    }
+
+    /**
+     * Verifies if the given UBAN matches the suffix of known IBANs.
+     */
+    private boolean isUbanValid(String identifier) {
+        log.info("TransactionID: {},Message: Validating the UBAN",getTransactionId());
+        return ServiceConstants.IBANs.ALL_IBANS.stream()
+                .map(this::extractLast14Digits)
+                .anyMatch(ibanSuffix -> ibanSuffix.equals(identifier));
+    }
+
+    /**
+     * Extracts last 14 digits from a given IBAN string.
+     */
+    private String extractLast14Digits(String iban) {
+        log.info("TransactionID: {},Message: Entered in extractLast14Digits ",getTransactionId());
+        return iban.length() >= 14 ? iban.substring(iban.length() - 14) : "";
+    }
+    private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail detail, String txnId) throws XPathExpressionException {
+        log.info("TransactionID: {},Message: Entered in applyErrorResponse",getTransactionId());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_REF_REQUEST_TXN_ID, txnId);
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_STATUS, "Failed");
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION, detail.description());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
+        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RETURN_CODE, detail.returnCode());
+
+        if ("Customer Not Found".equals(detail.systemNotificationDesc())){
+            log.error("TransactionID: {},Message: Error occured :" + detail.systemNotificationDesc(),getTransactionId());
+            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC, detail.systemNotificationDesc());
+            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_CODE, detail.systemNotificationCode());
+        } else {
+            log.error("TransactionID: {},Message: Error occured :" + detail.description(),getTransactionId());
+            Node node = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
+            if (Objects.nonNull(node) && Objects.nonNull(node.getParentNode())) {
+                node.getParentNode().removeChild(node);
+            }
+        }
+    }
+
+    private void
+    updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
+        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
+        if (node != null && value != null) node.setTextContent(value);
+    }
+
+    private Document loadAndParseXml(String path) throws ParserConfigurationException, IOException, SAXException {
+        log.info("TransactionID: {},Message: Loading the SOAP Request ",getTransactionId());
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(path);
+        if (Objects.isNull(stream)) {
+            log.error("TransactionID: {},Message: XML file not found at path: {}",getTransactionId(), path);
+            throw new CustomerRetrievalException("XML not found: " + path);
+        }
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        return builder.parse(stream);
+    }
+
+    private RequestParams extractParams(RetrievePrimaryCustomerForArrRequest request) {
+        logger.info("TransactionID: {},Message: Extract Params from request ",getTransactionId());
+        return new RequestParams(
+                request.getArrangementIdentifier().getIdentifier(),
+                request.getArrangementIdentifier().getContext().getCodeValue(),
+                request.getRequestHeader().getRequestIds().get(0).getTransactionId(),
+                request.getRequestHeader().getRequestIds().get(0).getSystemId()
+        );
+    }
+    /**
+     * Immutable container representing a valid request configuration.
+     * this record is left without methods or additional logic,as it is only
+     *  used to group and transport request fields such as
+     *  <ul>
+     *     <li>{@code identifier} - contains account number </li>
+     *     <li>{@code codeValue} - used to identify
+     * whether account is UKBasicBankAccountNumber or InternationalBankAccountNumber</li>
+     *      <li>{@code originalTxnId} - return the transactionId of the request </li>
+     *       <li>{@code systemId} - returns the systemId from the request </li>
+     *       </ul>
+     */
+    @SuppressWarnings("unused")
+    public record CustomerInfo(String prefixType, String firstName, String lastName) {
+        // this record is left without methods or additional logic,as it is only used to group and transport request fields
+
+    }
+   }
