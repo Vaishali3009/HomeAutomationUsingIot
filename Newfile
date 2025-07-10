@@ -1,704 +1,118 @@
-@Override
-public void validateBusinessRules(ValidateArrangementForPaymentRequest request, WebServiceMessage message) {
-    try {
-        log.info("TransactionID: {},Message: Starting business rule validation for request.", getTransactionId());
-
-        // 🔍 Check if transactionId is missing
-        if (request.getRequestHeader() == null ||
-            request.getRequestHeader().getRequestIds() == null ||
-            request.getRequestHeader().getRequestIds().isEmpty() ||
-            request.getRequestHeader().getRequestIds().get(0).getTransactionId() == null ||
-            request.getRequestHeader().getRequestIds().get(0).getTransactionId().isBlank()) {
-
-            log.warn("TransactionID: N/A, Message: Missing Transaction ID in the request. Returning custom error response.");
-
-            ErrorDetail invalidTxnIdError = new ErrorDetail(
-                    "ERR006",
-                    "Unable to Complete Request",
-                    "0060",
-                    "Invalid Transaction Id"
-            );
-
-            Document errorDoc = buildErrorResponse(
-                    invalidTxnIdError,
-                    "", // Empty original txnId
-                    XPathFactory.newInstance().newXPath()
-            );
-
-            writeResponseToSoapMessage(message, errorDoc);
-            return; // 🛑 Stop further processing
-        }
-
-        // ✅ Proceed with business logic
-        RequestParams params = extractParams(request);
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        Document responseDoc = handleBusinessValidation(params, xpath);
-        writeResponseToSoapMessage(message, responseDoc);
-        log.info("TransactionID: {},Message: Response sent Successfully", getTransactionId());
-
-    } catch (Exception ex) {
-        log.error("TransactionID: {},Message: Business rule validation failed", getTransactionId(), ex);
-        throw new AccountValidationException("Validation failed", ex);
-    }
-}
-
-package com.rbs.bdd.application.service;
-
-
-import com.rbs.bdd.application.exception.AccountValidationException;
-import com.rbs.bdd.application.port.out.AccountValidationPort;
-import com.rbs.bdd.common.context.TransactionIdContext;
-import com.rbs.bdd.domain.enums.*;
-import com.rbs.bdd.domain.model.ErrorDetail;
-import com.rbs.bdd.util.ValidationUtils;
-import com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.ws.WebServiceMessage;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
-import com.rbs.bdd.util.ValidationUtils.RequestParams;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.ZonedDateTime;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import static com.rbs.bdd.domain.enums.AccountStatus.DOMESTIC_RESTRICTED;
-import static com.rbs.bdd.domain.enums.AccountStatus.DOMESTIC_UNRESTRICTED;
-import static com.rbs.bdd.domain.enums.ModulusCheckStatus.FAILED;
-import static com.rbs.bdd.domain.enums.ModulusCheckStatus.PASSED;
-import static com.rbs.bdd.domain.enums.ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT;
-import static com.rbs.bdd.domain.enums.ServiceConstants.IBANs.*;
-import static com.rbs.bdd.domain.enums.SwitchingStatus.NOT_SWITCHING;
-import static com.rbs.bdd.domain.enums.SwitchingStatus.SWITCHED;
-import static com.rbs.bdd.util.ValidationUtils.generateTxnId;
-import static com.rbs.bdd.util.ValidationUtils.writeResponseToSoapMessage;
-
-/**
- * Service responsible for validating SOAP requests for account validation and returning
- * static success or error responses based on configured rules.
- */
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class AccountValidationService implements AccountValidationPort {
-
-
-    /**
-     * Logs the fact that schema validation is already handled by Spring WS.
-     */
-    @Override
-    public void validateSchema(ValidateArrangementForPaymentRequest request) {
-        log.info("Schema validation completed by Spring WS");
-    }
-
-
-
-    /**
-     * Applies business rule validation based on account identifiers, code values, and IBAN/UBAN checks.
-     * Depending on the logic, either a static success or error response is returned.
-     *
-     * @param request the incoming SOAP request
-     * @param message the SOAP response message to be modified
-     */
-    @Override
-    public void validateBusinessRules(ValidateArrangementForPaymentRequest request, WebServiceMessage message) {
-        try {
-            log.info("TransactionID: {},Message: Starting business rule validation for request.",getTransactionId());
-            RequestParams params = extractParams(request);
-            XPath xpath = XPathFactory.newInstance().newXPath();
-            Document responseDoc = handleBusinessValidation(params, xpath);
-
-            writeResponseToSoapMessage(message,responseDoc);
-            log.info("TransactionID: {},Message: Response sent Successfully",getTransactionId());
-
-        } catch (Exception ex) {
-            log.error("TransactionID: {},Message: Business rule validation failed",getTransactionId(), ex);
-            throw new AccountValidationException("Validation failed", ex);
-        }
-    }
-
-
-    private String getTransactionId(){
-        return TransactionIdContext.get();
-    }
-    private Document handleBusinessValidation(RequestParams params, XPath xpath) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException { log.debug("Checking for the error in the request");
-        log.info("TransactionID: {},Message: Entered in handleBusinessValidation",getTransactionId());
-        Optional<ErrorDetail> error = determineError(params);
-        if (error.isPresent()) {
-            return buildErrorResponse(error.get(), params.originalTxnId(), xpath);
-        }
-
-        Optional<ResponseConfig> config = determineMatchingConfig(params);
-        if (config.isPresent()) {
-            return buildSuccessResponse(params, config.get(), xpath);
-        }
-
-        return buildErrorResponse(ErrorConstants.ERR_MOD97_IBAN.detail(), params.originalTxnId(), xpath);
-    }
-    private Document buildErrorResponse(ErrorDetail detail, String txnId, XPath xpath)
-            throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
-        log.info("TransactionID: {},Message: Building the error response",getTransactionId());
-        Document errorDoc = loadAndParseXml(ServiceConstants.Paths.ACCOUNT_VALIDATION_ERROR_XML);
-        applyErrorResponse(errorDoc, xpath, detail, txnId);
-        return errorDoc;
-    }
-
-    private Document buildSuccessResponse(RequestParams params, ResponseConfig config, XPath xpath)
-            throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
-        log.info("TransactionID: {},Message: Building the response",getTransactionId());
-
-        Document successDoc = loadAndParseXml("static-response/account-validation/success-response.xml");
-
-        if (INTL_BANK_ACCOUNT.equals(params.codeValue()) && config.bankIdentifier() == null) {
-            log.error("TransactionID: {},Message: Wrong BankCode is there in the request ",getTransactionId());
-            return buildErrorResponse(ErrorConstants.ERR_MOD97_IBAN.detail(), params.originalTxnId(), xpath);
-        }
-        log.info("TransactionID: {},Message: Successfully creating the response  ",getTransactionId());
-        updateSuccessResponse(successDoc, xpath, config, params);
-        return successDoc;
-    }
-
-    private String resolveBankIdentifier(String iban) {
-        log.info("TransactionID: {},Message: Checking the Bank Identifier",getTransactionId());
-
-        Map<String, String> BANK_CODES = Map.of(
-                "NWB", "278",
-                "RBS", "365",
-                "UBN", "391"
-        );
-        if (iban == null || iban.isEmpty()) return null;
-        return BANK_CODES.entrySet()
-                .stream()
-                .filter(entry -> iban.contains(entry.getKey()))
-                .map(Map.Entry::getValue)
-                .findFirst()
-                .orElse(null);
-    }
-
-
-    /**
-     * Extracts key fields like identifier, codeValue, transactionId, and systemId from the SOAP request.
-     */
-    private RequestParams extractParams(ValidateArrangementForPaymentRequest request) {
-        log.info("TransactionID: {},Message: Fetching the account number ,transactionId and other information from request ",getTransactionId());
-        String identifier = request.getArrangementIdentifier().getIdentifier();
-        String codeValue = request.getArrangementIdentifier().getContext().getCodeValue();
-        String txnId = request.getRequestHeader().getRequestIds().get(0).getTransactionId();
-        String systemId = request.getRequestHeader().getRequestIds().get(0).getSystemId();
-        log.debug("TransactionID: {},Message: Extracted request parameters: identifier={}, codeValue={}, txnId={}, systemId={}",
-                getTransactionId() ,identifier, codeValue, txnId, systemId);
-        return new RequestParams(identifier, codeValue, txnId, systemId);
-    }
-
-    /**
-     * Validates error conditions such as invalid IBAN/UBAN format or mismatched values.
-     */
-    private Optional<ErrorDetail> determineError(RequestParams p) {
-        log.info("TransactionID: {},Message: Entered in determineError",getTransactionId());
-        Map<ValidationErrorType, ErrorDetail> errorMap = Map.of(
-                ValidationErrorType.INVALID_PREFIX, ErrorConstants.ERR_DB2_SQL.detail(),
-                ValidationErrorType.INVALID_IBAN_LENGTH, ErrorConstants.ERR_INVALID_IBAN_LENGTH.detail(),
-                ValidationErrorType.INVALID_UBAN_LENGTH, ErrorConstants.ERR_INVALID_UBAN_LENGTH.detail(),
-                ValidationErrorType.INVALID_MODULUS, ErrorConstants.ERR_MOD97_UBAN.detail(),
-                ValidationErrorType.INVALID_COUNTRY_CODE , ErrorConstants.ERR_WRONG_COUNTRY_CODE.detail()
-        );
-
-        return ValidationUtils.validateAccount(p, errorMap, this::isUbanValid, "AccountValidation");
-    }
-
-    /**
-     * Matches the request against known account types and configurations.
-     */
-    private Optional<ResponseConfig> determineMatchingConfig(RequestParams p) {
-        log.info("TransactionID: {},Message: Entering in determineMatchingConfig ",getTransactionId());
-        log.debug("TransactionID: {},Message: Entering in determineMatchingConfig "+p.codeValue(),getTransactionId());
-        String bankIdentifier = INTL_BANK_ACCOUNT.equals(p.codeValue()) ? resolveBankIdentifier(p.identifier()) : null;
-        log.info("TransactionID: {},Message: The Bank identifier is "+bankIdentifier,getTransactionId());
-        Map<String, ResponseConfig> ruleMap = Map.of(
-        IBAN_1, new ResponseConfig(DOMESTIC_RESTRICTED, SWITCHED, PASSED,bankIdentifier),
-        IBAN_2, new ResponseConfig(DOMESTIC_RESTRICTED, NOT_SWITCHING, PASSED,bankIdentifier),
-        IBAN_3, new ResponseConfig(DOMESTIC_UNRESTRICTED, SWITCHED, PASSED,bankIdentifier),
-        IBAN_4, new ResponseConfig(DOMESTIC_UNRESTRICTED, NOT_SWITCHING, FAILED,bankIdentifier)
-
-    );
-
-    return ruleMap.entrySet().stream()
-        .filter(e -> isMatch(p, e.getKey()))
-        .findFirst()
-        .map(Map.Entry::getValue)
-        .map(Optional::of)
-        .orElse(Optional.empty());
-
-    }
-
-    /**
-     * Checks if the request identifier matches exactly or by suffix.
-     */
-    private boolean isMatch(RequestParams p, String account) {
-        return p.identifier().equals(account) || extractLast14Digits(account).equals(p.identifier());
-    }
-
-    /**
-     * Verifies if the given UBAN matches the suffix of known IBANs.
-     */
-    private boolean isUbanValid(String identifier) {
-        log.info("TransactionID: {},Message: Checking if the UBAN is valid ",getTransactionId());
-        return ServiceConstants.IBANs.ALL_IBANS.stream()
-                .map(this::extractLast14Digits)
-                .anyMatch(ibanSuffix -> ibanSuffix.equals(identifier));
-    }
-
-    /**
-     * Extracts last 14 digits from a given IBAN string.
-     */
-    private String extractLast14Digits(String iban) {
-        log.debug("TransactionID: {},Message: Extract the last 14 digits from IBAN number",getTransactionId());
-        return iban.length() >= 14 ? iban.substring(iban.length() - 14) : "";
-    }
-
-    /**
-     * Reads and parses a static XML file from the classpath.
-     */
-    private Document loadAndParseXml(String path) throws ParserConfigurationException, IOException, SAXException {
-        log.debug("TransactionID: {},Message: Loading XML from path: {}",getTransactionId(), path);
-        InputStream xml = getClass().getClassLoader().getResourceAsStream(path);
-        if (Objects.isNull(xml)) {
-            log.error("TransactionID: {},Message: XML file not found at path: {}",getTransactionId(), path);
-            throw new AccountValidationException("XML not found: " + path);
-        }
-
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-        factory.setXIncludeAware(false);
-        factory.setExpandEntityReferences(false);
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        return builder.parse(xml);
-    }
-
-    /**
-     * Populates values in the success response based on matched config.
-     */
-    private void updateSuccessResponse(Document doc, XPath xpath, ResponseConfig config, RequestParams p) throws XPathExpressionException {
-        log.info("TransactionID: {},Message: Started Updating the response XML with success values",getTransactionId());
-        updateText(xpath, doc, "//responseId/systemId", p.systemId());
-        updateText(xpath, doc, "//responseId/transactionId", generateTxnId());
-        updateText(xpath, doc, "//status", config.accountStatus.getValue());
-        updateText(xpath, doc, "//switchingStatus", config.switchingStatus.getValue());
-        updateText(xpath, doc, "//modulusCheckStatus/codeValue", config.modulusCheckStatus.getValue());
-        if(config.bankIdentifier()!=null)
-        {
-            updateText(xpath, doc, "//parentOrganization/alternativeIdentifier/identifier",config.bankIdentifier());
-
-        }
-        log.info("TransactionID: {},Message: Updated response XML with success values",getTransactionId());
-    }
-
-    /**
-     * Populates values in the static error response XML.
-     */
-    private void applyErrorResponse(Document doc, XPath xpath, ErrorDetail errorDetail, String txnId) throws XPathExpressionException {
-        log.info("TransactionID: {},Message: Entered in applyErrorResponse",getTransactionId());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RESPONSE_ID_TXN_ID, generateTxnId());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_REF_REQUEST_TXN_ID, txnId);
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_STATUS, "Failed");
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_CMD_DESCRIPTION, errorDetail.description());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_TIMESTAMP, ZonedDateTime.now().toString());
-        updateText(xpath, doc, ServiceConstants.XPath.XPATH_RETURN_CODE, errorDetail.returnCode());
-        if (Objects.nonNull(errorDetail.systemNotificationDesc())) {
-
-            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_DESC, errorDetail.systemNotificationDesc());
-            updateText(xpath, doc, ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_CODE, errorDetail.systemNotificationCode());
-        } else {
-
-            Node node = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
-            if (node != null && node.getParentNode() != null) {
-                node.getParentNode().removeChild(node);
-                log.debug("TransactionID: {},Message: Removed systemNotification block as it was not applicable.",getTransactionId());
-            }
-        }
-        log.error("TransactionID: {},Message: Updated response XML with error values: {}",getTransactionId(), errorDetail.description());
-    }
-
-    /**
-     * Utility method to update a specific XML node’s text content.
-     */
-    private void updateText(XPath xpath, Document doc, String path, String value) throws XPathExpressionException {
-        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
-        if (node != null && value != null) {
-            node.setTextContent(value);
-            log.debug("TransactionID: {},Message: Updated XML node {} with value {}",getTransactionId() ,path, value);
-        }
-    }
-
-
-
-    /**
-     * Immutable container representing a valid account configuration.
-     * this record is left without methods or additional logic,as it is only
-     * used to group and transport validation results such as
-     * <ul>
-     *     <li>{@code accountStatus} - the classification of the account(eg , restricted,unrestricted)</li>
-     *      <li>{@code switchingStatus} - whether the account has been switched or not switching </li>
-     *       <li>{@code modulusStatus} - result of modulus check </li>
-     *       <li>{@code bankIdentifier} - result of bankIdentifier </li>
-     * </ul>
-     */
-     @SuppressWarnings("unused")
-    public record ResponseConfig(AccountStatus accountStatus, SwitchingStatus switchingStatus,ModulusCheckStatus modulusCheckStatus,String bankIdentifier ) {
-     // this record is left without methods or additional logic,as it is only used to group and transport validation results
-     }
-
-
-
-}
-
-
------------
-Request:
-
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v01="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/">
-   <soapenv:Header/>
-   <soapenv:Body>
-      <v01:validateArrangementForPayment>
-         <requestHeader>
-            <operatingBrand>ALL</operatingBrand>
-            <!--Zero or more repetitions:-->
-            <requestIds>
-               <systemId>RequestID</systemId>
-              
-            </requestIds>
-            <cmdType>Request</cmdType>
-         </requestHeader>
-         <arrangementIdentifier>
-            <identifier>GB29NWBK60161331926801</identifier>
-            <context>
-               <schemeName>ArrangementEnterpriseIdType</schemeName>
-               <codeValue>InternationalBankAccountNumber</codeValue>
-            </context>
-         </arrangementIdentifier>
-      </v01:validateArrangementForPayment>
-   </soapenv:Body>
-</soapenv:Envelope>
-
-
----------
-response;-
-<soapenv:Envelope xmlns:nsVer="http://com/rbsg/soa/C040PaymentManagement/ArrValidationForPayment/V01/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-   <soapenv:Body>
-      <nsVer:validateArrangementForPaymentResponse>
-         <exception>
-            <responseId>
-               <systemId>ESP</systemId>
-               <transactionId>1nlS31206b53d686f841b03e31c1320250710101259813h</transactionId>
-            </responseId>
-            <refRequestIds>
-               <systemId>RequestID</systemId>
-            </refRequestIds>
-            <operatingBrand>ALL</operatingBrand>
-            <serviceName>ArrValidationForPayment</serviceName>
-            <operationName>validateArrangementForPayment</operationName>
-            <cmdStatus>Failed</cmdStatus>
-            <cmdNotifications>
-               <returnCode>ERR006</returnCode>
-               <category>Error</category>
-               <description>Unable to Complete Request</description>
-               <timestamp>2025-07-10T10:12:59.910989+01:00</timestamp>
-               <systemNotifications>
-                  <returnCode>0060</returnCode>
-                  <category>Error</category>
-                  <description>Invalid Transaction Id</description>
-                  <processingId>
-                     <systemId>PMP</systemId>
-                  </processingId>
-               </systemNotifications>
-            </cmdNotifications>
-         </exception>
-      </nsVer:validateArrangementForPaymentResponse>
-   </soapenv:Body>
-</soapenv:Envelope>
-
-
-------------
-package com.rbs.bdd.util;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Predicate;
-
-import com.rbs.bdd.application.service.AccountValidationService;
-import com.rbs.bdd.domain.enums.ServiceConstants;
-import com.rbs.bdd.domain.enums.ValidationErrorType;
-import com.rbs.bdd.domain.model.ErrorDetail;
-import jakarta.xml.soap.SOAPException;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.soap.saaj.SaajSoapMessage;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import javax.xml.XMLConstants;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
-import static com.rbs.bdd.domain.enums.ServiceConstants.Tags.CUSTOMER_RETRIEVAL;
-
-/**
- * Utility class for validating account identifiers like IBAN or UBAN
- * across different service contexts such as Account Validation or Customer Retrieval.
- * <p>
- * This class centralizes error evaluation logic based on account type, identifier format,
- * length, and modulus check results.
- */
-@Slf4j
-public class ValidationUtils {
-    /**
-     * Immutable container representing a valid request configuration.
-     * this record is left without methods or additional logic,as it is only
-     *  used to group and transport request fields such as
-     *  <ul>
-     *     <li>{@code identifier} - contains account number </li>
-     *     <li>{@code codeValue} - used to identify
-     * whether account is UKBasicBankAccountNumber or InternationalBankAccountNumber</li>
-     *      <li>{@code originalTxnId} - return the transactionId of the request </li>
-     *       <li>{@code systemId} - returns the systemId from the request </li>
-     *       </ul>
-     */
-    @SuppressWarnings("unused")
-    public record RequestParams(String identifier, String codeValue, String originalTxnId, String systemId) {
-        // this record is left without methods or additional logic,as it is only used to group and transport request fields
-
-    }
-
-
-    /**
-     * Checks if the given node is empty or only contains non-element children.
-     */
-    public static boolean isNodeEmpty(Node node) {
-        if (node == null) return true;
-        NodeList children = node.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            if (children.item(i).getNodeType() == Node.ELEMENT_NODE) return false;
-        }
-        return true;
-    }
-
-    /**
-     * Removes a specific child element from the parent node.
-     */
-    public static void removeNodes(Node parent, String tagName) {
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (tagName.equals(child.getLocalName())) {
-                parent.removeChild(child);
-                break;
-            }
-        }
-    }
-
-    /**
-     * Validates the provided {@link RequestParams} based on predefined rules for
-     * account type (UK Basic or International) and returns a mapped {@link ErrorDetail}
-     * from the provided {@code errorMap} based on failure conditions.
-     * <p>
-     * This method is reusable across multiple services and logs the validation
-     * outcome per service context.
-     * @param p              the request parameter object containing account details
-     * @param errorMap       a mapping of {@link ValidationErrorType} to corresponding {@link ErrorDetail}
-     * @param ibanValidator  a predicate used to validate IBAN or UBAN using modulus or custom rule
-     * @param serviceContext a string to log the calling service (e.g., "AccountValidation", "CustomerRetrieval")
-     * @return an {@code Optional<ErrorDetail>} containing the matched error if validation fails; empty otherwise
-     */
-    public static Optional<ErrorDetail> validateAccount(
-            RequestParams p,
-            Map<ValidationErrorType, ErrorDetail> errorMap,
-            Predicate<String> ibanValidator,
-            String serviceContext
-    ) {
-        if (ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT.equals(p.codeValue())) {
-            log.info("Account Type is :"+ ServiceConstants.AccountTypes.UK_BASIC_BANK_ACCOUNT);
-            return validateUbanAccount(p, errorMap, ibanValidator, serviceContext);
-        }
-
-        if (ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT.equals(p.codeValue())) {
-            log.info("Account Type is :"+ServiceConstants.AccountTypes.INTL_BANK_ACCOUNT);
-            return validateIbanAccount(p, errorMap, serviceContext);
-        }
-
-        return Optional.empty();
-    }
-
-    /**
-     * Validates a UK Basic Bank Account (UBAN).
-     */
-    private static Optional<ErrorDetail> validateUbanAccount(
-            RequestParams p,
-            Map<ValidationErrorType, ErrorDetail> errorMap,
-            Predicate<String> ibanValidator,
-            String context
-    ) {
-        log.error("Entered in validateUbanAccount ");
-        if (!p.identifier().matches("\\d+")) {
-            log.error("UBAN account is starting with GB prefix");
-            return Optional.of(errorMap.get(ValidationErrorType.INVALID_PREFIX));
-        }
-
-        if (p.identifier().length() != 14) {
-            log.error("UBAN account is not equal to 14 characters");
-            return Optional.of(context.equals(CUSTOMER_RETRIEVAL)
-                    ? errorMap.get(ValidationErrorType.INVALID_LENGTH)
-                    : errorMap.get(ValidationErrorType.INVALID_UBAN_LENGTH));
-        }
-
-     /*   if (!ibanValidator.test(p.identifier())) {
-            log.error("UBAN account is not valid");
-            return Optional.of(errorMap.get(ValidationErrorType.INVALID_MODULUS));
-        }*/
-
-        log.info("No error for UBAN [{}] in {} with identifier: {}", p.codeValue(), context, p.identifier());
-        return Optional.empty();
-    }
-
-    /**
-     * Validates an International Bank Account Number (IBAN).
-     */
-    private static Optional<ErrorDetail> validateIbanAccount(
-            RequestParams p,
-            Map<ValidationErrorType, ErrorDetail> errorMap,
-            String context
-    ) {
-
-        if (!p.identifier().startsWith("GB")) {
-            log.error("IBAN account is not starting with GB prefix");
-            return Optional.of(context.equals(CUSTOMER_RETRIEVAL)
-                    ? errorMap.get(ValidationErrorType.INVALID_PREFIX)
-                    : errorMap.get(ValidationErrorType.INVALID_COUNTRY_CODE));
-        }
-
-        if (p.identifier().length() != 22) {
-            log.error("IBAN account is not equal to 22 characters");
-            return Optional.of(context.equals(CUSTOMER_RETRIEVAL)
-                    ? errorMap.get(ValidationErrorType.INVALID_LENGTH)
-                    : errorMap.get(ValidationErrorType.INVALID_IBAN_LENGTH));
-
-        }
-
-        log.info("No error for IBAN [{}] in {} with identifier: {}", p.codeValue(), context, p.identifier());
-        return Optional.empty();
-    }
-
-
-
-
-    /**
-     * Generates a unique transaction ID using UUID.
-     */
-    public static String generateTxnId() {
-        return "1alN" + UUID.randomUUID().toString().replace("-", "") + "h";
-    }
-    /**
-     * Removes a child node from the specified parent node.
-     * <ul>
-     *     <li>If {@code tagName} is {@code null}, it removes the node directly from its parent.</li>
-     *     <li>If {@code tagName} is provided, it searches the children of the parent node and removes the first match based on local name.</li>
-     * </ul>
-     *
-     * @param parentOrNode the node to be removed directly (if {@code tagName} is null), or parent node (if tagName is provided)
-     * @param tagName       the local name of the child node to remove; {@code null} for direct removal
-     */
-    public static void removeChildNode(Node parentOrNode, String tagName) {
-        if (tagName == null) {
-            removeDirectNode(parentOrNode);
-        } else {
-            removeChildByTag(parentOrNode, tagName);
-        }
-    }
-
-    /**
-     * Sets a value for the node matching the given XPath expression.
-     */
-    public static void setXPathValue(Document doc, String path, String value) throws XPathExpressionException {
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        Node node = (Node) xpath.evaluate(path, doc, XPathConstants.NODE);
-        if (node != null) {
-            node.setTextContent(value);
-        }
-    }
-
-    /**
-     * Removes the given node from its parent if both are non-null.
-     */
-    private static void removeDirectNode(Node node) {
-        if (node != null && node.getParentNode() != null) {
-            node.getParentNode().removeChild(node);
-        }
-    }
-
-    /**
-     * Removes the first child of the parent that matches the given local tag name.
-     */
-    private static void removeChildByTag(Node parent, String tagName) {
-        if (parent == null || tagName == null) return;
-
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (tagName.equals(child.getLocalName())) {
-                parent.removeChild(child);
-                break;
-            }
-        }
-    }
-
-    /**
-     * Finds a node by its local name using wildcard namespace.
-     */
-    public static Node getNode(Document doc, String localName) {
-        NodeList nodes = doc.getElementsByTagNameNS("*", localName);
-        return nodes.getLength() > 0 ? nodes.item(0) : null;
-    }
-
-    public static  void writeResponseToSoapMessage(WebServiceMessage message, Document responseDoc) throws TransformerException, SOAPException {
-        log.info("Entered in writeResponseToSoapMessage");
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
-        Transformer transformer = transformerFactory.newTransformer();
-        transformer.transform(new DOMSource(responseDoc), new StreamResult(out));
-        ((SaajSoapMessage) message).getSaajMessage().getSOAPPart()
-                .setContent(new StreamSource(new ByteArrayInputStream(out.toByteArray())));
-    }
-
-
-
-}
+databaseChangeLog:
+  - changeSet:
+      id: create-esp-simulation-record-table
+      author: esp-simulation-service
+      changes:
+        - createTable:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                  defaultValueComputed: gen_random_uuid()
+              - column:
+                  name: account_no
+                  type: varchar(50)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: account_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_prefix
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_first_name
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_last_name
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: insert-esp-simulation-record-1
+      author: esp-simulation-service
+      changes:
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: GB29NWBK60161331926201
+              - column:
+                  name: account_type
+                  value: InternationalBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MRS
+              - column:
+                  name: customer_first_name
+                  value: Alisa
+              - column:
+                  name: customer_last_name
+                  value: Johnson
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: GB29NWBK60161331926401
+              - column:
+                  name: account_type
+                  value: InternationalBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MR
+              - column:
+                  name: customer_first_name
+                  value: Alexander
+              - column:
+                  name: customer_last_name
+                  value: Gram
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: GB29NWBK60161331926501
+              - column:
+                  name: account_type
+                  value: InternationalBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MR
+              - column:
+                  name: customer_first_name
+                  value: Antony
+              - column:
+                  name: customer_last_name
+                  value: Nason
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: 60161331926501
+              - column:
+                  name: account_type
+                  value: UKBasicBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MRS
+              - column:
+                  name: customer_first_name
+                  value: Simmi
+              - column:
+                  name: customer_last_name
+                  value: Nason
