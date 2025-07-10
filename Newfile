@@ -1,19 +1,4 @@
-spring.profiles.active=local
-
-# Disable Zipkin in local
-spring.sleuth.enabled=true
-spring.zipkin.enabled=false
-logging.pattern.level=%5p [traceId=%X{traceId:-NA}, spanId=%X{spanId:-NA}]
+https://bdd-ms-esp-simulation-service.dcp.dev.euw1.shared.banksvcs.net/ALL/CUSTFORPAYMT040.wsdl
 
 
-spring:
-  profiles: dev
-  sleuth:
-    enabled: true
-  zipkin:
-    enabled: true
-    base-url: http://zipkin.dev.internal:9411
-    sender:
-      type: web
-  application:
-    name: bdd-ms-esp-simulation-service
+https://bdd-ms-esp-simulation-service.dcp.dev.euw1.shared.banksvcs.net/ALL/ARRVALPYMT040/01
