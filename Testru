@@ -1,105 +1,147 @@
-@Test
-void shouldLoadXmlSuccessfully_whenFileExists() throws Exception {
-    // Arrange
-    String path = "static-response/account-validation/success-response.xml";
+databaseChangeLog:
+  - changeSet:
+      id: drop-customer-record-table
+      author: esp-simulation-service
+      context: ignore
+      changes:
+        - dropTable:
+            tableName: customer_record
+            cascadeConstraints: true
 
-    // Act
-    Document doc = service.loadAndParseXml(path);
+  - changeSet:
+      id: create-esp-simulation-record-table
+      runOnChange: true
+      author: esp-simulation-service
+      changes:
+        - createTable:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                  defaultValueComputed: gen_random_uuid()
+              - column:
+                  name: account_no
+                  type: varchar(50)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: account_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_prefix
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_first_name
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_last_name
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
 
-    // Assert
-    assertNotNull(doc);
-}
-
-@Test
-void shouldThrowException_whenXmlFileIsMissing() {
-    // Arrange
-    String invalidPath = "non-existent.xml";
-
-    // Act & Assert
-    assertThrows(AccountValidationException.class, () -> service.loadAndParseXml(invalidPath));
-}
-
-
-
-
-@Test
-void shouldUpdateSuccessResponseWithoutBankIdentifier() throws Exception {
-    // Arrange
-    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
-        getClass().getClassLoader().getResourceAsStream("static-response/account-validation/success-response.xml"));
-    XPath xpath = XPathFactory.newInstance().newXPath();
-    ResponseConfig config = new ResponseConfig(DOMESTIC_RESTRICTED, SWITCHED, PASSED, null);
-    RequestParams params = new RequestParams("12345678901234", "UKBasicBankAccountNumber", "TXN-001", "SYS-1");
-
-    // Act
-    service.updateSuccessResponse(doc, xpath, config, params);
-
-    // Assert
-    String updatedStatus = xpath.evaluate("//status", doc);
-    assertEquals("DomesticRestricted", updatedStatus); // replace with expected value from config
-}
-
-
-@Test
-void shouldRemoveSystemNotificationBlockWhenNotApplicable() throws Exception {
-    // Arrange
-    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
-        getClass().getClassLoader().getResourceAsStream("static-response/account-validation/error-response.xml"));
-    XPath xpath = XPathFactory.newInstance().newXPath();
-    ErrorDetail detail = new ErrorDetail("ERR001", "Some error", null, null);
-
-    // Act
-    service.applyErrorResponse(doc, xpath, detail, "TXN-123");
-
-    // Assert
-    Node block = (Node) xpath.evaluate(ServiceConstants.XPath.XPATH_SYS_NOTIFICATION_BLOCK, doc, XPathConstants.NODE);
-    assertNull(block);  // Block should be removed
-}
-
-
-
-@Test
-void shouldReturnStaticMatchWhenCustomerIdentifierMatches() throws Exception {
-    // Arrange
-    RetrievePrimaryCustomerForArrRequest request = ... // mock with valid known static IBAN
-    WebServiceMessage message = mock(WebServiceMessage.class);
-    // Act
-    service.retrieveCustomer(request, message);
-    // Assert – verify SOAP response or success log
-}
-@Test
-void shouldParseXmlSuccessfully() throws Exception {
-    Document doc = service.loadAndParseXml("static-response/customer-retrieval/success-response.xml");
-    assertNotNull(doc);
-}
-
-@Test
-void shouldThrowExceptionIfXmlFileNotFound() {
-    assertThrows(CustomerRetrievalException.class, () -> {
-        service.loadAndParseXml("non-existent.xml");
-    });
-}
-@Test
-void shouldExtractLast14Digits() {
-    String iban = "GB29NWBK60161331926501";
-    assertEquals("60161331926501", service.extractLast14Digits(iban));
-}
-
-@Test
-void shouldReturnEmptyWhenIbanIsTooShort() {
-    assertEquals("", service.extractLast14Digits("123"));
-}
-@Test
-void shouldReturnTrueForValidUbanSuffix() {
-    // Arrange
-    String validUban = "31926501"; // match last 14 digits from known IBAN
-    // Act
-    boolean result = service.isUbanValid(validUban);
-    // Assert
-    assertTrue(result);
-}
-
-@Test
-void shouldReturnFalseForInvalidUbanSuffix() {
-    assertFalse(service.isUbanValid("INVALID12345678"));
-}
+  - changeSet:
+      id: insert-esp-simulation-record-1
+      author: esp-simulation-service
+      runOnChange: true
+      changes:
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: GB29NWBK60161331926201
+              - column:
+                  name: account_type
+                  value: InternationalBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MRS
+              - column:
+                  name: customer_first_name
+                  value: Alisa
+              - column:
+                  name: customer_last_name
+                  value: Johnson
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: GB29NWBK60161331926401
+              - column:
+                  name: account_type
+                  value: InternationalBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MR
+              - column:
+                  name: customer_first_name
+                  value: Alexander
+              - column:
+                  name: customer_last_name
+                  value: Gram
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: GB29NWBK60161331926501
+              - column:
+                  name: account_type
+                  value: InternationalBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MR
+              - column:
+                  name: customer_first_name
+                  value: Antony
+              - column:
+                  name: customer_last_name
+                  value: Nason
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: 60161331926501
+              - column:
+                  name: account_type
+                  value: UKBasicBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MRS
+              - column:
+                  name: customer_first_name
+                  value: Simmi
+              - column:
+                  name: customer_last_name
+                  value: Nason
+        - insert:
+            tableName: customer_record
+            columns:
+              - column:
+                  name: account_no
+                  value: 60161331926502
+              - column:
+                  name: account_type
+                  value: UKBasicBankAccountNumber
+              - column:
+                  name: customer_prefix
+                  value: MR
+              - column:
+                  name: customer_first_name
+                  value: James
+              - column:
+                  name: customer_last_name
+                  value: Nason
