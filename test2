@@ -1,3 +1,9 @@
+AccountStatus status = Arrays.stream(AccountStatus.values())
+    .filter(e -> e.getValue().equals(dbResult.get().getDomesticAccountType()))
+    .findFirst()
+    .orElseThrow(() -> new IllegalArgumentException("Invalid account status: " + dbResult.get().getDomesticAccountType()));
+
+
 2025-07-22T16:43:45.613Z "DEBUG [bdd-ms-esp-simulation-service,traceId=687fbfc0b89a88f6d1c3b3d703a834f0,spanId=d1c3b3d703a834f0]" 1 --- [bdd-ms-esp-simulation-service] [nio-8080-exec-1] [687fbfc0b89a88f6d1c3b3d703a834f0-d1c3b3d703a834f0] s.e.SoapFaultAnnotationExceptionResolver : Resolving exception from endpoint [public void com.rbs.bdd.infrastructure.soap.api.PaymentValidationSoapAdapter.validateArrangementForPayment(com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest,org.springframework.ws.context.MessageContext)]: com.rbs.bdd.application.exception.AccountValidationException: Validation failed
 2025-07-22T16:43:45.615Z "DEBUG [bdd-ms-esp-simulation-service,traceId=687fbfc0b89a88f6d1c3b3d703a834f0,spanId=d1c3b3d703a834f0]" 1 --- [bdd-ms-esp-simulation-service] [nio-8080-exec-1] [687fbfc0b89a88f6d1c3b3d703a834f0-d1c3b3d703a834f0] o.s.w.s.s.e.SimpleSoapExceptionResolver  : Resolving exception from endpoint [public void com.rbs.bdd.infrastructure.soap.api.PaymentValidationSoapAdapter.validateArrangementForPayment(com.rbsg.soa.c040paymentmanagement.arrvalidationforpayment.v01.ValidateArrangementForPaymentRequest,org.springframework.ws.context.MessageContext)]: com.rbs.bdd.application.exception.AccountValidationException: Validation failed
 2025-07-22T16:43:45.648Z "DEBUG [bdd-ms-esp-simulation-service,traceId=687fbfc0b89a88f6d1c3b3d703a834f0,spanId=d1c3b3d703a834f0]" 1 --- [bdd-ms-esp-simulation-service] [nio-8080-exec-1] [687fbfc0b89a88f6d1c3b3d703a834f0-d1c3b3d703a834f0] o.s.w.soap.server.SoapMessageDispatcher  : Endpoint invocation resulted in exception - responding with Fault
